@@ -1,0 +1,15 @@
+MINIX MOBILE RESPONSIVE FIX V5
+
+Changes:
+- Charges cards: 2 columns on mobile, 1 column on small phones
+- Amounts no longer overlap or clip
+- Trader Performance and Charges tables use a single horizontal swipe area
+- Table columns keep readable widths
+- Updated service worker cache
+
+Deployment:
+1. Upload/replace all files in GitHub.
+2. Commit changes.
+3. Wait for Vercel Ready.
+4. On mobile Chrome: Settings > Site settings > Storage > clear this site, or open in Incognito once.
+5. Ensure Desktop site is OFF in Chrome menu.

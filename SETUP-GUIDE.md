@@ -1,39 +1,25 @@
-# Minix Trader Dashboard V3 – Setup Guide
+# Minix Trader Dashboard V3 Enterprise – Final Live Setup
 
-## 1. Supabase
-1. Open your Supabase project.
-2. Go to **SQL Editor**.
-3. Run `supabase/database-schema.sql`.
-4. Go to **Authentication → Users → Add user** and create the first admin email/password.
-5. Copy that user's UUID.
-6. Run this SQL:
+## Completed
+- Supabase database tables
+- Secure Admin login
+- Daily Trader entry
+- Daily Nifty / BankNifty entry
+- Optional one-time CSV bulk import
+- Dashboard auto refresh from Supabase
+- Built-in historical JSON fallback
 
-```sql
-insert into public.profiles(id, full_name, role)
-values ('PASTE_USER_UUID','Administrator','admin');
-```
+## One-time setup
+1. In Supabase SQL Editor, run `supabase/database-schema.sql` once.
+2. Authentication > Users: create the admin user.
+3. Insert/update the user in `public.profiles` with role `admin`.
+4. Put Project URL and Publishable Key in `config.js`. Never put a Secret/Service Role key in the browser project.
+5. Upload/replace all project files in GitHub and commit. Vercel deploys automatically.
+6. Hard refresh the website once (Ctrl+Shift+R) or clear site cache because the service worker was updated.
 
-## 2. Configure project
-Open `config.js` and replace:
+## Daily use
+Open `/admin/` > Login > Add Entry > Save. The dashboard refreshes automatically based on `autoRefreshSeconds` in `config.js`. No daily CSV upload or GitHub/Vercel update is required.
 
-```js
-supabaseUrl: 'YOUR_SUPABASE_URL',
-supabaseAnonKey: 'YOUR_SUPABASE_ANON_KEY'
-```
-
-Find both values in Supabase **Project Settings → API**.
-
-## 3. Deploy update
-Upload/replace all project files in the same GitHub repository and commit. Vercel deploys automatically.
-
-## 4. Daily use
-- Admin: `https://YOUR-DOMAIN/admin/`
-- Dashboard: `https://YOUR-DOMAIN/dashboard.html`
-- Add one daily entry and press Save.
-- All users see it automatically after refresh (default 60 seconds).
-
-## 5. Existing historical data
-Your current historical JSON/CSV remains bundled. For cloud-only history, use the existing CSV bulk upload page once or import rows through Supabase.
-
-## Security note
-The schema permits public read so link holders can view the dashboard. Add Supabase Auth to the dashboard itself before using highly confidential data outside a controlled audience.
+## URLs
+- Dashboard: `/dashboard.html`
+- Admin: `/admin/`

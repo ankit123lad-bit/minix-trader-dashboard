@@ -1,64 +1,39 @@
-# MINIX Trader Web App — Setup Guide
+# Minix Trader Dashboard V3 – Setup Guide
 
-## 1. Test on your laptop
-Do not double-click dashboard.html because browser security may block JSON loading.
+## 1. Supabase
+1. Open your Supabase project.
+2. Go to **SQL Editor**.
+3. Run `supabase/database-schema.sql`.
+4. Go to **Authentication → Users → Add user** and create the first admin email/password.
+5. Copy that user's UUID.
+6. Run this SQL:
 
-Windows easy method:
-1. Extract this ZIP.
-2. Open the folder in VS Code.
-3. Install the “Live Server” extension.
-4. Right-click `index.html` → **Open with Live Server**.
-5. Open Dashboard. Demo login: `admin` / `Minix@123`.
+```sql
+insert into public.profiles(id, full_name, role)
+values ('PASTE_USER_UUID','Administrator','admin');
+```
 
-## 2. Upload a new CSV in demo mode
-1. Open **Admin CSV Upload**.
-2. Select the Traders CSV.
-3. Click **Preview CSV**.
-4. Click **Save for Dashboard on This Device**.
-5. Open Dashboard.
+## 2. Configure project
+Open `config.js` and replace:
 
-Local mode only updates the same browser/device. For all mobiles and laptops, complete Supabase setup.
+```js
+supabaseUrl: 'YOUR_SUPABASE_URL',
+supabaseAnonKey: 'YOUR_SUPABASE_ANON_KEY'
+```
 
-## 3. Supabase cloud setup
-1. Create a Supabase project.
-2. Open SQL Editor.
-3. Copy and run `supabase/schema.sql`.
-4. Open Project Settings → API.
-5. Copy Project URL and anon public key.
-6. Open `config.js` and replace `YOUR_SUPABASE_URL` and `YOUR_SUPABASE_ANON_KEY`.
-7. Open Admin CSV Upload and use **Upload to Supabase Cloud**.
+Find both values in Supabase **Project Settings → API**.
 
-Important: The included SQL policies are demo policies. Before real confidential company use, configure Supabase Authentication and Admin-only write policies.
+## 3. Deploy update
+Upload/replace all project files in the same GitHub repository and commit. Vercel deploys automatically.
 
-## 4. Make it live on Vercel
-1. Create a GitHub repository.
-2. Upload all extracted files and folders.
-3. Sign in to Vercel with GitHub.
-4. Click Add New → Project.
-5. Import the repository.
-6. Framework Preset: Other.
-7. Click Deploy.
-8. Vercel gives a URL that works on mobile and laptop.
+## 4. Daily use
+- Admin: `https://YOUR-DOMAIN/admin/`
+- Dashboard: `https://YOUR-DOMAIN/dashboard.html`
+- Add one daily entry and press Save.
+- All users see it automatically after refresh (default 60 seconds).
 
-## 5. Mobile app-style install
-Android Chrome: Menu → Add to Home screen.
-iPhone Safari: Share → Add to Home Screen.
+## 5. Existing historical data
+Your current historical JSON/CSV remains bundled. For cloud-only history, use the existing CSV bulk upload page once or import rows through Supabase.
 
-## Current package contents
-- Existing full dashboard preserved
-- 1,454 sample CSV records bundled
-- Automatic data loading
-- Admin CSV preview/upload page
-- Local device mode
-- Supabase cloud-ready mode
-- PWA files
-- Vercel deployment file
-
-
-## Bundled data in this updated ZIP
-- `data/Traders All Data.csv` — latest trader data (47 columns)
-- `data/Nifty Banknifty.csv` — latest index data (12 columns)
-- `data/traders.json` — auto-loaded trader dashboard data
-- `data/nifty-banknifty.json` — auto-loaded Nifty / BankNifty dashboard data
-
-Open the dashboard through Live Server or Vercel. Both datasets will load automatically.
+## Security note
+The schema permits public read so link holders can view the dashboard. Add Supabase Auth to the dashboard itself before using highly confidential data outside a controlled audience.

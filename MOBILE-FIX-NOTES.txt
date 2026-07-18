@@ -1,4 +1,4 @@
-MINIX MOBILE RESPONSIVE FIX V5
+Force Vercel deployment - Mobile V4
 
 Changes:
 - Charges cards: 2 columns on mobile, 1 column on small phones

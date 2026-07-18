@@ -1,6 +1,10 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "headers": [
+    {"source": "/dashboard.html", "headers": [{"key": "Cache-Control", "value": "no-cache, no-store, must-revalidate"}]},
+    {"source": "/service-worker.js", "headers": [{"key": "Cache-Control", "value": "no-cache, no-store, must-revalidate"}]}
+  ],
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/admin/", "destination": "/admin.html" }

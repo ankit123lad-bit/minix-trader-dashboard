@@ -1,11 +1,10 @@
-MINIX TRADER DASHBOARD V3 ENTERPRISE - WORKING FOUNDATION
+MINIX DASHBOARD V8
 
-Daily workflow after Supabase setup:
-1. Open /admin/
-2. Login
-3. Add Trader or Nifty/BankNifty entry
-4. Save
-5. Dashboard updates automatically on all devices.
+Upload the complete folder structure to GitHub:
+- dashboard.html
+- legacy-dashboard.html
+- css/main.css
+- js/app.js
 
-This package includes database, authenticated admin entry, delete controls, public dashboard reads, pagination and automatic refresh.
-See SETUP-GUIDE.md before deployment.
+Use dashboard.html as the main page.
+The original working dashboard is preserved inside legacy-dashboard.html.

@@ -1,0 +1,4 @@
+OPEN dashboard.html
+Do not open any old backup HTML file.
+Today Reports is inside dashboard.html.
+ALL TRADERS PERFORMANCE defaults to Today P&L descending; click any heading to sort.

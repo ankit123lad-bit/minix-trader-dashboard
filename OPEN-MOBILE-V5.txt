@@ -1,2 +1,0 @@
-MINIX V5 MOBILE WORKING
-Deploy all files. Then open /dashboard.html?v=5 on mobile.

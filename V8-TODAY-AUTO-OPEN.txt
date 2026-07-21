@@ -1,6 +1,0 @@
-V8 FIX
-- Today Reports is now the default active tab.
-- It opens automatically when the dashboard loads.
-- It renders again after Supabase trader data finishes loading.
-- Dashboard Summary remains available by clicking its tab.
-Deploy all files and open dashboard.html?v=8.

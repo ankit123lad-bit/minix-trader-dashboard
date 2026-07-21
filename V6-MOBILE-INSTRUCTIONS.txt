@@ -1,1 +1,0 @@
-Upload/replace all files. Open dashboard.html?v=6. Close old tabs. Chrome Desktop site must be OFF. V6 forces mobile layout on Android/iPhone even if browser reports desktop viewport. Based on original working data version; broken V5 fast data override removed.

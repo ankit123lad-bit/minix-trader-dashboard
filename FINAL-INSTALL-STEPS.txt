@@ -1,0 +1,16 @@
+MINIX ORIGINAL SECURE FINAL
+
+1. Supabase > SQL Editor: run Minix_Supabase_Setup.sql.
+2. Upload ALL project files/folders to GitHub/Vercel root. Keep data folder.
+3. Open dashboard.html?v=30.
+4. Admin: admin / Admin@123
+5. Jaymin: jaymin.desai / Minix@123
+6. If device rejected, run in Supabase SQL Editor:
+   select public.minix_reset_device('jaymin.desai');
+7. This version does not block F12/right-click.
+
+Role rules:
+Admin = all data
+PM = rows where Portfolio Name matches PM
+Researcher = rows where Researcher Name matches
+Trader = rows where Trader Name matches

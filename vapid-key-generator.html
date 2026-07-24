@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MINIX VAPID Key Generator</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#020617;color:#e5e7eb;font-family:Arial,sans-serif;padding:24px}
+    .card{width:min(900px,100%);margin:auto;background:#111827;border:1px solid #334155;border-radius:18px;padding:22px;box-shadow:0 25px 70px #0008}
+    h1{margin-top:0;color:#fff}p,li{line-height:1.55;color:#cbd5e1}
+    .warning{background:#451a03;border:1px solid #f59e0b;color:#fde68a;padding:12px;border-radius:10px}
+    .field{margin-top:16px}
+    label{display:block;font-weight:900;color:#93c5fd;margin-bottom:7px}
+    textarea{width:100%;min-height:105px;resize:vertical;background:#020617;color:#fff;border:1px solid #475569;border-radius:10px;padding:11px;font-family:Consolas,monospace}
+    .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:9px}
+    button{border:0;border-radius:10px;padding:11px 16px;background:#2563eb;color:#fff;font-weight:900;cursor:pointer}
+    button.copy{background:#0f766e}button.private{background:#b45309}
+    #status{margin-top:14px;padding:11px;border-radius:10px;background:#172554;color:#bfdbfe;font-weight:800}
+    code{color:#a7f3d0}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>🔐 MINIX VAPID Key Generator</h1>
+    <p>This page generates the Web Push keys inside your browser. No Node.js or npm is required and the keys are not sent anywhere.</p>
+    <div class="warning"><b>Important:</b> Public Key goes in <code>config.js</code>. Private Key goes only in Supabase Edge Function Secrets. Never upload the Private Key to Vercel, GitHub, HTML or config.js.</div>
+    <div class="actions"><button id="generateBtn">Generate New Keys</button></div>
+    <div class="field">
+      <label for="publicKey">VAPID Public Key — config.js</label>
+      <textarea id="publicKey" readonly></textarea>
+      <div class="actions"><button class="copy" data-copy="publicKey">Copy Public Key</button></div>
+    </div>
+    <div class="field">
+      <label for="privateKey">VAPID Private Key — Supabase Secret only</label>
+      <textarea id="privateKey" readonly></textarea>
+      <div class="actions"><button class="private" data-copy="privateKey">Copy Private Key</button></div>
+    </div>
+    <div id="status">Press “Generate New Keys”.</div>
+  </main>
+  <script>
+    (function(){
+      'use strict';
+      const $=id=>document.getElementById(id);
+      function fromBase64Url(value){
+        const s=String(value||'').replace(/-/g,'+').replace(/_/g,'/');
+        const padded=s+'='.repeat((4-s.length%4)%4);
+        const raw=atob(padded),out=new Uint8Array(raw.length);
+        for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
+        return out;
+      }
+      function toBase64Url(bytes){
+        let raw='';for(const byte of bytes)raw+=String.fromCharCode(byte);
+        return btoa(raw).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      }
+      async function generate(){
+        try{
+          if(!window.crypto||!crypto.subtle)throw Error('Web Crypto is unavailable. Open this file in Chrome or Edge.');
+          $('status').textContent='Generating secure keys…';
+          const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+          const pub=await crypto.subtle.exportKey('jwk',pair.publicKey);
+          const priv=await crypto.subtle.exportKey('jwk',pair.privateKey);
+          const x=fromBase64Url(pub.x),y=fromBase64Url(pub.y);
+          const uncompressed=new Uint8Array(65);uncompressed[0]=4;uncompressed.set(x,1);uncompressed.set(y,33);
+          $('publicKey').value=toBase64Url(uncompressed);
+          $('privateKey').value=priv.d;
+          $('status').textContent='✅ Keys generated. Copy both keys to their correct locations.';
+        }catch(error){
+          $('status').textContent='❌ '+String(error.message||error);
+        }
+      }
+      async function copy(id){
+        const box=$(id),value=box.value;if(!value)return;
+        try{await navigator.clipboard.writeText(value)}
+        catch(e){box.focus();box.select();document.execCommand('copy')}
+        $('status').textContent='✅ '+(id==='publicKey'?'Public':'Private')+' Key copied.';
+      }
+      $('generateBtn').addEventListener('click',generate);
+      document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>copy(b.dataset.copy)));
+    })();
+  </script>
+</body>
+</html>

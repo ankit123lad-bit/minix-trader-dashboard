@@ -1,0 +1,86 @@
+MINIX AUTOMATIC MOBILE + LAPTOP PUSH SETUP
+========================================
+
+Staffએ npm અથવા coding કરવાની નથી.
+આ setup Adminએ ફક્ત એક વખત કરવાનું છે.
+
+STEP 1 — VAPID KEYS (npm વગર)
+------------------------------
+1. આ packageમાંથી vapid-key-generator.html Chrome/Edgeમાં ખોલો.
+2. Generate New Keys દબાવો.
+3. Public Key copy કરો.
+4. Private Key પણ copy કરીને temporary Notepadમાં સુરક્ષિત રાખો.
+5. Private Key કોઈને WhatsApp/Email ન કરો અને website folderમાં ન રાખો.
+
+STEP 2 — config.js
+------------------
+config.js Notepadમાં ખોલો.
+
+આ line:
+vapidPublicKey: 'PASTE_VAPID_PUBLIC_KEY_HERE'
+
+તેમાં generated Public Key paste કરો અને Save કરો.
+
+STEP 3 — SUPABASE SQL
+---------------------
+1. Supabase Dashboard ખોલો.
+2. SQL Editor → New Query.
+3. minix_push_notification_setup.sqlનું આખું coding paste કરીને Run કરો.
+
+STEP 4 — EDGE FUNCTION
+----------------------
+Function name: send-daily-reports
+Code file:
+supabase/functions/send-daily-reports/index.ts
+
+આ function Supabaseમાં deploy કરો.
+Function માટે Verify JWT / Enforce JWT verification OFF રાખો.
+Function પોતાની અંદર x-cron-secret અને Admin token બંને verify કરે છે.
+
+Supabase → Edge Functions → Secretsમાં નીચેના secrets ઉમેરો:
+
+VAPID_PUBLIC_KEY   = generated Public Key
+VAPID_PRIVATE_KEY  = generated Private Key
+VAPID_SUBJECT      = mailto:your-admin-email@company.com
+PUSH_CRON_SECRET   = તમારી લાંબી private random password
+DASHBOARD_URL      = https://YOUR-SITE.vercel.app/dashboard.html
+
+Private Key config.js/HTML/Vercel/GitHubમાં નાખવાની નથી.
+
+STEP 5 — 4:00 PM CRON
+---------------------
+Supabase → Integrations → Cron → Create Job.
+
+Function URL:
+https://YOUR_PROJECT_REF.supabase.co/functions/v1/send-daily-reports
+
+Method: POST
+Time: 10:30 UTC (India 4:00 PM)
+
+Headers:
+Content-Type: application/json
+x-cron-secret: STEP 4માં રાખેલી PUSH_CRON_SECRET
+
+Body:
+{"mode":"scheduled"}
+
+Optional reminder jobs:
+10:45 UTC = 4:15 PM IST
+11:00 UTC = 4:30 PM IST
+
+STEP 6 — WEBSITE DEPLOY
+-----------------------
+Packageની web files Vercel/GitHubમાં deploy કરો.
+Dashboard HTTPS linkથી ખોલવું જરૂરી છે.
+file:///D:/... પરથી automatic push નહીં ચાલે.
+
+STEP 7 — STAFF (દરેક device પર ફક્ત એક વખત)
+------------------------------------------------
+Laptop / Android:
+Dashboard link → Login → Enable Notifications → Allow → Test.
+
+iPhone:
+Safari → Share → Add to Home Screen → Home Screenમાંથી Dashboard ખોલો
+→ Login → Enable Notifications → Allow → Test.
+
+ત્યારબાદ dashboard બંધ હોય તો પણ server 4:00 PMએ push મોકલશે.

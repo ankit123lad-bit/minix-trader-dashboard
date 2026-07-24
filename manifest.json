@@ -1,9 +1,18 @@
 {
+  "id": "/",
   "name": "Minix Trader Dashboard",
   "short_name": "Minix Trader",
-  "start_url": "./index.html",
+  "description": "Role-based trader dashboard and daily closing report notifications.",
+  "start_url": "./dashboard.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#2563eb",
-  "icons": []
+  "orientation": "any",
+  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {"name":"Dashboard","short_name":"Dashboard","url":"./dashboard.html"},
+    {"name":"Admin","short_name":"Admin","url":"./admin.html"}
+  ],
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }

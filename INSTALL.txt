@@ -1,0 +1,21 @@
+MINIX FIXED WHATSAPP PACKAGE
+
+1. Run minix_user_management_setup.sql in Supabase SQL Editor.
+2. Run minix_daily_trader_reports_setup.sql in Supabase SQL Editor.
+3. Replace the existing dashboard.html and admin.html with the files in this package.
+4. Keep your existing config.js, service-worker.js and other files unchanged.
+5. Close the old browser tab, open dashboard.html again and press Ctrl + F5.
+
+ADMIN MOBILE NUMBER
+Admin Login / Add Entry > User Management > Edit Trader
+Enter Mobile Number (WhatsApp) such as 919876543210.
+Keep WhatsApp Reminder Enabled and click Update User.
+
+WHATSAPP REMINDER
+Admin > Pending / WhatsApp > WhatsApp Reminder.
+WhatsApp opens with a prepared message. Admin must press Send.
+
+TRADER FORM
+The Today’s Trader Report form appears automatically after a Trader login and
+stays visible. It contains F&O/Cash/MCX fund, gross, charges, automatic totals,
+status selection, 4:15 PM deadline and Submit To Admin.

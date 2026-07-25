@@ -42,7 +42,7 @@ Supabase → Edge Functions → Secretsમાં નીચેના secrets ઉ�
 VAPID_PUBLIC_KEY   = generated Public Key
 VAPID_PRIVATE_KEY  = generated Private Key
 VAPID_SUBJECT      = mailto:your-admin-email@company.com
-PUSH_CRON_SECRET   = તમારી લાંબી private random password
+PUSH_CRON_SECRET   = તમારી લાંબી private random password ( MinixPush2026@DailyReport#4PM!Secure789 ) 
 DASHBOARD_URL      = https://YOUR-SITE.vercel.app/dashboard.html
 
 Private Key config.js/HTML/Vercel/GitHubમાં નાખવાની નથી.

@@ -173,7 +173,7 @@
   function formHtml(){
     const name=loginTraderName();
     const fields=[['total_margin','Total Margin'],['margin_utilized','Margin Utilized'],['fno_gross','F&O Gross'],['fno_charges','F&O Charges'],['cash_gross','Cash Gross'],['cash_charges','Cash Charges'],['mcx_gross','MCX Gross'],['mcx_charges','MCX Charges']];
-    return '<div class="minix-today-head"><h2>📝 Submit Today’s Report</h2><span class="minix-scope-badge">'+esc(name)+' • Trader</span></div><div class="minix-entry-note">Status પસંદ કરો. <b>Traded Today</b> હોય તો figures भरो. બાકી statusમાં figures ₹0 રહેશે.</div><form id="minixTraderEntryForm" onsubmit="minixSaveTraderReport(event)"><div class="minix-entry-grid"><div class="minix-entry-field minix-entry-field-wide"><label>Today’s Status</label><select id="minixEntryStatus" onchange="minixEntryStatusChanged()" required><option value="TRADED">🟢 Traded Today</option><option value="NO_TRADE">🟡 No Trade Today</option><option value="SICK_LEAVE">🏥 Sick Leave</option><option value="ON_LEAVE">🏖️ On Leave</option></select></div>'+fields.map(x=>'<div class="minix-entry-field minix-amount-field"><label>'+x[1]+'</label><input id="minix_'+x[0]+'" type="number" step="0.01" value="0" required></div>').join('')+'<div class="minix-entry-field minix-entry-field-wide"><label>Reason / Note</label><textarea id="minix_reason" placeholder="Example: Sick leave / No trade opportunity"></textarea></div></div><div id="minixSaveMessage" class="minix-save-message"></div><div class="minix-push-actions"><button type="submit">✅ Submit To Admin</button><button type="button" class="close" onclick="minixClosePushModal()">Close</button></div></form>';
+    return '<div class="minix-today-head"><h2>📝 Submit Today’s Report</h2><span class="minix-scope-badge">'+esc(name)+' • Trader</span></div><div class="minix-entry-note">Status પસંદ કરો. <b>Traded Today</b> હોય તો figures भरो. No Trade હોય તો figures ₹0 રહેશે.</div><form id="minixTraderEntryForm" onsubmit="minixSaveTraderReport(event)"><div class="minix-entry-grid"><div class="minix-entry-field minix-entry-field-wide"><label>Today’s Status</label><select id="minixEntryStatus" onchange="minixEntryStatusChanged()" required><option value="TRADED">🟢 Traded Today</option><option value="NO_TRADE">🟡 No Trade Today</option></select></div>'+fields.map(x=>'<div class="minix-entry-field minix-amount-field"><label>'+x[1]+'</label><input id="minix_'+x[0]+'" type="number" step="0.01" value="0" required></div>').join('')+'<div class="minix-entry-field minix-entry-field-wide"><label>Reason / Note</label><textarea id="minix_reason" placeholder="No Trade હોય તો કારણ લખી શકો"></textarea></div></div><div id="minixSaveMessage" class="minix-save-message"></div><div class="minix-push-actions"><button type="submit">✅ Submit To Admin</button><button type="button" class="close" onclick="minixClosePushModal()">Close</button></div></form>';
   }
   window.minixOpenTraderEntry=async function(){
     let o=document.getElementById('minixPushModal');if(!o){o=document.createElement('div');o.id='minixPushModal';o.className='minix-push-overlay';document.body.appendChild(o)}
@@ -18178,7 +18178,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
 #minixTraderVisiblePanel{display:none;margin:16px 0;padding:18px;border:1px solid #10b981;border-radius:16px;background:linear-gradient(135deg,#0b1728,#102033);box-shadow:0 14px 35px #0005}
 #minixTraderVisiblePanel .mv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 #minixTraderVisiblePanel .mv-head h2{margin:0;color:#fff}#minixTraderVisiblePanel .mv-user{padding:8px 12px;border-radius:999px;background:#064e3b;color:#a7f3d0;font-weight:900}
-.mv-statuses{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:9px;margin:12px 0}
+.mv-statuses{display:grid;grid-template-columns:repeat(2,minmax(150px,1fr));gap:9px;margin:12px 0}
 .mv-statuses label{display:flex;align-items:center;gap:7px;padding:11px;border:1px solid #475569;border-radius:11px;background:#0f172a;color:#fff;cursor:pointer;font-weight:800}
 .mv-entry-grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px}
 .mv-field label{display:block;color:#93c5fd;font-size:12px;font-weight:800;margin-bottom:5px}.mv-field input,.mv-field textarea{width:100%;box-sizing:border-box;border:1px solid #475569;border-radius:9px;background:#020617;color:#fff;padding:10px;font:inherit}
@@ -18190,6 +18190,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
 </style>
 <script id="minix-trader-visible-entry-v4">
 (function(){
+  let existingLoaded=false,existingLoading=false;
   const E=id=>document.getElementById(id);
   const N=v=>{const n=Number(String(v??0).replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:0};
   const M=v=>(v<0?'-':'')+'₹'+Math.abs(Number(v)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
@@ -18204,7 +18205,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   function client(){const c=window.MINIX_CONFIG||{};return window.supabase&&c.supabaseUrl&&c.supabaseAnonKey?window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey):null}
   function panelHtml(){
     const fields=[['fno_total_fund','F&O Total Fund'],['cash_total_fund','Cash Total Fund'],['mcx_total_fund','MCX Total Fund'],['margin_utilized','Margin Utilized'],['fno_gross','F&O Gross'],['fno_charges','F&O Charges'],['cash_gross','Cash Gross'],['cash_charges','Cash Charges'],['mcx_gross','MCX Gross'],['mcx_charges','MCX Charges']];
-    return '<div class="mv-head"><h2>📝 Today’s Trader Report</h2><span class="mv-user">'+H(traderName())+' • '+today().split('-').reverse().join('-')+'</span></div><div style="display:inline-block;margin-bottom:9px;padding:8px 12px;border-radius:9px;background:#7f1d1d;color:#fecaca;font-weight:900">⏰ Final Submission Deadline: 4:15 PM</div><div style="color:#bfdbfe">આજે trade કર્યું હોય તો figures भरो. Trade ન કર્યું હોય તો નીચેનું યોગ્ય status પસંદ કરો.</div><div class="mv-statuses"><label><input type="radio" name="mv_status" value="TRADED" checked> 🟢 Traded Today</label><label><input type="radio" name="mv_status" value="NO_TRADE"> 🟡 No Trade Today</label><label><input type="radio" name="mv_status" value="SICK_LEAVE"> 🏥 Sick Leave</label><label><input type="radio" name="mv_status" value="ON_LEAVE"> 🏖️ On Leave</label></div><div class="mv-entry-grid">'+fields.map(x=>'<div class="mv-field"><label>'+x[1]+'</label><input id="mv_'+x[0]+'" type="number" step="0.01" value="0"></div>').join('')+'<div class="mv-field mv-field-wide"><label>Reason / Note</label><textarea id="mv_reason" placeholder="No Trade / Sick Leave / On Leaveનું કારણ લખી શકો"></textarea></div></div><div class="mv-auto-grid"><div class="mv-auto"><span>Total Fund — Automatic</span><b id="mv_total_fund">₹0</b></div><div class="mv-auto"><span>Total Gross — Automatic</span><b id="mv_total_gross">₹0</b></div><div class="mv-auto"><span>Total Charges — Automatic</span><b id="mv_total_charges">₹0</b></div><div class="mv-auto"><span>Total Net P&amp;L — Automatic</span><b id="mv_total_net">₹0</b></div></div><button type="button" class="mv-submit" onclick="minixSubmitVisibleTraderReport()">✅ Submit To Admin</button><div id="mv_message" class="mv-message"></div>';
+    return '<div class="mv-head"><h2 id="mv_report_title">📝 Today’s Trader Report</h2><span class="mv-user">'+H(traderName())+' • '+today().split('-').reverse().join('-')+'</span></div><div style="display:inline-block;margin-bottom:9px;padding:8px 12px;border-radius:9px;background:#7f1d1d;color:#fecaca;font-weight:900">⏰ Final Submission Deadline: 4:15 PM</div><div style="color:#bfdbfe">આજે trade કર્યું હોય તો figures भरो. આજનો report Submit થયેલો હોય તો અહીંથી Edit કરી શકો; Adminને old → new changes દેખાશે.</div><div class="mv-statuses"><label><input type="radio" name="mv_status" value="TRADED" checked> 🟢 Traded Today</label><label><input type="radio" name="mv_status" value="NO_TRADE"> 🟡 No Trade Today</label></div><div class="mv-entry-grid">'+fields.map(x=>'<div class="mv-field"><label>'+x[1]+'</label><input id="mv_'+x[0]+'" type="number" step="0.01" value="0"></div>').join('')+'<div class="mv-field mv-field-wide"><label>Reason / Note</label><textarea id="mv_reason" placeholder="No Trade હોય તો કારણ લખી શકો"></textarea></div></div><div class="mv-auto-grid"><div class="mv-auto"><span>Total Fund — Automatic</span><b id="mv_total_fund">₹0</b></div><div class="mv-auto"><span>Total Gross — Automatic</span><b id="mv_total_gross">₹0</b></div><div class="mv-auto"><span>Total Charges — Automatic</span><b id="mv_total_charges">₹0</b></div><div class="mv-auto"><span>Total Net P&amp;L — Automatic</span><b id="mv_total_net">₹0</b></div></div><button id="mv_submit_button" type="button" class="mv-submit" onclick="minixSubmitVisibleTraderReport()">✅ Submit To Admin</button><div id="mv_message" class="mv-message"></div>';
   }
   function calc(){
     const fund=N(E('mv_fno_total_fund')?.value)+N(E('mv_cash_total_fund')?.value)+N(E('mv_mcx_total_fund')?.value);
@@ -18219,14 +18220,21 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     calc();
   }
   async function loadExisting(){
-    const c=client();if(!c)return;const {data}=await c.from('minix_daily_trader_reports').select('*').eq('report_date',today()).ilike('trader_name',traderName()).maybeSingle();
-    if(!data)return;const radio=document.querySelector('input[name="mv_status"][value="'+data.today_status+'"]');if(radio)radio.checked=true;
+    if(existingLoaded||existingLoading)return;
+    existingLoading=true;
+    const c=client();if(!c){existingLoading=false;return}const {data}=await c.from('minix_daily_trader_reports').select('*').eq('report_date',today()).ilike('trader_name',traderName()).maybeSingle();
+    existingLoading=false;existingLoaded=true;
+    window.MINIX_VISIBLE_REPORT_EDITING=!!data;
+    if(!data)return;
+    if(E('mv_report_title'))E('mv_report_title').textContent='✏️ Edit Today’s Trader Report';
+    if(E('mv_submit_button'))E('mv_submit_button').textContent='✅ Save Edited Report';
+    const radio=document.querySelector('input[name="mv_status"][value="'+data.today_status+'"]');if(radio)radio.checked=true;
     ['fno_total_fund','cash_total_fund','mcx_total_fund','margin_utilized','fno_gross','fno_charges','cash_gross','cash_charges','mcx_gross','mcx_charges','reason'].forEach(k=>{const x=E('mv_'+k);if(x)x.value=data[k]??''});statusChanged();
   }
   function show(){
     if(!/^trader$/i.test(role()))return false;
     let p=E('minixTraderVisiblePanel');if(!p){p=document.createElement('section');p.id='minixTraderVisiblePanel';p.innerHTML=panelHtml();const tabs=document.querySelector('.tab-buttons'),msg=E('message');(tabs||msg||document.body).insertAdjacentElement(tabs?'afterend':'afterend',p);p.querySelectorAll('input[name="mv_status"]').forEach(x=>x.addEventListener('change',statusChanged));p.querySelectorAll('.mv-entry-grid input').forEach(x=>x.addEventListener('input',calc));}
-    p.style.display='block';const old=E('minixTraderEntryBtn');if(old)old.style.display='none';loadExisting();calc();return true;
+    p.style.display='block';const old=E('minixTraderEntryBtn');if(old)old.style.display='none';if(!existingLoaded&&!existingLoading)loadExisting();calc();return true;
   }
   window.minixSubmitVisibleTraderReport=async function(){
     const c=client(),msg=E('mv_message');msg.style.display='block';if(!c){msg.style.background='#7f1d1d';msg.textContent='Supabase config missing.';return}
@@ -18236,7 +18244,11 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     msg.style.background='#172554';msg.textContent='Saving report…';const {data,error}=await c.from('minix_daily_trader_reports').upsert(record,{onConflict:'report_date,trader_name'}).select().single();
     if(error){msg.style.background='#7f1d1d';msg.textContent='Error: '+error.message;return}
     window.MINIX_TODAY_SUBMISSIONS=(window.MINIX_TODAY_SUBMISSIONS||[]).filter(x=>String(x.trader_name).toLowerCase()!==record.trader_name.toLowerCase());window.MINIX_TODAY_SUBMISSIONS.push(data||record);
-    msg.style.background='#064e3b';msg.textContent='✅ Submitted successfully. Admin, PM and Researcher can see this report.';
+    msg.style.background='#064e3b';msg.textContent=window.MINIX_VISIBLE_REPORT_EDITING?'✅ Edited report saved. Admin can see old → new changes.':'✅ Submitted successfully. Admin, PM and Researcher can see this report.';
+    window.MINIX_VISIBLE_REPORT_EDITING=true;
+    existingLoaded=true;
+    if(E('mv_report_title'))E('mv_report_title').textContent='✏️ Edit Today’s Trader Report';
+    if(E('mv_submit_button'))E('mv_submit_button').textContent='✅ Save Edited Report';
   };
   function istNowMinutes(){const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date()),x={};p.forEach(a=>x[a.type]=a.value);return Number(x.hour)*60+Number(x.minute)}
   async function notifyReminder(title,body,tag){
@@ -19416,5 +19428,92 @@ function updateFundUtilizedKpis() {
 })();
 </script>
 <!-- === END PASSPORT SIZE TRADER PHOTO + NAME FIX === -->
+<!-- === ADMIN DAILY REPORT HISTORY + EDIT AUDIT (EMBEDDED) === -->
+<style id="minix-history-audit-css">
+#minixHistoryRoot{color:#e8f2ff}#minixHistoryRoot .mh-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#minixHistoryRoot .mh-filter{display:grid;grid-template-columns:180px minmax(220px,1fr) auto;gap:9px;margin:14px 0}
+#minixHistoryRoot input{box-sizing:border-box;width:100%;padding:10px;border:1px solid #3b536b;border-radius:9px;background:#071729;color:#fff}
+#minixHistoryRoot button,#minixHistoryButton{border:0;border-radius:9px;padding:10px 13px;background:#2563eb;color:#fff;font-weight:900;cursor:pointer}
+#minixHistoryRoot .mh-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+#minixHistoryRoot .mh-kpi{padding:11px;border:1px solid #29465f;border-radius:11px;background:#091a2d}
+#minixHistoryRoot .mh-kpi small{display:block;color:#9fc8ef}#minixHistoryRoot .mh-kpi b{font-size:20px;color:#34d399}
+#minixHistoryRoot .mh-wrap{overflow:auto;max-height:350px;border:1px solid #29465f;border-radius:10px}
+#minixHistoryRoot table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px}
+#minixHistoryRoot th{position:sticky;top:0;background:#102944;color:#9fd0ff;z-index:1}
+#minixHistoryRoot th,#minixHistoryRoot td{padding:9px;border-bottom:1px solid #21394f;text-align:left}
+#minixHistoryRoot .mh-edited{display:inline-block;margin-left:5px;padding:3px 6px;border-radius:999px;background:#78350f;color:#fde68a;font-weight:900}
+#minixHistoryRoot h3{color:#7db7ff;margin:17px 0 7px}.mh-empty{text-align:center!important;padding:20px!important;color:#9eb4c8}
+@media(max-width:700px){#minixHistoryRoot .mh-filter{grid-template-columns:1fr}#minixHistoryRoot .mh-kpis{grid-template-columns:1fr 1fr}}
+</style>
+<script id="minix-history-audit-v1">
+(function(){
+  'use strict';
+  let reports=[],edits=[],busy=false,db=null;
+  const E=id=>document.getElementById(id);
+  const H=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const N=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
+  const M=v=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(N(v));
+  function U(){try{return JSON.parse(localStorage.getItem('minixUser')||'{}')}catch(e){return{}}}
+  function admin(){return /^admin$/i.test(String(U().role||'').trim())}
+  function D(v){if(!v)return'—';const p=String(v).slice(0,10).split('-');return p.length===3?p[2]+'-'+p[1]+'-'+p[0]:H(v)}
+  function T(v){if(!v)return'—';const d=new Date(v);return isNaN(d)?H(v):d.toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}
+  function S(v){return({TRADED:'Traded',NO_TRADE:'No Trade',SICK_LEAVE:'Sick Leave',ON_LEAVE:'On Leave'})[String(v||'').toUpperCase()]||H(v||'—')}
+  function client(){if(db)return db;const c=window.MINIX_CONFIG||{};if(!window.supabase||!c.supabaseUrl||!c.supabaseAnonKey)throw Error('Supabase config missing.');return db=window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey)}
+  async function pages(table,order){
+    let out=[],from=0;
+    while(true){const q=await client().from(table).select('*').order(order,{ascending:false}).range(from,from+999);if(q.error)throw q.error;out=out.concat(q.data||[]);if((q.data||[]).length<1000)break;from+=1000}
+    return out;
+  }
+  function filtered(){
+    const d=E('mhDate')?.value||'',n=(E('mhName')?.value||'').trim().toLowerCase();
+    return reports.filter(r=>(!d||String(r.report_date).slice(0,10)===d)&&(!n||String(r.trader_name||'').toLowerCase().includes(n)));
+  }
+  function render(){
+    const rows=filtered(),map={},dates={},editMap={};
+    edits.forEach(x=>{const k=String(x.report_date).slice(0,10)+'|'+String(x.trader_name||'').toLowerCase();(editMap[k]||(editMap[k]=[])).push(x)});
+    rows.forEach(r=>{const n=String(r.trader_name||'Unknown'),d=String(r.report_date).slice(0,10);dates[d]=1;if(!map[n])map[n]={dates:{},first:d,last:d};map[n].dates[d]=1;if(d<map[n].first)map[n].first=d;if(d>map[n].last)map[n].last=d});
+    E('mhKpis').innerHTML='<div class="mh-kpi"><small>Submissions</small><b>'+rows.length+'</b></div><div class="mh-kpi"><small>Traders</small><b>'+Object.keys(map).length+'</b></div><div class="mh-kpi"><small>Report Dates</small><b>'+Object.keys(dates).length+'</b></div><div class="mh-kpi"><small>Total Edits</small><b>'+Object.values(editMap).reduce((s,a)=>s+a.length,0)+'</b></div>';
+    E('mhSummary').innerHTML=Object.keys(map).sort().map(n=>'<tr><td>'+H(n)+'</td><td>'+Object.keys(map[n].dates).length+'</td><td>'+D(map[n].first)+'</td><td>'+D(map[n].last)+'</td></tr>').join('')||'<tr><td colspan="4" class="mh-empty">No reports found.</td></tr>';
+    E('mhReports').innerHTML=rows.map(r=>{
+      const k=String(r.report_date).slice(0,10)+'|'+String(r.trader_name||'').toLowerCase(),ec=(editMap[k]||[]).length;
+      const gross=N(r.fno_gross)+N(r.cash_gross)+N(r.mcx_gross),chg=N(r.fno_charges)+N(r.cash_charges)+N(r.mcx_charges);
+      return'<tr><td>'+D(r.report_date)+'</td><td>'+H(r.trader_name)+(ec?'<span class="mh-edited">Edited '+ec+'×</span>':'')+'</td><td>'+S(r.today_status)+'</td><td>'+T(r.updated_at)+'</td><td>'+M(r.fno_total_fund)+'</td><td>'+M(r.cash_total_fund)+'</td><td>'+M(r.mcx_total_fund)+'</td><td>'+M(r.total_margin)+'</td><td>'+M(r.margin_utilized)+'</td><td>'+M(gross)+'</td><td>'+M(chg)+'</td><td>'+M(gross-chg)+'</td></tr>'
+    }).join('')||'<tr><td colspan="12" class="mh-empty">No reports found.</td></tr>';
+    const visible={};rows.forEach(r=>visible[String(r.report_date).slice(0,10)+'|'+String(r.trader_name||'').toLowerCase()]=1);
+    E('mhAudits').innerHTML=edits.filter(x=>visible[String(x.report_date).slice(0,10)+'|'+String(x.trader_name||'').toLowerCase()]).map(x=>{
+      const o=x.old_data||{},n=x.new_data||{},fields=[['F&O Fund','fno_total_fund'],['Cash Fund','cash_total_fund'],['MCX Fund','mcx_total_fund'],['Total Fund','total_margin'],['Utilized','margin_utilized'],['F&O Gross','fno_gross'],['F&O Charges','fno_charges'],['Cash Gross','cash_gross'],['Cash Charges','cash_charges'],['MCX Gross','mcx_gross'],['MCX Charges','mcx_charges']];
+      let c=fields.filter(a=>N(o[a[1]])!==N(n[a[1]])).map(a=>H(a[0])+': '+M(o[a[1]])+' → '+M(n[a[1]]));
+      if(String(o.today_status||'')!==String(n.today_status||''))c.unshift('Status: '+S(o.today_status)+' → '+S(n.today_status));
+      if(String(o.reason||'')!==String(n.reason||''))c.push('Reason: '+H(o.reason||'—')+' → '+H(n.reason||'—'));
+      return'<tr><td>'+D(x.report_date)+'</td><td>'+H(x.trader_name)+'</td><td>'+T(x.edited_at)+'</td><td>'+H(x.edited_by||n.submitted_by||'—')+'</td><td style="white-space:normal;min-width:410px">'+(c.join('<br>')||'Report details updated')+'</td></tr>'
+    }).join('')||'<tr><td colspan="5" class="mh-empty">No edited reports found.</td></tr>';
+  }
+  function html(message){
+    return'<div id="minixHistoryRoot">'+
+      '<div class="mh-head"><h2>📚 Daily Report History</h2><button onclick="minixClosePushModal()">Close</button></div>'+
+      (message?'<div class="mh-empty">'+H(message)+'</div>':
+      '<div class="mh-filter"><input id="mhDate" type="date"><input id="mhName" type="search" placeholder="Search trader name..."><button onclick="minixClearHistory()">Clear Filters</button></div>'+
+      '<div id="mhKpis" class="mh-kpis"></div>'+
+      '<h3>Trader-wise Submitted Days</h3><div class="mh-wrap"><table><thead><tr><th>Trader Name</th><th>Submitted Days</th><th>First Report</th><th>Last Report</th></tr></thead><tbody id="mhSummary"></tbody></table></div>'+
+      '<h3>All Daily Reports</h3><div class="mh-wrap"><table><thead><tr><th>Date</th><th>Trader</th><th>Status</th><th>Submitted/Updated</th><th>F&O Fund</th><th>Cash Fund</th><th>MCX Fund</th><th>Total Fund</th><th>Utilized</th><th>Gross</th><th>Charges</th><th>Net P&L</th></tr></thead><tbody id="mhReports"></tbody></table></div>'+
+      '<h3>Edit Audit History (Original → Updated)</h3><div class="mh-wrap"><table><thead><tr><th>Date</th><th>Trader</th><th>Edited At</th><th>Edited By</th><th>Changes</th></tr></thead><tbody id="mhAudits"></tbody></table></div>')+'</div>'
+  }
+  window.minixClearHistory=function(){if(E('mhDate'))E('mhDate').value='';if(E('mhName'))E('mhName').value='';render()};
+  window.minixOpenHistory=async function(){
+    if(!admin())return alert('Only Admin can open Daily Report History.');if(busy)return;busy=true;
+    let m=E('minixPushModal');if(!m){m=document.createElement('div');m.id='minixPushModal';m.className='minix-push-overlay';document.body.appendChild(m)}
+    m.style.display='flex';m.innerHTML='<div class="minix-push-card" style="width:min(1500px,96vw)">'+html('Loading history...')+'</div>';
+    try{const a=await Promise.all([pages('minix_daily_trader_reports','report_date'),pages('minix_daily_report_edits','edited_at')]);reports=a[0];edits=a[1];m.innerHTML='<div class="minix-push-card" style="width:min(1500px,96vw)">'+html('')+'</div>';E('mhDate').addEventListener('input',render);E('mhName').addEventListener('input',render);render()}
+    catch(e){m.innerHTML='<div class="minix-push-card">'+html('Could not load history: '+(e.message||e)+'. Please run STEP_EDIT_AUDIT_SQL.sql once in Supabase.')+'</div>'}finally{busy=false}
+  };
+  function button(){
+    const a=E('minixHeaderActions'),b=E('minixHistoryButton');
+    if(!admin()){if(b)b.remove();return}if(!a||b)return;
+    const x=document.createElement('button');x.id='minixHistoryButton';x.textContent='📚 Daily Report History';x.onclick=window.minixOpenHistory;a.appendChild(x)
+  }
+  button();setInterval(button,1500);
+})();
+</script>
+<!-- === END ADMIN DAILY REPORT HISTORY + EDIT AUDIT === -->
 </body>
 </html>

@@ -18111,7 +18111,11 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
    const [baseT,baseM,cloudT0,cloudM0]=await Promise.all([fetchJson('data/traders.json'),fetchJson('data/nifty-banknifty.json'),fetchAll('trader_rows'),fetchAll('market_rows')]);
    const bt=(Array.isArray(baseT)?baseT:[]).map(x=>normalize(x,traderAliases)).filter(traderValid), ct=(Array.isArray(cloudT0)?cloudT0:[]).map(x=>normalize(x,traderAliases)).filter(traderValid);
    const bm=(Array.isArray(baseM)?baseM:[]).map(x=>normalize(x,{})).filter(marketValid), cm=(Array.isArray(cloudM0)?cloudM0:[]).map(x=>normalize(x,{})).filter(marketValid);
-   const traders=mergeDedup(bt,ct,false), markets=mergeDedup(bm,cm,true);
+   // Cloud is the authoritative source after Admin "Replace Old Data & Import".
+   // Do not merge/deduplicate trader rows: multiple legitimate CSV rows can share
+   // the same Date/Demat/Trader/Strategy/Portfolio combination.
+   const traders=ct.length ? ct : bt;
+   const markets=cm.length ? cm : bm;
    if(traders.length){
     window.rawData=traders;
     rawData=traders;

@@ -3,7 +3,7 @@
 <title>Minix V3 Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#07101f;color:#e5e7eb;font-family:Arial}.wrap{max-width:1500px;margin:auto;padding:18px}.card{background:#111827;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}input,select,button,textarea{width:100%;padding:10px;border-radius:9px;border:1px solid #475569;background:#020617;color:#fff}button{background:#2563eb;font-weight:800;cursor:pointer}.green{background:#059669}.red{background:#dc2626}.gray{background:#475569}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{width:auto}.msg{padding:10px;border-radius:9px;background:#172554;margin:10px 0}.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.field label{display:block;font-size:11px;color:#94a3b8;margin-bottom:4px}.tablewrap{overflow:auto;max-height:450px}table{border-collapse:collapse;width:100%;white-space:nowrap}th,td{padding:8px;border-bottom:1px solid #334155;font-size:12px}th{position:sticky;top:0;background:#0f172a}.hidden{display:none}.small{font-size:12px;color:#94a3b8}.progress{font-weight:800;color:#93c5fd}@media(max-width:800px){.grid,.fields{grid-template-columns:1fr}.wrap{padding:8px}}
+*{box-sizing:border-box}body{margin:0;background:#07101f;color:#e5e7eb;font-family:Arial}.wrap{max-width:1500px;margin:auto;padding:18px}.card{background:#111827;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}input,select,button,textarea{width:100%;padding:10px;border-radius:9px;border:1px solid #475569;background:#020617;color:#fff}button{background:#2563eb;font-weight:800;cursor:pointer}.green{background:#059669}.red{background:#dc2626}.gray{background:#475569}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{width:auto}.msg{padding:10px;border-radius:9px;background:#172554;margin:10px 0}.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.field label{display:block;font-size:11px;color:#94a3b8;margin-bottom:4px}.tablewrap{overflow:auto;max-height:450px}table{border-collapse:collapse;width:100%;white-space:nowrap}th,td{padding:8px;border-bottom:1px solid #334155;font-size:12px}th{position:sticky;top:0;background:#0f172a}.hidden{display:none}.small{font-size:12px;color:#94a3b8}.progress{font-weight:800;color:#93c5fd}.push-summary{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px;margin:14px 0}.push-stat{padding:14px;border:1px solid #334155;border-radius:12px;background:#0b1220}.push-stat span{display:block;color:#94a3b8;font-size:12px}.push-stat b{display:block;margin-top:6px;font-size:24px}.push-enabled{color:#34d399;font-weight:800}.push-disabled{color:#f87171;font-weight:800}@media(max-width:800px){.grid,.fields,.push-summary{grid-template-columns:1fr}.wrap{padding:8px}}
 </style></head>
 <style>.user-actions{display:flex;gap:6px}.user-actions button{width:auto;padding:7px 10px}.user-form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.user-form-actions button{width:auto;min-width:150px}.status-active{color:#34d399;font-weight:800}.status-inactive{color:#f87171;font-weight:800}</style>
 <body><div class="wrap"><h1>Minix Trader Dashboard V3 – Admin</h1>
@@ -12,10 +12,10 @@
 <div class="card tabs"><button onclick="showPanel('trader')">Trader Daily Entry</button><button onclick="showPanel('market')">Nifty / BankNifty Entry</button><button class="green" onclick="showPanel('users')">User Management</button><button class="green" onclick="showPanel('reminders')">📲 Pending / WhatsApp</button><button onclick="showPanel('push')">🔔 Push Notification Centre</button><button onclick="location.href='dashboard.html'">← Back To Dashboard</button><button class="red" id="logoutBtn">Logout</button></div>
 <div id="status" class="msg">Ready.</div>
 <div id="traderPanel" class="card"><h2>Add Trader Row</h2><p class="small">Fields exactly match <b>Traders All Data.csv</b>. Fill the required daily values and Save.</p><div id="traderFields" class="fields"></div><div class="grid"><button class="green" onclick="saveRow('trader_rows','trader')">Save Trader Entry</button><button onclick="loadRows('trader_rows','traderTable')">Refresh List</button><input id="traderSearch" placeholder="Search" oninput="filterTable('traderTable',this.value)"></div>
-<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><div class="grid" style="margin-top:8px"><input id="traderCsv" type="file" accept=".csv,text/csv"><button class="gray" onclick="importCsv('trader_rows','traderCsv')">Import Traders CSV</button><div id="traderProgress" class="progress"></div></div></div>
+<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><p class="small">For a complete updated CSV, use <b>Replace Old Data &amp; Import</b>. It removes the previous trader rows first, preventing duplicate totals.</p><div class="grid" style="margin-top:8px"><input id="traderCsv" type="file" accept=".csv,text/csv"><button class="gray" onclick="importCsv('trader_rows','traderCsv')">Add / Import Traders CSV</button><button class="red" id="replaceTraderBtn" onclick="replaceTradersCsv()">Replace Old Data &amp; Import</button><div id="traderProgress" class="progress"></div></div></div>
 <div class="tablewrap"><table id="traderTable"></table></div></div>
 <div id="marketPanel" class="card hidden"><h2>Add Nifty / BankNifty Row</h2><p class="small">Fields exactly match <b>Nifty Banknifty.csv</b>.</p><div id="marketFields" class="fields"></div><div class="grid"><button class="green" onclick="saveRow('market_rows','market')">Save Market Entry</button><button onclick="loadRows('market_rows','marketTable')">Refresh List</button><input id="marketSearch" placeholder="Search" oninput="filterTable('marketTable',this.value)"></div>
-<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><div class="grid" style="margin-top:8px"><input id="marketCsv" type="file" accept=".csv,text/csv"><button class="gray" onclick="importCsv('market_rows','marketCsv')">Import Nifty / BankNifty CSV</button><div id="marketProgress" class="progress"></div></div></div>
+<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><p class="small">For a complete updated CSV, use <b>Replace Old Market Data &amp; Import</b>. It removes the previous Nifty/BankNifty rows first.</p><div class="grid" style="margin-top:8px"><input id="marketCsv" type="file" accept=".csv,text/csv"><button class="gray" onclick="importCsv('market_rows','marketCsv')">Add / Import Nifty / BankNifty CSV</button><button class="red" id="replaceMarketBtn" onclick="replaceMarketCsv()">Replace Old Market Data &amp; Import</button><div id="marketProgress" class="progress"></div></div></div>
 <div class="tablewrap"><table id="marketTable"></table></div></div>
 <div id="usersPanel" class="card hidden">
   <h2>Admin User Management <span style="font-size:13px;color:#6ee7b7">• WhatsApp Ready</span></h2>
@@ -45,10 +45,10 @@
   <div class="grid"><button class="green" onclick="loadPendingReminders()">Refresh Pending List</button><div id="pendingReminderCount" class="progress"></div><div></div></div>
   <div class="tablewrap" style="max-height:560px"><table id="pendingReminderTable"></table></div>
 </div>
-<div id="pushPanel" class="card hidden"><h2>🔔 Push Notification Centre</h2><p class="small">Mobile/Laptop notification status, sent history and Admin resend.</p><div class="grid"><button onclick="loadPushCentre()">Refresh Status</button><select id="pushUserSelect"><option value="">All Active Devices</option></select><button class="green" onclick="resendPush()">Resend Daily Report</button></div><h3>Enabled Devices</h3><div class="tablewrap"><table id="pushDevicesTable"></table></div><h3>Recent Notification History</h3><div class="tablewrap"><table id="pushHistoryTable"></table></div></div>
+<div id="pushPanel" class="card hidden"><h2>🔔 Push Notification Centre</h2><p class="small">All active tradersની notification checklist, Mobile/Laptop status, sent history and Admin resend.</p><div class="grid"><button onclick="loadPushCentre()">Refresh Status</button><select id="pushUserSelect"><option value="">All Active Devices</option></select><button class="green" onclick="resendPush()">Resend Daily Report</button></div><div id="pushTraderSummary" class="push-summary"></div><h3>All Traders Notification Checklist</h3><div class="tablewrap" style="max-height:560px"><table id="pushTraderChecklistTable"></table></div><h3>Enabled Device Details</h3><div class="tablewrap"><table id="pushDevicesTable"></table></div><h3>Recent Notification History</h3><div class="tablewrap"><table id="pushHistoryTable"></table></div></div>
 </div></div>
 <script>
-const traderHeaders=["Financial Year","Company Name","Demat Account","Researcher Name","Portfolio Name","Trader Name","Date","Month","Fund","Strategy","FNO Gross","FNO Gorv Chg","FNO Net Amount","FNO BRK","FNO BRK On GST","FNO Trx Chgs","FNO Sebi Chgs","FNO IPF Charges","FNO Stamp Duty","FNO STT","FNO Clearing Charges","FNO GST","Cash Gross","Cash Gorv Chg","Cash Net Amount","Cash BRK","Cash BRK On GST","Cash Trx Chgs","Cash Sebi Chgs","Cash IPF Charges","Cash Stamp Duty","Cash STT","Cash Clearing Charges","Cash GST","MCX Gross","MCX Gorv Chg","MCX Net Amount","MCX BRK","MCX BRK On GST","MCX Trx Chgs","MCX Sebi Chgs","MCX IPF Charges","MCX Stamp Duty","MCX STT","MCX Clearing Charges","MCX GST","Dividend Received"];
+const traderHeaders=["Financial Year","Company Name","Demat Account","Researcher Name","Portfolio Name","Trader Name","Date","Month","Fund","Margin Utilized","Strategy","FNO Gross","FNO Gorv Chg","FNO Net Amount","FNO BRK","FNO BRK On GST","FNO Trx Chgs","FNO Sebi Chgs","FNO IPF Charges","FNO Stamp Duty","FNO STT","FNO Clearing Charges","FNO GST","Cash Gross","Cash Gorv Chg","Cash Net Amount","Cash BRK","Cash BRK On GST","Cash Trx Chgs","Cash Sebi Chgs","Cash IPF Charges","Cash Stamp Duty","Cash STT","Cash Clearing Charges","Cash GST","MCX Gross","MCX Gorv Chg","MCX Net Amount","MCX BRK","MCX BRK On GST","MCX Trx Chgs","MCX Sebi Chgs","MCX IPF Charges","MCX Stamp Duty","MCX STT","MCX Clearing Charges","MCX GST","Dividend Received"];
 const marketHeaders=["Financial Year","Date","Index Name","Open Index Value","High Index Value","Low Index Value","Closing Index Value","Points Change","Change(%)","P/E","P/B","Div Yield"];
 let sb=null,user=null,role=null;
 function el(id){return document.getElementById(id)}
@@ -85,6 +85,104 @@ function filterTable(id,q){q=q.toLowerCase();document.querySelectorAll('#'+id+' 
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function csvParse(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){cell+='"';i++}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(cell);cell='';if(row.some(x=>x!==''))rows.push(row);row=[]}else cell+=c}if(cell||row.length){row.push(cell);rows.push(row)}return rows}
 async function importCsv(table,inputId){try{const f=el(inputId).files[0];if(!f)throw Error('Choose a CSV file first.');const rows=csvParse(await f.text());if(rows.length<2)throw Error('CSV has no data rows.');const headers=rows[0].map(x=>x.replace(/^\uFEFF/,'').trim());const progress=el(table==='trader_rows'?'traderProgress':'marketProgress');let payloads=rows.slice(1).filter(r=>r.some(x=>String(x).trim()!=='')).map(r=>{const p={};headers.forEach((h,i)=>p[h]=String(r[i]??'').trim());return {payload:p}});let done=0;for(let i=0;i<payloads.length;i+=200){const chunk=payloads.slice(i,i+200);const {error}=await sb.from(table).insert(chunk);if(error)throw error;done+=chunk.length;progress.textContent=`Imported ${done} / ${payloads.length}`;}setStatus(`CSV import complete: ${done} rows.`);loadRows(table,table==='trader_rows'?'traderTable':'marketTable')}catch(e){setStatus(e.message,true)}}
+
+async function replaceTradersCsv(){
+  const button=el('replaceTraderBtn'),progress=el('traderProgress');
+  try{
+    const f=el('traderCsv').files[0];
+    if(!f)throw Error('First choose Traders All Data CSV file.');
+    const rows=csvParse(await f.text());
+    if(rows.length<2)throw Error('CSV has no data rows.');
+    const headers=rows[0].map(x=>x.replace(/^\uFEFF/,'').trim());
+    const required=['Date','Trader Name','FNO Gross','FNO Gorv Chg','FNO Net Amount'];
+    const missing=required.filter(h=>!headers.includes(h));
+    if(missing.length)throw Error('Wrong Traders CSV. Missing columns: '+missing.join(', '));
+    const payloads=rows.slice(1).filter(r=>r.some(x=>String(x).trim()!=='')).map(r=>{
+      const p={};headers.forEach((h,i)=>p[h]=String(r[i]??'').trim());return {payload:p};
+    });
+    if(!payloads.length)throw Error('CSV has no usable trader rows.');
+    if(!confirm(`This will DELETE all old trader data and import ${payloads.length} new rows.\n\nContinue?`))return;
+
+    button.disabled=true;
+    progress.textContent='Removing old trader data…';
+    setStatus('Replacing trader data. Please keep this page open.');
+
+    const {error:deleteError}=await sb.from('trader_rows').delete().gte('id',0);
+    if(deleteError)throw deleteError;
+    const {count,error:countError}=await sb.from('trader_rows').select('id',{count:'exact',head:true});
+    if(countError)throw countError;
+    if(count!==0)throw Error(`Old data was not fully removed. ${count} rows remain; import stopped.`);
+
+    let done=0;
+    for(let i=0;i<payloads.length;i+=200){
+      const chunk=payloads.slice(i,i+200);
+      const {error}=await sb.from('trader_rows').insert(chunk);
+      if(error)throw Error(`Import stopped after ${done} rows: ${error.message}`);
+      done+=chunk.length;
+      progress.textContent=`Replaced & imported ${done} / ${payloads.length}`;
+    }
+    const {count:finalCount,error:finalError}=await sb.from('trader_rows').select('id',{count:'exact',head:true});
+    if(finalError)throw finalError;
+    if(finalCount!==payloads.length)throw Error(`Import count mismatch: expected ${payloads.length}, cloud has ${finalCount}.`);
+
+    setStatus(`Success: old data removed and exactly ${finalCount} trader rows imported. Open Dashboard and hard refresh.`);
+    await loadRows('trader_rows','traderTable');
+  }catch(e){
+    setStatus(e.message||String(e),true);
+    progress.textContent='Replace/import failed. Please read the red status message.';
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
+
+async function replaceMarketCsv(){
+  const button=el('replaceMarketBtn'),progress=el('marketProgress');
+  try{
+    const f=el('marketCsv').files[0];
+    if(!f)throw Error('First choose Nifty / BankNifty CSV file.');
+    const rows=csvParse(await f.text());
+    if(rows.length<2)throw Error('CSV has no data rows.');
+    const headers=rows[0].map(x=>x.replace(/^\uFEFF/,'').trim());
+    const required=['Date','Index Name','Closing Index Value'];
+    const missing=required.filter(h=>!headers.includes(h));
+    if(missing.length)throw Error('Wrong Market CSV. Missing columns: '+missing.join(', '));
+    const payloads=rows.slice(1).filter(r=>r.some(x=>String(x).trim()!=='')).map(r=>{
+      const p={};headers.forEach((h,i)=>p[h]=String(r[i]??'').trim());return {payload:p};
+    });
+    if(!payloads.length)throw Error('CSV has no usable Nifty / BankNifty rows.');
+    if(!confirm(`This will DELETE all old Nifty/BankNifty data and import ${payloads.length} new rows.\n\nContinue?`))return;
+
+    button.disabled=true;
+    progress.textContent='Removing old market data…';
+    setStatus('Replacing Nifty / BankNifty data. Please keep this page open.');
+
+    const {error:deleteError}=await sb.from('market_rows').delete().gte('id',0);
+    if(deleteError)throw deleteError;
+    const {count,error:countError}=await sb.from('market_rows').select('id',{count:'exact',head:true});
+    if(countError)throw countError;
+    if(count!==0)throw Error(`Old market data was not fully removed. ${count} rows remain; import stopped.`);
+
+    let done=0;
+    for(let i=0;i<payloads.length;i+=200){
+      const chunk=payloads.slice(i,i+200);
+      const {error}=await sb.from('market_rows').insert(chunk);
+      if(error)throw Error(`Market import stopped after ${done} rows: ${error.message}`);
+      done+=chunk.length;
+      progress.textContent=`Replaced & imported ${done} / ${payloads.length}`;
+    }
+    const {count:finalCount,error:finalError}=await sb.from('market_rows').select('id',{count:'exact',head:true});
+    if(finalError)throw finalError;
+    if(finalCount!==payloads.length)throw Error(`Market import count mismatch: expected ${payloads.length}, cloud has ${finalCount}.`);
+
+    setStatus(`Success: old market data removed and exactly ${finalCount} Nifty / BankNifty rows imported.`);
+    await loadRows('market_rows','marketTable');
+  }catch(e){
+    setStatus(e.message||String(e),true);
+    progress.textContent='Market replace/import failed. Please read the red status message.';
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
 
 let minixUsersCache=[];
 async function sha256(text){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
@@ -153,7 +251,49 @@ async function loadPendingReminders(){try{
   el('pendingReminderTable').innerHTML='<thead><tr><th>Trader</th><th>PM</th><th>Researcher</th><th>Mobile Number</th><th>Status</th><th>Action</th></tr></thead><tbody>'+(pending.map(u=>'<tr><td><b>'+escapeHtml(u.trader_name||u.full_name)+'</b></td><td>'+escapeHtml(u.pm_name||'-')+'</td><td>'+escapeHtml(u.researcher_name||'-')+'</td><td>'+escapeHtml(u.mobile_number||'Not Added')+'</td><td class="status-inactive">🔴 Report Pending</td><td>'+(u.mobile_number&&u.whatsapp_enabled!==false?'<button class="green" onclick="openWhatsappReminder('+u.id+')">📲 WhatsApp Reminder</button>':'<button onclick="editMobileFromReminder('+u.id+')">Add Mobile Number</button>')+'</td></tr>').join('')||'<tr><td colspan="6" class="status-active">✅ All trader reports submitted.</td></tr>')+'</tbody>';
 }catch(e){setStatus('Pending reminders: '+e.message,true)}}
 function simpleTable(id,rows,cols){el(id).innerHTML='<thead><tr>'+cols.map(c=>'<th>'+escapeHtml(c[1])+'</th>').join('')+'</tr></thead><tbody>'+((rows||[]).map(r=>'<tr>'+cols.map(c=>'<td>'+escapeHtml(c[0]==='sent_at'||c[0]==='last_seen_at'?new Date(r[c[0]]).toLocaleString():r[c[0]]??'')+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="'+cols.length+'">No records</td></tr>')+'</tbody>'}
-async function loadPushCentre(){try{const [{data:d,error:de},{data:h,error:he}]=await Promise.all([sb.from('minix_push_subscriptions').select('username,role,device_label,active,last_seen_at').order('id',{ascending:false}),sb.from('minix_notification_log').select('username,role,report_date,notification_type,status,error_message,sent_at').order('id',{ascending:false}).limit(300)]);if(de||he)throw de||he;simpleTable('pushDevicesTable',d,[['username','Username'],['role','Role'],['device_label','Device'],['active','Active'],['last_seen_at','Last Seen']]);simpleTable('pushHistoryTable',h,[['sent_at','Sent Time'],['username','Username'],['role','Role'],['report_date','Report Date'],['notification_type','Type'],['status','Status'],['error_message','Error']]);const names=[...new Set((d||[]).filter(x=>x.active).map(x=>x.username))];el('pushUserSelect').innerHTML='<option value="">All Active Devices</option>'+names.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('')}catch(e){setStatus('Push Centre: '+e.message,true)}}
+function pushKey(v){return String(v||'').trim().toLowerCase()}
+function pushDeviceType(label){
+  const s=String(label||'').toLowerCase();
+  if(/android|iphone|ipad|mobile|phone/.test(s))return 'mobile';
+  if(/windows|macintosh|mac os|linux|laptop|desktop/.test(s))return 'laptop';
+  return 'other';
+}
+function pushDate(v){if(!v)return '-';const d=new Date(v);return isNaN(d)?String(v):d.toLocaleString('en-IN')}
+function renderPushTraderChecklist(users,devices){
+  const activeDevices=(devices||[]).filter(x=>x.active!==false);
+  const traders=(users||[]).filter(x=>x.active!==false&&String(x.role||'').toLowerCase()==='trader');
+  const rows=traders.map(u=>{
+    const keys=[u.username,u.full_name,u.trader_name].map(pushKey).filter(Boolean);
+    const mine=activeDevices.filter(d=>keys.includes(pushKey(d.username)));
+    const mobile=mine.filter(d=>pushDeviceType(d.device_label)==='mobile').length;
+    const laptop=mine.filter(d=>pushDeviceType(d.device_label)==='laptop').length;
+    const last=mine.map(d=>d.last_seen_at).filter(Boolean).sort().pop()||null;
+    return {u,mine,mobile,laptop,last,enabled:mine.length>0};
+  }).sort((a,b)=>String(a.u.trader_name||a.u.full_name).localeCompare(String(b.u.trader_name||b.u.full_name)));
+  const enabled=rows.filter(x=>x.enabled).length,disabled=rows.length-enabled;
+  el('pushTraderSummary').innerHTML=
+    '<div class="push-stat"><span>Total Active Traders</span><b>'+rows.length+'</b></div>'+
+    '<div class="push-stat"><span>Notification Enabled</span><b class="push-enabled">'+enabled+'</b></div>'+
+    '<div class="push-stat"><span>Not Enabled</span><b class="push-disabled">'+disabled+'</b></div>'+
+    '<div class="push-stat"><span>Total Active Devices</span><b>'+activeDevices.length+'</b></div>';
+  el('pushTraderChecklistTable').innerHTML='<thead><tr><th>Trader Name</th><th>Username</th><th>Notification</th><th>Mobile</th><th>Laptop</th><th>Total Devices</th><th>Last Enabled / Seen</th></tr></thead><tbody>'+
+    (rows.map(x=>'<tr><td><b>'+escapeHtml(x.u.trader_name||x.u.full_name||x.u.username)+'</b></td><td>'+escapeHtml(x.u.username||'-')+'</td><td class="'+(x.enabled?'push-enabled':'push-disabled')+'">'+(x.enabled?'✅ Enabled':'❌ Not Enabled')+'</td><td>'+(x.mobile?'✅ '+x.mobile:'❌ 0')+'</td><td>'+(x.laptop?'✅ '+x.laptop:'❌ 0')+'</td><td>'+x.mine.length+'</td><td>'+escapeHtml(pushDate(x.last))+'</td></tr>').join('')||'<tr><td colspan="7">No active Trader users found.</td></tr>')+
+    '</tbody>';
+}
+async function loadPushCentre(){try{
+  const [{data:d,error:de},{data:h,error:he},{data:u,error:ue}]=await Promise.all([
+    sb.from('minix_push_subscriptions').select('username,role,device_label,active,last_seen_at').order('id',{ascending:false}),
+    sb.from('minix_notification_log').select('username,role,report_date,notification_type,status,error_message,sent_at').order('id',{ascending:false}).limit(300),
+    sb.from('minix_users').select('username,full_name,trader_name,role,active').eq('active',true).order('full_name')
+  ]);
+  if(de||he||ue)throw de||he||ue;
+  renderPushTraderChecklist(u||[],d||[]);
+  simpleTable('pushDevicesTable',d,[['username','Username'],['role','Role'],['device_label','Device'],['active','Active'],['last_seen_at','Last Seen']]);
+  simpleTable('pushHistoryTable',h,[['sent_at','Sent Time'],['username','Username'],['role','Role'],['report_date','Report Date'],['notification_type','Type'],['status','Status'],['error_message','Error']]);
+  const names=[...new Set((d||[]).filter(x=>x.active).map(x=>x.username))];
+  el('pushUserSelect').innerHTML='<option value="">All Active Devices</option>'+names.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');
+  setStatus('Push status refreshed: '+(u||[]).filter(x=>String(x.role||'').toLowerCase()==='trader').length+' active traders checked.');
+}catch(e){setStatus('Push Centre: '+e.message,true)}}
 async function resendPush(){try{const session=(await sb.auth.getSession()).data.session;if(!session)throw Error('Admin session expired. Login again.');const base=String(MINIX_CONFIG.supabaseUrl).replace(/\/$/,'');const r=await fetch(base+'/functions/v1/send-daily-reports',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+session.access_token},body:JSON.stringify({mode:'resend',username:el('pushUserSelect').value})});const out=await r.json();if(!r.ok)throw Error(out.error||'Resend failed');setStatus('Notification sent: '+out.sent+' | Failed: '+out.failed);loadPushCentre()}catch(e){setStatus('Resend failed: '+e.message,true)}}
 (async()=>{if(sb){await sb.auth.signOut();}})();
 </script></body></html>

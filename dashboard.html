@@ -12708,13 +12708,12 @@ body.gpt-charge-modal-open .bell-btn,body.gpt-charge-modal-open #fundAlertBell{d
   function pctCell(v){ if(v==null || !isFinite(Number(v))) return '<td class="amount neutral">-</td>'; const n=Number(v); return '<td class="amount '+(n>=0?'positive':'negative')+'">'+n.toFixed(2)+'%</td>'; }
   function formatDate(d){ try{ return formatDateFull(new Date(d)); }catch(e){ return String(d); } }
 
-  /* ---------- KPI cards: insert Total Fund / Total Utilized and keep segment fund 0 ---------- */
+  /* ---------- KPI cards: create cards only; final fund formula fills their values ---------- */
   function ensureSegmentCards(){
     ['cash','fno','mcx'].forEach(p=>{
       const first=$(p+'TotalGross'); if(!first) return; const grid=first.closest('.segment-grid'); if(!grid) return;
       if(!$(p+'TotalFund')){ const card=D.createElement('div'); card.className='kpi-card gpt-added-fund-card'; card.innerHTML='<div class="kpi-title">🏦 Total Fund</div><div id="'+p+'TotalFund" class="kpi-value neutral">₹0</div>'; grid.insertBefore(card,grid.firstElementChild); }
       if(!$(p+'TotalUtilized')){ const card=D.createElement('div'); card.className='kpi-card gpt-added-util-card'; card.innerHTML='<div class="kpi-title">📌 Total Utilized</div><div id="'+p+'TotalUtilized" class="kpi-value warning">₹0</div>'; grid.insertBefore(card,grid.children[1]||null); }
-      const f=$(p+'TotalFund'), u=$(p+'TotalUtilized'); if(f) f.textContent='₹0'; if(u) u.textContent='₹0';
     });
   }
   const oldUpdateSegment=window.updateSegmentSummary;
@@ -12722,7 +12721,6 @@ body.gpt-charge-modal-open .bell-btn,body.gpt-charge-modal-open #fundAlertBell{d
     window.updateSegmentSummary=function(prefix,grossField,expenseField,netField,data,totalCapital){
       const ret=oldUpdateSegment.apply(this,arguments);
       ensureSegmentCards();
-      const f=$(prefix+'TotalFund'), u=$(prefix+'TotalUtilized'); if(f) f.textContent='₹0'; if(u) u.textContent='₹0';
       return ret;
     };
   }
@@ -13013,8 +13011,6 @@ body.gpt-show-charge-details #allTradersDateWiseTable td{
         else grid.insertAdjacentHTML('afterbegin',card('📌 Total Utilized',d[2],'warning'));
       }
     });
-    ['cashTotalFund','fnoTotalFund','mcxTotalFund','overallTotalFund'].forEach(function(id){var el=byId(id); if(el){el.textContent='₹0'; el.className='kpi-value neutral';}});
-    ['cashTotalUtilized','fnoTotalUtilized','mcxTotalUtilized','overallTotalUtilized'].forEach(function(id){var el=byId(id); if(el){el.textContent='₹0'; el.className='kpi-value warning';}});
   }
 
   function compactCharges(){
@@ -13235,13 +13231,11 @@ body.gpt-show-charge-details #allTradersDateWiseTable th:nth-child(19),body.gpt-
       const gross=$(p+'TotalGross'); const grid=gross&&gross.closest('.segment-grid'); if(!grid) return;
       insertCard(grid,p+'TotalFund','🏦 Total Fund','neutral',0);
       insertCard(grid,p+'TotalUtilized','📌 Total Utilized','warning',1);
-      setText(p+'TotalFund','₹0','neutral'); setText(p+'TotalUtilized','₹0','warning');
     });
     const tg=$('totalGross'); const totalGrid=tg&&tg.closest('.segment-grid');
     if(totalGrid){
       insertCard(totalGrid,'overallTotalFund','🏦 Total Fund','neutral',0);
       insertCard(totalGrid,'overallTotalUtilized','📌 Total Utilized','warning',1);
-      setText('overallTotalFund','₹0','neutral'); setText('overallTotalUtilized','₹0','warning');
     }
   }
   function currentTraderName(){ const el=$('indTraderFilter')||$('traderFilter')||$('chartTraderFilter'); const v=(el&&el.value)||'All'; return v && v!=='All' ? v : 'All'; }

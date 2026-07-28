@@ -19513,5 +19513,35 @@ function updateFundUtilizedKpis() {
 })();
 </script>
 <!-- === END ADMIN DAILY REPORT HISTORY + EDIT AUDIT === -->
+<!-- === CASH KPI ZERO RULE: keep cards visible, Cash Fund and Margin Utilized stay zero === -->
+<script id="minix-cash-kpi-zero-v2">
+(function(){
+  function card(id){var e=document.getElementById(id);return e&&e.closest('.kpi-card')}
+  function apply(){
+    var cashFund=card('cashTotalFund'),cashUsed=card('cashTotalUtilized');
+    if(cashFund){
+      cashFund.style.removeProperty('display');
+      var cf=document.getElementById('cashTotalFund');
+      if(cf&&cf.textContent!=='₹0'){cf.textContent='₹0';cf.title='₹0';cf.className='kpi-value neutral'}
+    }
+    if(cashUsed){
+      cashUsed.style.removeProperty('display');
+      var cu=document.getElementById('cashTotalUtilized');
+      if(cu&&cu.textContent!=='₹0'){cu.textContent='₹0';cu.title='₹0';cu.className='kpi-value warning'}
+    }
+    ['cashTotalUtilized','fnoTotalUtilized','mcxTotalUtilized','overallTotalUtilized'].forEach(function(id){
+      var c=card(id),t=c&&c.querySelector('.kpi-title');
+      if(t&&t.textContent!=='📌 Margin Utilized')t.textContent='📌 Margin Utilized';
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);
+  else apply();
+  window.addEventListener('load',function(){apply();setTimeout(apply,500);setTimeout(apply,1600)});
+  document.addEventListener('change',function(){setTimeout(apply,120)},true);
+  setInterval(apply,2500);
+  new MutationObserver(apply).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+})();
+</script>
+<!-- === END CASH KPI ZERO RULE === -->
 </body>
 </html>

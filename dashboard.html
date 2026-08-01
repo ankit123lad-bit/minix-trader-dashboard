@@ -18574,5 +18574,320 @@ body.ai-show-gov-details #allTradersDateWiseTable table td:last-child{
 </style>
 <!-- === END FINAL FULL PHOTO MODAL SIZE FIX === -->
 
+
+<!-- === MINIX RANKING NAME CLICK PHOTO / NO PHOTO UPDATE === -->
+<style id="minix-ranking-photo-click-css">
+.minix-rank-name-btn{
+  appearance:none;-webkit-appearance:none;border:0;background:transparent;color:#f8fafc;
+  padding:0;margin:0;font:inherit;font-weight:900;text-align:left;cursor:pointer;
+  text-decoration:none;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.minix-rank-name-btn:hover,.minix-rank-name-btn:focus{
+  color:#38bdf8;text-decoration:underline;text-underline-offset:3px;outline:none;
+}
+.minix-rank-name-btn:focus-visible{box-shadow:0 0 0 2px #2563eb;border-radius:4px;}
+#traderImageModal .minix-photo-person-role{
+  color:#93c5fd;font-size:13px;font-weight:800;text-align:center;margin-top:-5px;
+}
+#traderImageModal .minix-photo-loading{
+  display:none;width:clamp(230px,26vw,340px);height:clamp(300px,62vh,440px);
+  max-width:88vw;max-height:70vh;border:2px dashed #334155;border-radius:12px;
+  align-items:center;justify-content:center;flex-direction:column;gap:12px;
+  background:#07111f;color:#93c5fd;text-align:center;padding:24px;
+}
+#traderImageModal .minix-no-photo-box{
+  display:none;width:clamp(230px,26vw,340px);height:clamp(300px,62vh,440px);
+  max-width:88vw;max-height:70vh;border:3px dashed #475569;border-radius:12px;
+  align-items:center;justify-content:center;flex-direction:column;gap:12px;
+  background:linear-gradient(145deg,#07111f,#111827);text-align:center;padding:24px;
+  box-shadow:0 22px 70px rgba(0,0,0,.55);
+}
+#traderImageModal .minix-no-photo-initials{
+  width:116px;height:116px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:4px solid #64748b;background:#0f172a;color:#e2e8f0;font-size:38px;font-weight:900;
+}
+#traderImageModal .minix-no-photo-title{color:#f8fafc;font-size:21px;font-weight:900;}
+#traderImageModal .minix-no-photo-note{color:#94a3b8;font-size:12px;line-height:1.45;}
+@media(max-width:600px){
+  #traderImageModal .minix-photo-loading,#traderImageModal .minix-no-photo-box{
+    width:min(76vw,290px);height:min(58vh,380px);min-height:280px;
+  }
+}
+</style>
+<script id="minix-ranking-photo-click-script">
+(function(){
+  'use strict';
+
+  function htmlEscape(v){
+    return String(v==null?'':v).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function attrEscape(v){return htmlEscape(v).replace(/`/g,'&#96;');}
+  function initials(name){
+    var parts=String(name||'').trim().split(/\s+/).filter(Boolean);
+    if(!parts.length)return '?';
+    return ((parts[0][0]||'')+(parts.length>1?(parts[parts.length-1][0]||''):'')).toUpperCase();
+  }
+  function slug(name){
+    return String(name||'').trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  }
+  function photoMap(){
+    try{ if(typeof traderPhotos!=='undefined' && traderPhotos) return traderPhotos; }catch(e){}
+    return window.traderPhotos||{};
+  }
+  function unique(arr){var seen={};return arr.filter(function(x){if(!x||seen[x])return false;seen[x]=1;return true;});}
+  function photoCandidates(name,role){
+    var map=photoMap(), out=[];
+    if(map && map[name])out.push(map[name]);
+    var raw=String(name||'').trim();
+    var s=slug(raw);
+    var encoded=encodeURIComponent(raw).replace(/%2F/gi,'/');
+    var roleFolder=/pm|portfolio/i.test(role||'')?'portfolio':(/research/i.test(role||'')?'researchers':'traders');
+    ['jpg','jpeg','png','webp'].forEach(function(ext){
+      out.push('photos/'+encoded+'.'+ext);
+      if(s)out.push('photos/'+s+'.'+ext);
+      out.push('photos/'+roleFolder+'/'+encoded+'.'+ext);
+      if(s)out.push('photos/'+roleFolder+'/'+s+'.'+ext);
+    });
+    return unique(out);
+  }
+  function ensureModalParts(){
+    var modal=document.getElementById('traderImageModal');
+    var image=document.getElementById('traderImagePreview');
+    if(!modal||!image)return null;
+    var nameBox=modal.querySelector('.minix-photo-person-name');
+    if(!nameBox){nameBox=document.createElement('div');nameBox.className='minix-photo-person-name';image.insertAdjacentElement('afterend',nameBox);}
+    var roleBox=modal.querySelector('.minix-photo-person-role');
+    if(!roleBox){roleBox=document.createElement('div');roleBox.className='minix-photo-person-role';nameBox.insertAdjacentElement('afterend',roleBox);}
+    var loading=modal.querySelector('.minix-photo-loading');
+    if(!loading){
+      loading=document.createElement('div');loading.className='minix-photo-loading';
+      loading.innerHTML='<div style="font-size:34px">📷</div><div style="font-weight:900">Checking Photo...</div>';
+      image.insertAdjacentElement('beforebegin',loading);
+    }
+    var noPhoto=modal.querySelector('.minix-no-photo-box');
+    if(!noPhoto){
+      noPhoto=document.createElement('div');noPhoto.className='minix-no-photo-box';
+      noPhoto.innerHTML='<div class="minix-no-photo-initials">?</div><div class="minix-no-photo-title">No Photo Available</div><div class="minix-no-photo-note">Add the photo inside the <b>photos</b> folder using the same person name.</div>';
+      loading.insertAdjacentElement('afterend',noPhoto);
+      noPhoto.addEventListener('click',function(e){e.stopPropagation();});
+    }
+    return {modal:modal,image:image,nameBox:nameBox,roleBox:roleBox,loading:loading,noPhoto:noPhoto};
+  }
+  function showNoPhoto(parts,name){
+    parts.loading.style.display='none';parts.image.style.display='none';parts.image.removeAttribute('src');
+    parts.noPhoto.style.display='flex';
+    var init=parts.noPhoto.querySelector('.minix-no-photo-initials');if(init)init.textContent=initials(name);
+  }
+  function tryPhoto(parts,candidates,index,name){
+    if(index>=candidates.length){showNoPhoto(parts,name);return;}
+    var test=new Image();
+    test.onload=function(){
+      if(!test.naturalWidth){tryPhoto(parts,candidates,index+1,name);return;}
+      parts.loading.style.display='none';parts.noPhoto.style.display='none';
+      parts.image.src=candidates[index];parts.image.style.display='block';
+    };
+    test.onerror=function(){tryPhoto(parts,candidates,index+1,name);};
+    test.src=candidates[index];
+  }
+  window.openMinixRankPhoto=function(trigger){
+    var name=String(trigger&&trigger.getAttribute('data-person-name')||trigger&&trigger.textContent||'').trim();
+    if(!name)return;
+    var holder=trigger.closest ? trigger.closest('[id]') : null;
+    var holderId=holder?holder.id:'';
+    var role=String(trigger&&trigger.getAttribute('data-person-role')||'').trim() || (/PM/i.test(holderId)?'PM / Portfolio':(/Research/i.test(holderId)?'Researcher':'Trader'));
+    var parts=ensureModalParts();if(!parts)return;
+    parts.nameBox.textContent=name;parts.roleBox.textContent=role;
+    parts.image.alt=name+' Photo';parts.image.style.display='none';
+    parts.noPhoto.style.display='none';parts.loading.style.display='flex';
+    parts.modal.style.display='flex';document.body.style.overflow='hidden';
+    tryPhoto(parts,photoCandidates(name,role),0,name);
+  };
+
+  window.tableHtml=function(rows){
+    if(!rows||!rows.length)return "<p class='muted'>No data available</p>";
+    return '<table><thead><tr><th>Rank</th><th>Name</th><th class="amount">Net P&amp;L</th></tr></thead><tbody>'+
+      rows.map(function(r,i){
+        var name=String(r[0]==null?'Unknown':r[0]);var value=Number(r[1])||0;
+        return '<tr><td><span class="rank-badge">'+(i+1)+'</span></td><td><button type="button" class="minix-rank-name-btn" data-person-name="'+attrEscape(name)+'" onclick="openMinixRankPhoto(this)" title="View photo of '+attrEscape(name)+'">'+htmlEscape(name)+'</button></td><td class="amount '+(value>=0?'positive':'negative')+'">'+formatINR(value)+'</td></tr>';
+      }).join('')+'</tbody></table>';
+  };
+  try{tableHtml=window.tableHtml;}catch(e){}
+
+  function refreshRankings(){try{if(typeof buildRankingTables==='function')buildRankingTables();}catch(e){console.warn('Photo ranking refresh skipped',e);}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(refreshRankings,80);});
+  else setTimeout(refreshRankings,80);
+  setTimeout(refreshRankings,700);
+  setTimeout(refreshRankings,1800);
+})();
+</script>
+<!-- === END MINIX RANKING NAME CLICK PHOTO / NO PHOTO UPDATE === -->
+
+
+<!-- === MINIX GLOBAL ALL PERSON NAMES PHOTO CLICK === -->
+<style id="minix-global-person-photo-css">
+.minix-person-name-btn{
+  appearance:none!important;-webkit-appearance:none!important;border:0!important;background:transparent!important;
+  color:inherit!important;padding:0!important;margin:0!important;font:inherit!important;font-weight:inherit!important;
+  text-align:inherit!important;cursor:pointer!important;max-width:100%!important;white-space:inherit!important;
+  overflow:inherit!important;text-overflow:inherit!important;vertical-align:baseline!important;
+}
+.minix-person-name-btn:hover,.minix-person-name-btn:focus{
+  color:#38bdf8!important;text-decoration:underline!important;text-underline-offset:3px!important;outline:none!important;
+}
+.minix-person-name-btn:focus-visible{box-shadow:0 0 0 2px #2563eb!important;border-radius:4px!important;}
+td .minix-person-name-btn{display:inline-block!important;}
+
+/* Preserve grouped portfolio row layout while only the name opens the photo. */
+.portfolio-toggle,.charges-portfolio-toggle{flex:none!important;}
+.portfolio-name-text,.charges-portfolio-name-text{display:inline!important;}
+.portfolio-subtext,.charges-portfolio-subtext{display:block!important;}
+</style>
+<script id="minix-global-person-photo-script">
+(function(){
+  'use strict';
+  var scheduled=false;
+
+  function clean(v){return String(v==null?'':v).replace(/\s+/g,' ').trim();}
+  function key(v){return clean(v).toLowerCase();}
+  function htmlEscape(v){return clean(v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function attrEscape(v){return htmlEscape(v).replace(/`/g,'&#96;');}
+  function sourceRows(){
+    var out=[];
+    try{if(typeof rawData!=='undefined'&&Array.isArray(rawData))out=out.concat(rawData);}catch(e){}
+    try{if(typeof preparedData!=='undefined'&&Array.isArray(preparedData))out=out.concat(preparedData);}catch(e){}
+    if(Array.isArray(window.rawData))out=out.concat(window.rawData);
+    if(Array.isArray(window.preparedData))out=out.concat(window.preparedData);
+    return out;
+  }
+  function add(reg,name,role){
+    name=clean(name);if(!name||name==='-'||/^all$/i.test(name)||/^unknown$/i.test(name))return;
+    var k=key(name),x=reg[k]||(reg[k]={name:name,roles:{}});x.roles[role]=true;
+  }
+  function registry(){
+    var reg={};
+    sourceRows().forEach(function(r){
+      if(!r||typeof r!=='object')return;
+      add(reg,r['Trader Name']||r.trader_name||r.traderName,'Trader');
+      add(reg,r['Researcher Name']||r.researcher_name||r.researcherName,'Researcher');
+      add(reg,r['Portfolio Name']||r.portfolio_name||r.portfolioName,'PM / Portfolio');
+      add(reg,r['PM Name']||r.pm_name||r.pmName,'PM / Portfolio');
+      add(reg,r['Portfolio Manager']||r.portfolio_manager,'PM / Portfolio');
+    });
+    document.querySelectorAll('select').forEach(function(sel){
+      var label='';
+      try{var lab=document.querySelector('label[for="'+CSS.escape(sel.id)+'"]');if(lab)label=lab.textContent||'';}catch(e){}
+      if(!label){var p=sel.parentElement;if(p){var l=p.querySelector('label');if(l)label=l.textContent||'';}}
+      var role=inferRole(label+' '+(sel.id||''));if(!role)return;
+      Array.prototype.forEach.call(sel.options||[],function(o){if(o.value&&o.value!=='All')add(reg,o.textContent||o.value,role);});
+    });
+    return reg;
+  }
+  function inferRole(text){
+    text=clean(text).toLowerCase();
+    if(/researcher/.test(text))return 'Researcher';
+    if(/portfolio|\bpm\b/.test(text))return 'PM / Portfolio';
+    if(/trader/.test(text))return 'Trader';
+    return '';
+  }
+  function roleFromRegistry(item){
+    if(!item)return '';
+    var roles=Object.keys(item.roles||{});
+    if(roles.length===1)return roles[0];
+    if(roles.indexOf('Trader')>=0)return 'Trader';
+    return roles[0]||'';
+  }
+  function tableCellRole(td){
+    var table=td.closest('table');if(!table)return '';
+    var row=td.parentElement,index=Array.prototype.indexOf.call(row.children,td),header='';
+    var heads=table.querySelectorAll('thead tr:last-child th');
+    if(heads[index])header=heads[index].textContent||'';
+    var role=inferRole(header);if(role)return role;
+    if(/^\s*name\s*$/i.test(clean(header))){
+      var card=table.closest('.table-card,section,[id]');
+      role=inferRole(card?card.textContent.slice(0,250):'');
+      if(role)return role;
+    }
+    return '';
+  }
+  function looksLikeName(v){
+    v=clean(v);
+    if(v.length<2||v.length>90)return false;
+    if(/^(all|unknown|grand total|total|no data|no records|not added|none|n\/a|-)/i.test(v))return false;
+    if(/[₹%]/.test(v)||/^[-+]?\d[\d,.:/% -]*$/.test(v))return false;
+    if(!/[A-Za-z]/.test(v))return false;
+    return true;
+  }
+  function makeButton(name,role,originalClass){
+    var b=document.createElement('button');
+    b.type='button';b.className='minix-person-name-btn'+(originalClass?' '+originalClass:'');
+    b.setAttribute('data-person-name',name);b.setAttribute('data-person-role',role||'Person');
+    b.setAttribute('title','View photo of '+name);b.textContent=name;
+    b.onclick=function(ev){ev.stopPropagation();if(typeof window.openMinixRankPhoto==='function')window.openMinixRankPhoto(b);};
+    return b;
+  }
+  function decorateStructuredNames(reg){
+    document.querySelectorAll('.portfolio-name-text,.charges-portfolio-name-text').forEach(function(el){
+      if(!el||el.dataset.minixPhotoChecked==='1')return;
+      var name=clean(el.textContent),item=reg[key(name)];
+      if(!item||!looksLikeName(name)){el.dataset.minixPhotoChecked='1';return;}
+      var role=roleFromRegistry(item)||'PM / Portfolio';
+      el.setAttribute('data-person-name',name);
+      el.setAttribute('data-person-role',role);
+      el.setAttribute('title','View photo of '+name);
+      el.style.cursor='pointer';
+      el.style.textDecoration='underline';
+      el.style.textUnderlineOffset='3px';
+      el.onclick=function(ev){
+        ev.stopPropagation();
+        if(typeof window.openMinixRankPhoto==='function')window.openMinixRankPhoto(el);
+      };
+      el.dataset.minixPhotoChecked='1';
+    });
+  }
+  function decorateCell(td,reg){
+    if(!td||td.dataset.minixPhotoChecked==='1')return;
+    /* Never replace a structured/grouped table cell. It contains the +/- control,
+       person name and the rows/demat subtext as separate elements. */
+    if(td.children.length || td.querySelector('button,input,select,textarea,.portfolio-toggle,.portfolio-subtext,.charges-portfolio-toggle,.charges-portfolio-subtext')){
+      td.dataset.minixPhotoChecked='1';return;
+    }
+    var name=clean(td.textContent),item=reg[key(name)],role=tableCellRole(td)||roleFromRegistry(item);
+    if(!role&&!item)return;
+    if(!looksLikeName(name))return;
+    td.textContent='';td.appendChild(makeButton(name,role,''));td.dataset.minixPhotoChecked='1';
+  }
+  function decorateLeaf(el,reg){
+    if(!el||el.dataset.minixPhotoChecked==='1'||el.children.length)return;
+    if(el.closest('button,a,input,select,textarea,option'))return;
+    var name=clean(el.textContent),item=reg[key(name)];if(!item||!looksLikeName(name))return;
+    var role=roleFromRegistry(item);el.textContent='';el.appendChild(makeButton(name,role,''));el.dataset.minixPhotoChecked='1';
+  }
+  function decorateExistingButtons(reg){
+    document.querySelectorAll('.minix-rank-name-btn').forEach(function(b){
+      var name=clean(b.getAttribute('data-person-name')||b.textContent),item=reg[key(name)];
+      if(item)b.setAttribute('data-person-role',roleFromRegistry(item));
+    });
+  }
+  function run(){
+    scheduled=false;var reg=registry();decorateExistingButtons(reg);decorateStructuredNames(reg);
+    document.querySelectorAll('table tbody td, table tfoot td').forEach(function(td){decorateCell(td,reg);});
+    document.querySelectorAll('.kpi-value,.weekly-total,.profile-name,.trader-profile-name,[data-person-display]').forEach(function(el){decorateLeaf(el,reg);});
+  }
+  function schedule(){if(scheduled)return;scheduled=true;setTimeout(run,90);}
+  var observer=new MutationObserver(schedule);
+  function start(){
+    run();observer.observe(document.body,{childList:true,subtree:true});
+    document.addEventListener('change',schedule,true);document.addEventListener('click',schedule,true);
+    [350,900,1800,3500].forEach(function(ms){setTimeout(run,ms);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+<!-- === END MINIX GLOBAL ALL PERSON NAMES PHOTO CLICK === -->
+
 </body>
 </html>

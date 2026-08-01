@@ -1,0 +1,47 @@
+MINIX PWA READY – STEP BY STEP (ANDROID + IPHONE)
+====================================================
+
+A. GITHUB / VERCEL UPDATE
+1. આ ZIP extract કરો.
+2. અંદર MINIX_MOBILE_LAPTOP_PUSH_PACKAGES folder ખોલો.
+3. GitHub repository: ankit123lad-bit/minix-trader-dashboard ખોલો.
+4. Repositoryમાં જૂની filesને આ updated filesથી replace/upload કરો.
+5. ખાસ કરીને આ files upload થવી જરૂરી છે:
+   dashboard.html
+   index.html
+   admin.html
+   manifest.json
+   service-worker.js
+   pwa-install.js
+   icon-192.png
+   icon-512.png
+   icon-maskable-512.png
+   apple-touch-icon.png
+   vercel.json
+6. Commit changes દબાવો.
+7. Vercel automatic deploy પૂર્ણ થયા પછી URL ખોલો:
+   https://minix-trader-dashboard.vercel.app/dashboard
+8. જૂનું version દેખાય તો browser refresh કરો. Mobileમાં tab બંધ કરીને ફરી ખોલો.
+
+B. ANDROID INSTALL
+1. Dashboard Chromeમાં ખોલો.
+2. Dashboard પર “Install Minix App” button દેખાય તો દબાવો.
+3. Install દબાવો.
+4. Button ન દેખાય તો Chromeના ⋮ menu → Install app / Add to Home screen.
+5. Home screen પર Minix Trader icon આવશે.
+
+C. IPHONE INSTALL
+1. Dashboard Safariમાં ખોલો. Chromeમાં નહીં.
+2. “Install Minix App” button દબાવો; screen પર steps દેખાશે.
+3. Safari Share button દબાવો.
+4. Add to Home Screen પસંદ કરો.
+5. Add દબાવો.
+6. Home screen પરથી Minix Trader ખોલો.
+
+D. NOTIFICATION
+1. પહેલા PWA install કરો.
+2. Minix App home screen પરથી ખોલો.
+3. Login કરો.
+4. Enable Notifications દબાવો અને Allow કરો.
+
+નોંધ: Employee photos માટે નવી local photo file ઉમેરવામાં આવી નથી. Dashboardનું હાલનું data/layout code બદલાયું નથી; PWA install files જ સુધારવામાં આવી છે.

@@ -1,18 +1,70 @@
 {
-  "id": "/",
+  "id": "/dashboard",
   "name": "Minix Trader Dashboard",
   "short_name": "Minix Trader",
-  "description": "Role-based trader dashboard and daily closing report notifications.",
-  "start_url": "./dashboard.html",
-  "scope": "./",
+  "description": "Minix role-based trader dashboard, daily reports and notifications.",
+  "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#020617",
   "theme_color": "#2563eb",
   "orientation": "any",
-  "categories": ["business", "finance", "productivity"],
-  "shortcuts": [
-    {"name":"Dashboard","short_name":"Dashboard","url":"./dashboard.html"},
-    {"name":"Admin","short_name":"Admin","url":"./admin.html"}
+  "lang": "en",
+  "categories": [
+    "business",
+    "finance",
+    "productivity"
   ],
-  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open the Minix dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "short_name": "Admin",
+      "description": "Open admin entry",
+      "url": "/admin",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }

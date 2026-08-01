@@ -1,4 +1,4 @@
-const CACHE_NAME = "minix-pwa-shell-v4-mobile-fix";
+const CACHE_NAME = "minix-pwa-shell-v5-fullwidth-fix";
 const APP_SHELL = [
   "/",
   "/index.html",

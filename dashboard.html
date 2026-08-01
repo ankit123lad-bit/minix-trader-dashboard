@@ -11844,7 +11844,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-01-photo-live-v2";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-01-mobile-fullwidth-v3";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})
@@ -11855,6 +11855,108 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
 })();
 </script>
 <!-- === END MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
+
+
+
+<!-- === MINIX INDIVIDUAL PERFORMANCE FULL WIDTH MOBILE FIX 2026-08-01 V2 === -->
+<style id="minix-individual-full-width-mobile-fix-v2">
+/* Mobile/PWA: each Individual Performance report must use the full phone width. */
+@media (max-width:1180px){
+  #individualSection{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow-x:hidden!important;
+  }
+  #individualSection > .table-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    gap:10px!important;
+  }
+  #individualSection > .table-grid > .table-card{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  #individualPerformanceTable,
+  #riskUtilizationTable,
+  #accuracyTable,
+  #analyticsTable{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow-x:auto!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-x:contain!important;
+    scrollbar-gutter:stable!important;
+  }
+  #individualPerformanceTable table,
+  #riskUtilizationTable table,
+  #accuracyTable table,
+  #analyticsTable table{
+    width:max-content!important;
+    min-width:100%!important;
+    max-width:none!important;
+    table-layout:auto!important;
+  }
+
+  /* Dynamic viewport units work correctly inside installed Android/iPhone PWAs. */
+  .tab-buttons,
+  #minixPushBar{
+    left:8px!important;
+    right:auto!important;
+    width:calc(100dvw - 16px)!important;
+    max-width:none!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    transform:none!important;
+  }
+}
+@supports not (width:100dvw){
+  @media (max-width:1180px){
+    .tab-buttons,#minixPushBar{width:calc(100vw - 16px)!important;}
+  }
+}
+</style>
+<script id="minix-individual-scroll-reset-v2">
+(function(){
+  'use strict';
+  function resetIndividualScroll(){
+    var sec=document.getElementById('individualSection');
+    if(!sec || getComputedStyle(sec).display==='none') return;
+    var selectors=[
+      '#individualPerformanceTable','#riskUtilizationTable','#accuracyTable','#analyticsTable',
+      '#monthWiseChargesTable','#allTradersDateWiseTable','#capitalUtilizationTable',
+      '#individualSection .table-card'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(function(el){
+      try{ el.scrollLeft=0; }catch(e){}
+    });
+  }
+  document.addEventListener('click',function(ev){
+    var btn=ev.target && ev.target.closest ? ev.target.closest('.dashboard-tab') : null;
+    if(!btn) return;
+    var call=btn.getAttribute('onclick')||'';
+    if(call.indexOf('individualSection')!==-1){
+      setTimeout(resetIndividualScroll,80);
+      setTimeout(resetIndividualScroll,350);
+    }
+  },true);
+  window.addEventListener('orientationchange',function(){
+    setTimeout(resetIndividualScroll,180);
+    setTimeout(resetIndividualScroll,550);
+  },{passive:true});
+  window.addEventListener('pageshow',function(){setTimeout(resetIndividualScroll,180);},{passive:true});
+})();
+</script>
+<!-- === END MINIX INDIVIDUAL PERFORMANCE FULL WIDTH MOBILE FIX === -->
 
 </body></html>
 </script>
@@ -16035,7 +16137,7 @@ section {
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-01-photo-live-v2";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-01-mobile-fullwidth-v3";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})
@@ -18941,7 +19043,7 @@ td .minix-person-name-btn{display:inline-block!important;}
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-01-photo-live-v2";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-01-mobile-fullwidth-v3";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})

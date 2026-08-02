@@ -11958,6 +11958,214 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
 </script>
 <!-- === END MINIX INDIVIDUAL PERFORMANCE FULL WIDTH MOBILE FIX === -->
 
+
+<!-- === MINIX TRADER DAILY ENTRY PANEL RESTORED 2026-08-01 === -->
+<style id="minix-trader-entry-restored-css">
+#minixTraderVisiblePanel{
+  display:none;
+  margin:0 0 18px;
+  padding:22px;
+  border:1px solid #10b981;
+  border-radius:22px;
+  background:linear-gradient(145deg,#0b1b2f,#0a1728);
+  box-shadow:0 16px 45px rgba(0,0,0,.26);
+}
+#minixTraderVisiblePanel .mv-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#minixTraderVisiblePanel .mv-head h2{margin:0;color:#f8fafc;font-size:20px}
+#minixTraderVisiblePanel .mv-user{display:inline-flex;padding:9px 15px;border-radius:999px;background:#065f46;color:#a7f3d0;font-weight:900;font-size:13px}
+#minixTraderVisiblePanel .mv-deadline{display:inline-block;margin-bottom:10px;padding:10px 14px;border-radius:12px;background:#991b1b;color:#fecaca;font-weight:900}
+#minixTraderVisiblePanel .mv-help{color:#bfdbfe;line-height:1.5;margin-bottom:14px}
+#minixTraderVisiblePanel .mv-statuses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 18px}
+#minixTraderVisiblePanel .mv-statuses label{display:flex;align-items:center;gap:12px;min-height:58px;padding:0 18px;border:1px solid #475569;border-radius:16px;background:#111827;color:#fff;font-size:17px;font-weight:900;cursor:pointer}
+#minixTraderVisiblePanel .mv-statuses input{width:20px;height:20px;accent-color:#2563eb}
+#minixTraderVisiblePanel .mv-entry-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+#minixTraderVisiblePanel .mv-field label{display:block;margin:0 0 7px;color:#93c5fd;font-weight:900}
+#minixTraderVisiblePanel .mv-field input,
+#minixTraderVisiblePanel .mv-field textarea{width:100%;box-sizing:border-box;border:1px solid #334155;border-radius:14px;background:#071426;color:#fff;padding:15px;font:inherit;outline:none}
+#minixTraderVisiblePanel .mv-field input:focus,
+#minixTraderVisiblePanel .mv-field textarea:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.14)}
+#minixTraderVisiblePanel .mv-field input:disabled{opacity:.52;cursor:not-allowed}
+#minixTraderVisiblePanel .mv-field-wide{grid-column:1/-1}
+#minixTraderVisiblePanel .mv-field textarea{min-height:92px;resize:vertical}
+#minixTraderVisiblePanel .mv-auto-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:18px}
+#minixTraderVisiblePanel .mv-auto{min-height:78px;padding:14px 18px;border:1px solid #3b82f6;border-radius:16px;background:#172554}
+#minixTraderVisiblePanel .mv-auto span{display:block;color:#bfdbfe;margin-bottom:5px}
+#minixTraderVisiblePanel .mv-auto b{display:block;color:#34d399;font-size:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#minixTraderVisiblePanel .mv-submit{margin-top:17px;border:0;border-radius:14px;padding:14px 22px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:16px;font-weight:900;cursor:pointer}
+#minixTraderVisiblePanel .mv-submit:disabled{opacity:.6;cursor:wait}
+#minixTraderVisiblePanel .mv-message{display:none;margin-top:13px;padding:12px 14px;border-radius:12px;font-weight:800}
+#minixTraderVisiblePanel .mv-message.ok{display:block;background:#064e3b;color:#a7f3d0}
+#minixTraderVisiblePanel .mv-message.err{display:block;background:#7f1d1d;color:#fecaca}
+@media(max-width:1180px){#minixTraderVisiblePanel .mv-entry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+  #minixTraderVisiblePanel{padding:15px;margin-bottom:22px;border-radius:17px}
+  #minixTraderVisiblePanel .mv-head h2{font-size:17px}
+  #minixTraderVisiblePanel .mv-statuses{grid-template-columns:1fr}
+  #minixTraderVisiblePanel .mv-entry-grid{grid-template-columns:1fr}
+  #minixTraderVisiblePanel .mv-auto-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #minixTraderVisiblePanel .mv-auto{padding:12px;min-width:0}
+  #minixTraderVisiblePanel .mv-auto b{font-size:18px}
+  #minixTraderVisiblePanel .mv-submit{width:100%;margin-bottom:125px}
+}
+</style>
+<script id="minix-trader-entry-restored-js">
+(function(){
+  'use strict';
+  const PANEL_ID='minixTraderVisiblePanel';
+  let loadedKey='';
+  let lastUserKey='';
+
+  const E=id=>document.getElementById(id);
+  const N=v=>{const n=Number(String(v??0).replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:0};
+  const M=v=>(Number(v)<0?'-':'')+'₹'+Math.abs(Number(v)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+  const H=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function user(){try{return JSON.parse(localStorage.getItem('minixUser')||'null')}catch(e){return null}}
+  function role(u){return String((u||user())?.role||'').trim().toLowerCase().replace(/[^a-z]/g,'')}
+  function isTrader(u){const r=role(u);return r==='trader'||r==='traders'||r==='trading'||r.startsWith('trader')}
+  function today(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),x={};p.forEach(a=>x[a.type]=a.value);return x.year+'-'+x.month+'-'+x.day}
+  function traderName(){
+    const u=user()||{};
+    const direct=String(u.trader_name||u.display_name||u.full_name||u.name||'').trim();
+    if(direct)return direct;
+    const a=Array.isArray(window.rawData)?window.rawData:[];
+    const names=[...new Set(a.map(r=>String(r['Trader Name']||r.trader_name||'').trim()).filter(Boolean))];
+    return names.length===1?names[0]:String(u.username||u.user_name||'').trim();
+  }
+  function client(){
+    const c=window.MINIX_CONFIG||{};
+    const url=c.supabaseUrl||localStorage.getItem('MINIX_SUPABASE_URL');
+    const key=c.supabaseAnonKey||localStorage.getItem('MINIX_SUPABASE_KEY');
+    return window.supabase&&url&&key?window.supabase.createClient(url,key):null;
+  }
+  function panelHtml(){
+    const fields=[
+      ['fno_total_fund','F&O Total Fund'],['cash_total_fund','Cash Total Fund'],['mcx_total_fund','MCX Total Fund'],['margin_utilized','Margin Utilized'],
+      ['fno_gross','F&O Gross'],['fno_charges','F&O Charges'],['cash_gross','Cash Gross'],['cash_charges','Cash Charges'],
+      ['mcx_gross','MCX Gross'],['mcx_charges','MCX Charges']
+    ];
+    return '<div class="mv-head"><h2 id="mv_report_title">📝 Today’s Trader Report</h2><span class="mv-user">'+H(traderName())+' • '+today().split('-').reverse().join('-')+'</span></div>'+
+      '<div class="mv-deadline">⏰ Final Submission Deadline: 4:15 PM</div>'+
+      '<div class="mv-help">આજે trade કર્યું હોય તો figures भरो. આજનો report Submit થયેલો હોય તો અહીંથી Edit કરી શકો; Adminને old → new changes દેખાશે.</div>'+
+      '<div class="mv-statuses">'+
+        '<label><input type="radio" name="mv_status" value="TRADED" checked> 🟢 Traded Today</label>'+
+        '<label><input type="radio" name="mv_status" value="NO_TRADE"> 🟡 No Trade Today</label>'+
+      '</div>'+
+      '<div class="mv-entry-grid">'+fields.map(x=>'<div class="mv-field"><label>'+x[1]+'</label><input id="mv_'+x[0]+'" type="number" step="0.01" inputmode="decimal" value="0"></div>').join('')+
+        '<div class="mv-field mv-field-wide"><label>Reason / Note</label><textarea id="mv_reason" placeholder="No Trade હોય તો કારણ લખી શકો"></textarea></div>'+
+      '</div>'+
+      '<div class="mv-auto-grid">'+
+        '<div class="mv-auto"><span>Total Fund — Automatic</span><b id="mv_total_fund">₹0</b></div>'+
+        '<div class="mv-auto"><span>Total Gross — Automatic</span><b id="mv_total_gross">₹0</b></div>'+
+        '<div class="mv-auto"><span>Total Charges — Automatic</span><b id="mv_total_charges">₹0</b></div>'+
+        '<div class="mv-auto"><span>Total Net P&amp;L — Automatic</span><b id="mv_total_net">₹0</b></div>'+
+      '</div>'+
+      '<button id="mv_submit_button" type="button" class="mv-submit">✅ Submit To Admin</button>'+
+      '<div id="mv_message" class="mv-message"></div>';
+  }
+  function ensurePanel(){
+    let p=E(PANEL_ID);
+    if(p)return p;
+    p=document.createElement('section');p.id=PANEL_ID;p.setAttribute('aria-label','Today Trader Report');p.innerHTML=panelHtml();
+    const tabs=document.querySelector('.tab-buttons');
+    if(tabs&&tabs.parentNode)tabs.parentNode.insertBefore(p,tabs);else(document.querySelector('.container')||document.body).prepend(p);
+    p.querySelectorAll('input[name="mv_status"]').forEach(x=>x.addEventListener('change',statusChanged));
+    p.querySelectorAll('.mv-entry-grid input').forEach(x=>x.addEventListener('input',calc));
+    E('mv_submit_button')?.addEventListener('click',submit);
+    return p;
+  }
+  function calc(){
+    const fund=N(E('mv_fno_total_fund')?.value)+N(E('mv_cash_total_fund')?.value)+N(E('mv_mcx_total_fund')?.value);
+    const gross=N(E('mv_fno_gross')?.value)+N(E('mv_cash_gross')?.value)+N(E('mv_mcx_gross')?.value);
+    const charges=N(E('mv_fno_charges')?.value)+N(E('mv_cash_charges')?.value)+N(E('mv_mcx_charges')?.value);
+    const net=gross-charges;
+    if(E('mv_total_fund'))E('mv_total_fund').textContent=M(fund);
+    if(E('mv_total_gross')){E('mv_total_gross').textContent=M(gross);E('mv_total_gross').style.color=gross<0?'#f87171':'#34d399'}
+    if(E('mv_total_charges'))E('mv_total_charges').textContent=M(charges);
+    if(E('mv_total_net')){E('mv_total_net').textContent=M(net);E('mv_total_net').style.color=net<0?'#f87171':'#34d399'}
+  }
+  function statusChanged(){
+    const traded=document.querySelector('input[name="mv_status"]:checked')?.value==='TRADED';
+    document.querySelectorAll('#'+PANEL_ID+' .mv-entry-grid input').forEach(x=>{x.disabled=!traded;if(!traded)x.value='0'});
+    calc();
+  }
+  function showMessage(msg,ok){const x=E('mv_message');if(!x)return;x.textContent=msg;x.className='mv-message '+(ok?'ok':'err')}
+  function fill(data){
+    if(!data)return;
+    if(E('mv_report_title'))E('mv_report_title').textContent='✏️ Edit Today’s Trader Report';
+    if(E('mv_submit_button'))E('mv_submit_button').textContent='✅ Save Edited Report';
+    const radio=document.querySelector('input[name="mv_status"][value="'+String(data.today_status||'TRADED')+'"]');if(radio)radio.checked=true;
+    ['fno_total_fund','cash_total_fund','mcx_total_fund','margin_utilized','fno_gross','fno_charges','cash_gross','cash_charges','mcx_gross','mcx_charges','reason'].forEach(k=>{const x=E('mv_'+k);if(x)x.value=data[k]??(k==='reason'?'':'0')});
+    statusChanged();calc();
+  }
+  async function loadExisting(force){
+    const name=traderName(),key=today()+'|'+name.toLowerCase();
+    if(!force&&loadedKey===key)return;
+    loadedKey=key;
+    const c=client();if(!c||!name)return;
+    try{
+      const {data,error}=await c.from('minix_daily_trader_reports').select('*').eq('report_date',today()).ilike('trader_name',name).maybeSingle();
+      if(error)throw error;
+      if(data)fill(data);
+    }catch(e){console.error('Trader report load failed',e)}
+  }
+  async function submit(){
+    const c=client(),name=traderName(),u=user()||{};
+    if(!c){showMessage('Supabase configuration મળ્યું નથી.',false);return}
+    if(!name){showMessage('Trader name મળ્યું નથી. ફરી login કરો.',false);return}
+    const status=document.querySelector('input[name="mv_status"]:checked')?.value||'TRADED';
+    const traded=status==='TRADED';
+    const payload={
+      report_date:today(),trader_name:name,today_status:status,
+      fno_total_fund:traded?N(E('mv_fno_total_fund')?.value):0,
+      cash_total_fund:traded?N(E('mv_cash_total_fund')?.value):0,
+      mcx_total_fund:traded?N(E('mv_mcx_total_fund')?.value):0,
+      margin_utilized:traded?N(E('mv_margin_utilized')?.value):0,
+      fno_gross:traded?N(E('mv_fno_gross')?.value):0,
+      fno_charges:traded?N(E('mv_fno_charges')?.value):0,
+      cash_gross:traded?N(E('mv_cash_gross')?.value):0,
+      cash_charges:traded?N(E('mv_cash_charges')?.value):0,
+      mcx_gross:traded?N(E('mv_mcx_gross')?.value):0,
+      mcx_charges:traded?N(E('mv_mcx_charges')?.value):0,
+      reason:String(E('mv_reason')?.value||'').trim(),
+      submitted_by:String(u.username||u.user_name||name),
+      updated_at:new Date().toISOString()
+    };
+    payload.total_margin=payload.fno_total_fund+payload.cash_total_fund+payload.mcx_total_fund;
+    const btn=E('mv_submit_button');if(btn){btn.disabled=true;btn.textContent='Saving…'}
+    try{
+      const {data,error}=await c.from('minix_daily_trader_reports').upsert(payload,{onConflict:'report_date,trader_name'}).select().single();
+      if(error)throw error;
+      fill(data||payload);
+      showMessage('✅ Today’s Trader Report Adminને successfully submit થઈ ગયો.',true);
+      if(typeof window.minixShowTodayReport==='function'){
+        window.MINIX_TODAY_SUBMISSIONS=(Array.isArray(window.MINIX_TODAY_SUBMISSIONS)?window.MINIX_TODAY_SUBMISSIONS:[]).filter(x=>String(x.trader_name||'').toLowerCase()!==name.toLowerCase());
+        window.MINIX_TODAY_SUBMISSIONS.push(data||payload);
+      }
+    }catch(e){console.error('Trader report save failed',e);showMessage('Report save ન થયો: '+(e.message||'Please try again.'),false)}
+    finally{if(btn){btn.disabled=false;btn.textContent=E('mv_report_title')?.textContent.includes('Edit')?'✅ Save Edited Report':'✅ Submit To Admin'}}
+  }
+  function sync(){
+    const u=user(),p=ensurePanel();
+    const key=u?String(u.username||u.user_name||u.trader_name||'')+'|'+role(u):'';
+    if(!u||!isTrader(u)){p.style.display='none';lastUserKey=key;return}
+    p.style.display='block';
+    if(lastUserKey!==key){
+      lastUserKey=key;loadedKey='';p.innerHTML=panelHtml();
+      p.querySelectorAll('input[name="mv_status"]').forEach(x=>x.addEventListener('change',statusChanged));
+      p.querySelectorAll('.mv-entry-grid input').forEach(x=>x.addEventListener('input',calc));
+      E('mv_submit_button')?.addEventListener('click',submit);
+    }
+    loadExisting(false);
+  }
+  window.minixSubmitVisibleTraderReport=submit;
+  window.minixRefreshTraderEntryPanel=function(){loadedKey='';sync()};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync);else sync();
+  setInterval(sync,700);
+  window.addEventListener('focus',sync);
+})();
+</script>
+<!-- === END MINIX TRADER DAILY ENTRY PANEL RESTORED === -->
+
 </body></html>
 </script>
 

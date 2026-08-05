@@ -3077,6 +3077,13 @@ function buildWeeklyNetCards(){
   }).join("");
 }
 function formatTarget(v){return v>=10000000?(v/10000000)+" Cr":(v/100000)+" Lakh"}
+function formatFundShort(v){
+  const n=Number(v)||0,abs=Math.abs(n),sign=n<0?'-':'';
+  if(abs>=10000000)return sign+(abs/10000000).toFixed(2)+' Cr';
+  if(abs>=100000)return sign+(abs/100000).toFixed(2)+' Lakhs';
+  if(abs>=1000)return sign+(abs/1000).toFixed(2)+' K';
+  return sign+abs.toFixed(2);
+}
 function formatNumber2(v){return new Intl.NumberFormat("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}).format(v||0)}
 
 
@@ -5097,10 +5104,10 @@ document.addEventListener('keydown', function(e){
     }).sort((a,b)=>b.mtd-a.mtd);
 
     const indIndexPct=marketPctPairForData(data, !!(indDateFilter?.value));
-    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P&L</th><th class="amount">MTD P&L</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th><th>ROI</th><th>Risk</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
-    riskUtilizationTable.innerHTML=`<table><thead><tr><th>Trader</th><th class="amount">Fund / Limit</th><th class="amount">Profit / Loss</th><th class="amount">Final Remaining</th><th>Calculation</th><th>Alert</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="amount">${formatINR(r.limit)}</td><td class="amount ${r.mtd<0?'negative':'positive'}">${formatINR(r.mtd)}</td><td class="amount ${r.remaining>=0?'positive':'negative'}"><b>${formatINR(r.remaining)}</b></td><td>${r.mtd>=0?'Fund + Profit':'Fund - Loss'}</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
+    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P/L</th><th class="amount">MTD P/L</th><th class="amount">Nifty %</th><th class="amount">Bank %</th><th>ROI</th><th>Risk</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
+    riskUtilizationTable.innerHTML=`<table><thead><tr><th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Final</th><th>Calc</th><th>Alert</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="amount" title="${formatINR(r.limit)}">${formatFundShort(r.limit)}</td><td class="amount ${r.mtd<0?'negative':'positive'}">${formatINR(r.mtd)}</td><td class="amount ${r.remaining>=0?'positive':'negative'}"><b>${formatINR(r.remaining)}</b></td><td>${r.mtd>=0?'Fund + Profit':'Fund - Loss'}</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
     accuracyTable.innerHTML=`<table><thead><tr><th>Trader</th><th>Winning Trades</th><th>Losing Trades</th><th>Accuracy</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="positive">${r.win}</td><td class="negative">${r.loss}</td><td>${r.accuracy.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
-    analyticsTable.innerHTML=`<table><thead><tr><th>Trader</th><th>ROI %</th><th class="amount">Total Profit</th><th class="amount">Total Loss</th><th>Profit Factor</th><th>Win Rate</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td>${r.roi.toFixed(1)}%</td><td class="amount positive">${formatINR(r.positiveTotal)}</td><td class="amount negative">${formatINR(r.negativeTotal)}</td><td class="${r.profitFactor>=1?'positive':'negative'}">${r.profitFactor===999?'∞':r.profitFactor.toFixed(2)}</td><td>${r.winRate.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
+    analyticsTable.innerHTML=`<table><thead><tr><th>Trader</th><th>ROI %</th><th class="amount">Profit</th><th class="amount">Loss</th><th>P.Factor</th><th>Win %</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td>${r.roi.toFixed(1)}%</td><td class="amount positive">${formatINR(r.positiveTotal)}</td><td class="amount negative">${formatINR(r.negativeTotal)}</td><td class="${r.profitFactor>=1?'positive':'negative'}">${r.profitFactor===999?'∞':r.profitFactor.toFixed(2)}</td><td>${r.winRate.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
 
     buildMonthWiseChargesTable(data);
     buildAllTradersDateWiseTable(data);
@@ -5239,10 +5246,10 @@ select.ai-hidden-select{position:absolute!important;opacity:0!important;pointer-
     dayData.forEach(r=>{const t=r['Trader Name']||'Unknown',x=ensureTrader(t); x.day+=r.totalNet;});
     const rows=Object.values(byTrader).map(x=>{const total=x.win+x.loss; const accuracy=total?x.win/total*100:0; const traderRows=mtdData.filter(r=>(r['Trader Name']||'Unknown')===x.trader); const limit=getLatestTraderFund(traderRows); const roi=limit?x.mtd/limit*100:0; const remaining=limit+x.mtd; const riskObj=getRiskFromPnlAndFund(x.mtd,limit); const status=x.mtd<0?'❌':riskObj.pct>75?'⚠️':'✅'; const positiveTotal=x.values.filter(v=>v>0).reduce((a,b)=>a+b,0); const negativeTotal=x.values.filter(v=>v<0).reduce((a,b)=>a+b,0); const profitFactor=Math.abs(negativeTotal)>0?positiveTotal/Math.abs(negativeTotal):(positiveTotal>0?999:0); const winRate=total?x.win/total*100:0; return {...x,accuracy,roi,limit,remaining,riskPct:riskObj.pct,risk:riskObj.level,riskIcon:riskObj.icon,riskClass:riskObj.cls,status,positiveTotal,negativeTotal,profitFactor,winRate};}).sort((a,b)=>b.mtd-a.mtd);
     const indIndexPct=marketPctPairForData(data, !!(indDateFilter?.value));
-    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P&L</th><th class="amount">MTD P&L</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th><th>ROI</th><th>Risk</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
-    riskUtilizationTable.innerHTML=`<table><thead><tr><th>Trader</th><th class="amount">Fund / Limit</th><th class="amount">Profit / Loss</th><th class="amount">Final Remaining</th><th>Calculation</th><th>Alert</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="amount">${formatINR(r.limit)}</td><td class="amount ${r.mtd<0?'negative':'positive'}">${formatINR(r.mtd)}</td><td class="amount ${r.remaining>=0?'positive':'negative'}"><b>${formatINR(r.remaining)}</b></td><td>${r.mtd>=0?'Fund + Profit':'Fund - Loss'}</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
+    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P/L</th><th class="amount">MTD P/L</th><th class="amount">Nifty %</th><th class="amount">Bank %</th><th>ROI</th><th>Risk</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
+    riskUtilizationTable.innerHTML=`<table><thead><tr><th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Final</th><th>Calc</th><th>Alert</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="amount" title="${formatINR(r.limit)}">${formatFundShort(r.limit)}</td><td class="amount ${r.mtd<0?'negative':'positive'}">${formatINR(r.mtd)}</td><td class="amount ${r.remaining>=0?'positive':'negative'}"><b>${formatINR(r.remaining)}</b></td><td>${r.mtd>=0?'Fund + Profit':'Fund - Loss'}</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
     accuracyTable.innerHTML=`<table><thead><tr><th>Trader</th><th>Winning Trades</th><th>Losing Trades</th><th>Accuracy</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="positive">${r.win}</td><td class="negative">${r.loss}</td><td>${r.accuracy.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
-    analyticsTable.innerHTML=`<table><thead><tr><th>Trader</th><th>ROI %</th><th class="amount">Total Profit</th><th class="amount">Total Loss</th><th>Profit Factor</th><th>Win Rate</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td>${r.roi.toFixed(1)}%</td><td class="amount positive">${formatINR(r.positiveTotal)}</td><td class="amount negative">${formatINR(r.negativeTotal)}</td><td class="${r.profitFactor>=1?'positive':'negative'}">${r.profitFactor===999?'∞':r.profitFactor.toFixed(2)}</td><td>${r.winRate.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
+    analyticsTable.innerHTML=`<table><thead><tr><th>Trader</th><th>ROI %</th><th class="amount">Profit</th><th class="amount">Loss</th><th>P.Factor</th><th>Win %</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td>${r.roi.toFixed(1)}%</td><td class="amount positive">${formatINR(r.positiveTotal)}</td><td class="amount negative">${formatINR(r.negativeTotal)}</td><td class="${r.profitFactor>=1?'positive':'negative'}">${r.profitFactor===999?'∞':r.profitFactor.toFixed(2)}</td><td>${r.winRate.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
     buildMonthWiseChargesTable(data); buildAllTradersDateWiseTable(data); buildCapitalUtilizationTable(data);
   };
 })();
@@ -11653,7 +11660,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
       el.innerHTML="<p class='muted'>No data available</p>";
       return;
     }
-    el.innerHTML='<table><thead><tr><th>Trader</th><th>Winning Days</th><th>Losing Days</th><th>Total Days</th><th>Accuracy</th></tr></thead><tbody>'+
+    el.innerHTML='<table><thead><tr><th>Trader</th><th>Win</th><th>Loss</th><th>Total</th><th>Accuracy</th></tr></thead><tbody>'+
       rows.map(function(r){
         return '<tr><td>'+traderCell(r.trader)+'</td><td class="positive">'+r.win+'</td><td class="negative">'+r.loss+'</td><td class="neutral">'+r.total+'</td><td>'+r.accuracy.toFixed(1)+'%</td></tr>';
       }).join('')+'</tbody></table>';
@@ -11946,7 +11953,8 @@ body.gpt-charge-modal-open .bell-btn,body.gpt-charge-modal-open #fundAlertBell{d
   function parseCell(td){
     const text=(td&&td.textContent||'').trim();
     if(text==='∞') return 1e99;
-    const n=Number(text.replace(/[₹,%\s,]/g,''));
+    const source=(td&&td.getAttribute&&td.getAttribute('data-sort-value'))||(td&&td.getAttribute&&td.getAttribute('title'))||text;
+    const n=Number(String(source).replace(/[₹,%\s,]/g,''));
     return isFinite(n)&&text.match(/[0-9]/)?n:text.toLowerCase();
   }
   function resetSort(container){
@@ -14672,7 +14680,7 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
   function renameModalHeaders(){
     var t=document.querySelector('#gptChargesFullModal table');
     if(!t) return;
-    var names=['DATE','ROI','NIFTY','BANK','FUND','MARGIN UTILIZED','G P&L','BRK','F BRK','F GST','C BRK','C GST','M BRK','M GST','B GST','GOVT','CLR','TRX','SEBI','STT','STMP','IPF','GST','N P&L'];
+    var names=['DATE','ROI','NIFTY','BANK','FUND','UTILIZED','G P&L','BRK','F BRK','F GST','C BRK','C GST','M BRK','M GST','B GST','GOVT','CLR','TRX','SEBI','STT','STMP','IPF','GST','N P&L'];
     t.querySelectorAll('thead th').forEach(function(th,i){ if(names[i]) th.textContent=names[i]; });
     t.style.width='100%';
     t.style.minWidth='0';
@@ -15116,7 +15124,7 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
       });
     });
     body+=`<tr class="grand-total-row"><td colspan="3" class="grand-label">🏁 GRAND TOTAL<br><span class="muted">${grandTotal.rows} rows</span></td>${cells(grandTotal)}</tr>`;
-    el.innerHTML=`<table><thead><tr><th>Financial Year</th><th>Demat Account</th><th>Month Name</th><th class="amount">Total Gross Amount</th><th class="amount">Brokerage</th><th class="amount">Brokerage On GST</th><th class="amount">Other Government Charges</th><th class="amount">Other Government Charges On GST</th><th class="amount">Net Amount</th></tr></thead><tbody>${body}</tbody></table>`;
+    el.innerHTML=`<table><thead><tr><th title="Financial Year">FY</th><th title="Demat Account">DEMAT</th><th title="Month Name">MONTH</th><th class="amount" title="Total Gross Amount">GROSS</th><th class="amount" title="Brokerage">BRK</th><th class="amount" title="Brokerage On GST">BRK GST</th><th class="amount" title="Other Government Charges">GOVT</th><th class="amount" title="Other Government Charges On GST">GOVT GST</th><th class="amount" title="Net Amount">NET</th></tr></thead><tbody>${body}</tbody></table>`;
   }
   window.buildFullFyDematMonthSummaryTable=buildFullFyDematMonthSummaryTable;
   window.toggleFullSummaryGroup=function(id){
@@ -15670,10 +15678,12 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
 <!-- === AI FINAL FUND FIX: Full Dashboard Portfolio Summary sums Fund across Demat Accounts === -->
 <script>
 (function(){
+  var portfolioSort={col:'pnl',dir:-1};
   function E(id){return document.getElementById(id);} 
   function num(v){ if(v==null||v==='') return 0; if(typeof v==='number') return isFinite(v)?v:0; var n=Number(String(v).replace(/[^0-9.-]/g,'')); return isFinite(n)?n:0; }
   function esc(v){ return String(v==null?'':v).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];}); }
   function money(v){ try{ if(typeof formatINR==='function') return formatINR(num(v)); }catch(e){} return '₹'+Math.round(num(v)).toLocaleString('en-IN'); }
+  function fundShort(v){var n=num(v),a=Math.abs(n),s=n<0?'-':'';if(a>=10000000)return s+(a/10000000).toFixed(2)+' Cr';if(a>=100000)return s+(a/100000).toFixed(2)+' Lakhs';if(a>=1000)return s+(a/1000).toFixed(2)+' K';return s+a.toFixed(2);}
   function pct(v){ var n=num(v); return (n>=0?'+':'')+n.toFixed(2)+'%'; }
   function getRows(){ try{ if(typeof getFullSummaryFilteredData==='function') return getFullSummaryFilteredData()||[]; }catch(e){} return Array.isArray(window.preparedData)?window.preparedData:[]; }
   function val(r,keys,def){ for(var i=0;i<keys.length;i++){ var v=r&&r[keys[i]]; if(v!==undefined&&v!==null&&String(v).trim()!=='') return v; } return def; }
@@ -15692,6 +15702,10 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
   function idxPair(data){ var idx={nifty:null,bank:null}; try{ if(typeof marketPctPairForData==='function') idx=marketPctPairForData(data,false)||idx; }catch(e){} return idx; }
   function idxTd(v){ return '<td class="amount neutral">'+(v==null?'-':pct(v))+'</td>'; }
   function dematList(obj){ return Object.keys(obj||{}).join(', ')||'-'; }
+  function sortValue(g,col){ if(col==='portfolio')return String(g.portfolio||'').toLowerCase(); if(col==='roi')return g.fund?g.pnl/g.fund*100:0; return num(g[col]); }
+  function sortGroups(groups){ return groups.sort(function(a,b){var av=sortValue(a,portfolioSort.col),bv=sortValue(b,portfolioSort.col),c=(typeof av==='string')?av.localeCompare(bv):(av-bv);return c*portfolioSort.dir;}); }
+  function sortHeader(label,col,cls){var active=portfolioSort.col===col,arrow=active?(portfolioSort.dir>0?'↑':'↓'):'↕';return '<th class="'+(cls||'')+' portfolio-sortable-th" data-portfolio-sort="'+col+'" onclick="event.stopPropagation();window.sortPortfolioPerformance(\''+col+'\')">'+label+' <span class="portfolio-sort-arrow">'+arrow+'</span></th>';}
+  window.sortPortfolioPerformance=function(col){if(portfolioSort.col===col)portfolioSort.dir*=-1;else{portfolioSort.col=col;portfolioSort.dir=1;}window.renderPortfolioCollapseTable();};
 
   function buildCorrectFundGroups(data){
     var groups={};
@@ -15717,7 +15731,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
       g.childRows=Object.keys(g.children).map(function(c){return g.children[c];}).sort(function(a,b){return (a.demat+a.researcher+a.trader).localeCompare(b.demat+b.researcher+b.trader);});
       g.fund=g.childRows.reduce(function(s,r){return s+num(r.fund);},0);
       return g;
-    }).sort(function(a,b){return b.pnl-a.pnl;});
+    });
   }
 
   window.renderPortfolioCollapseTable=function(){
@@ -15725,7 +15739,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     var data=getRows();
     if(!data.length){ el.innerHTML='<p class="muted">No data available</p>'; return; }
     window.__portfolioOpenState=window.__portfolioOpenState||{};
-    var groups=buildCorrectFundGroups(data), idx=idxPair(data);
+    var groups=sortGroups(buildCorrectFundGroups(data)), idx=idxPair(data);
     var t={fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0};
     groups.forEach(function(g){ t.fund+=g.fund; t.pnl+=g.pnl; t.charges+=g.charges; t.win+=g.win; t.loss+=g.loss; t.dividend+=g.dividend; });
     var body='';
@@ -15736,21 +15750,21 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
       body+='<tr class="portfolio-group-row" onclick="togglePortfolioSummaryGroup(\''+id+'\')">'+
         '<td><span class="portfolio-toggle">'+(open?'−':'+')+'</span><span class="portfolio-name-text">'+esc(g.portfolio)+'</span><div class="portfolio-subtext">'+g.childRows.length+' rows | '+esc(dematList(g.demats))+'</div></td>'+ 
         '<td><b>Portfolio Total</b></td><td>-</td><td>-</td>'+ 
-        '<td class="amount">'+money(g.fund)+'</td>'+ 
+        '<td class="amount" title="'+money(g.fund)+'">'+fundShort(g.fund)+'</td>'+ 
         '<td class="amount '+(g.pnl>=0?'positive':'negative')+'">'+money(g.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+
         '<td class="amount warning">'+money(g.charges)+'</td><td class="'+(roi>=0?'positive':'negative')+'">'+pct(roi)+'</td>'+ 
         '<td class="positive">'+g.win+'</td><td class="negative">'+g.loss+'</td><td class="amount positive">'+money(g.dividend)+'</td></tr>';
       if(open){
         g.childRows.forEach(function(r){ var rroi=r.fund?r.pnl/r.fund*100:0; body+='<tr class="portfolio-detail-row">'+
           '<td style="padding-left:28px!important;">↳ '+esc(g.portfolio)+'</td><td>'+esc(r.demat)+'</td><td>'+esc(r.researcher)+'</td><td>'+esc(r.trader)+'</td>'+ 
-          '<td class="amount">'+money(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+
+          '<td class="amount" title="'+money(r.fund)+'">'+fundShort(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+
           '<td class="amount warning">'+money(r.charges)+'</td><td class="'+(rroi>=0?'positive':'negative')+'">'+pct(rroi)+'</td>'+ 
           '<td class="positive">'+r.win+'</td><td class="negative">'+r.loss+'</td><td class="amount positive">'+money(r.dividend)+'</td></tr>'; });
       }
     });
     var troi=t.fund?t.pnl/t.fund*100:0;
-    var foot='<tr class="portfolio-grand-total"><td colspan="4">Grand Total</td><td class="amount">'+money(t.fund)+'</td><td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+'<td class="amount warning">'+money(t.charges)+'</td><td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td><td class="positive">'+t.win+'</td><td class="negative">'+t.loss+'</td><td class="amount positive">'+money(t.dividend)+'</td></tr>';
-    el.innerHTML='<div class="portfolio-collapse-wrap"><table class="portfolio-collapse-table"><thead><tr><th>Portfolio</th><th>Demat</th><th>Researcher</th><th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Nifty</th><th class="amount">Bank</th><th class="amount">Charges</th><th>ROI</th><th>Win</th><th>Loss</th><th class="amount">Dividend</th></tr></thead><tbody>'+body+foot+'</tbody></table></div>';
+    var foot='<tr class="portfolio-grand-total"><td colspan="4">Grand Total</td><td class="amount" title="'+money(t.fund)+'">'+fundShort(t.fund)+'</td><td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+'<td class="amount warning">'+money(t.charges)+'</td><td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td><td class="positive">'+t.win+'</td><td class="negative">'+t.loss+'</td><td class="amount positive">'+money(t.dividend)+'</td></tr>';
+    el.innerHTML='<div class="portfolio-collapse-wrap"><table class="portfolio-collapse-table"><thead><tr>'+sortHeader('Portfolio','portfolio','')+'<th>Demat</th><th>Researcher</th><th>Trader</th>'+sortHeader('Fund','fund','amount')+sortHeader('P/L','pnl','amount')+'<th class="amount">Nifty</th><th class="amount">Bank</th>'+sortHeader('Charges','charges','amount')+sortHeader('ROI','roi','')+sortHeader('W','win','')+sortHeader('L','loss','')+sortHeader('Div','dividend','amount')+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
   };
   window.togglePortfolioSummaryGroup=function(id){ window.__portfolioOpenState=window.__portfolioOpenState||{}; window.__portfolioOpenState[id]=!window.__portfolioOpenState[id]; window.renderPortfolioCollapseTable(); };
   var oldBuild=window.buildFullDashboardSummaryWithTraders;
@@ -16300,7 +16314,7 @@ body.ai-show-gov-details .ai-gov-detail{display:table-cell !important;}
   function renameHeaders(){
     var t=document.querySelector('#allTradersDateWiseTable table');
     if(!t) return;
-    var names=['DATE','ROI','NIFTY','BANK','FUND','MARGIN UTILIZED','G P&L','BRK','F BRK','F GST','C BRK','C GST','M BRK','M GST','B GST','GOVT','CLR','TRX','SEBI','STT','STMP','IPF','GST','N P&L'];
+    var names=['DATE','ROI','NIFTY','BANK','FUND','UTILIZED','G P&L','BRK','F BRK','F GST','C BRK','C GST','M BRK','M GST','B GST','GOVT','CLR','TRX','SEBI','STT','STMP','IPF','GST','N P&L'];
     t.querySelectorAll('thead th').forEach(function(th,i){ if(names[i]) th.textContent=names[i]; });
     t.style.width='100%'; t.style.minWidth='0'; t.style.maxWidth='100%'; t.style.tableLayout='fixed';
     var wrap=$('allTradersDateWiseTable');
@@ -17019,7 +17033,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   window.renderSegmentMISReport=function(){
     var card=ensureCard(); if(!card)return; var rows=selectedRows(), map={}; rows.forEach(function(r){var d=rowDate(r); if(!d)return; var k=dmy(d); (map[k]=map[k]||[]).push(r);});
     var dates=Object.keys(map).sort(function(a,b){return iso(parseDate(a)).localeCompare(iso(parseDate(b)));});
-    var head='<tr><th>Date</th><th class="amount">ROI</th><th class="amount">Nifty</th><th class="amount">Bank</th><th class="amount">Fund</th><th class="amount warning">Margin Utilized</th><th class="amount">FNO Gross</th><th class="amount">FNO Gov</th><th class="amount">FNO Net</th><th class="amount">Cash Gross</th><th class="amount">Cash Gov</th><th class="amount">Cash Net</th><th class="amount">MCX Gross</th><th class="amount">MCX Gov</th><th class="amount">MCX Net</th></tr>';
+    var head='<tr><th>Date</th><th class="amount">ROI</th><th class="amount">Nifty</th><th class="amount">Bank</th><th class="amount">Fund</th><th class="amount warning" title="Margin Utilized">Utilized</th><th class="amount">FNO Gross</th><th class="amount">FNO Gov</th><th class="amount">FNO Net</th><th class="amount">Cash Gross</th><th class="amount">Cash Gov</th><th class="amount">Cash Net</th><th class="amount">MCX Gross</th><th class="amount">MCX Gov</th><th class="amount">MCX Net</th></tr>';
     var body=dates.map(function(k){return mainRow(k,map[k],false);}).join('');
     card.innerHTML='<h3>📊 Segment Wise MIS Report</h3><div class="ai-mis-toolbar">'+buttons()+'</div><div class="ai-mis-wrap"><table id="aiSegmentMISTable"><thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="15">No data available for selected filters</td></tr>')+'</tbody><tfoot>'+((rows&&rows.length)?mainRow('Grand Total',rows,true):'')+'</tfoot></table></div>'+detail(map,dates,activeSeg(),rows);
     function setSeg(s){D.body.classList.remove('ai-mis-show-fno','ai-mis-show-cash','ai-mis-show-mcx'); if(s==='FNO')D.body.classList.add('ai-mis-show-fno'); if(s==='Cash')D.body.classList.add('ai-mis-show-cash'); if(s==='MCX')D.body.classList.add('ai-mis-show-mcx'); window.renderSegmentMISReport();}
@@ -17685,7 +17699,8 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     if(ui<0){
       var th=D.createElement('th');
       th.className='amount warning segment-margin-utilized-v3';
-      th.textContent='Margin Utilized';
+      th.textContent='Utilized';
+      th.title='Margin Utilized';
       hr.insertBefore(th,hr.cells[fi+1]||null);
       ui=fi+1;
     }
@@ -18407,7 +18422,7 @@ function updateFundUtilizedKpis() {
     }
     ['cashTotalUtilized','fnoTotalUtilized','mcxTotalUtilized','overallTotalUtilized'].forEach(function(id){
       var c=card(id),t=c&&c.querySelector('.kpi-title');
-      if(t&&t.textContent!=='📌 Margin Utilized')t.textContent='📌 Margin Utilized';
+      if(t&&t.textContent!=='📌 Utilized')t.textContent='📌 Utilized';
     });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);
@@ -18944,7 +18959,44 @@ td .minix-person-name-btn{display:inline-block!important;}
 <!-- === END MINIX GLOBAL ALL PERSON NAMES PHOTO CLICK === -->
 
 <!-- === MINIX UNIVERSAL MOBILE / TABLET RESPONSIVE SAFETY LAYER === -->
+<script id="minix-utilized-label-short-v1">
+(function(){
+  function shorten(){
+    document.querySelectorAll('th,.kpi-title,.minix-report-item span').forEach(function(el){
+      Array.from(el.childNodes).forEach(function(node){
+        if(node.nodeType===3&&/margin\s+utilized/i.test(node.nodeValue||''))node.nodeValue=(node.nodeValue||'').replace(/margin\s+utilized/ig,'Utilized');
+      });
+      if(/utilized/i.test(el.textContent||'')&&!el.title)el.title='Margin Utilized';
+    });
+  }
+  var timer;
+  function schedule(){clearTimeout(timer);timer=setTimeout(shorten,25);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',shorten);else shorten();
+  new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  window.addEventListener('load',function(){shorten();setTimeout(shorten,600);setTimeout(shorten,1800);});
+})();
+</script>
 <style id="minix-universal-responsive-v1">
+/* Compact one-line financial table headers: no wrap text. */
+#riskUtilizationTable th,
+#individualPerformanceTable th,
+#accuracyTable th,
+#analyticsTable th,
+#fullTraderPerformanceTable .portfolio-collapse-table th,
+#allTradersDateWiseTable th,
+#aiSegmentMISTable th{
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+  overflow-wrap:normal!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  line-height:1.15!important;
+  height:42px!important;
+  vertical-align:middle!important;
+}
+#fullTraderPerformanceTable .portfolio-sortable-th{cursor:pointer!important;user-select:none!important;}
+#fullTraderPerformanceTable .portfolio-sortable-th:hover{background:#172554!important;}
+#fullTraderPerformanceTable .portfolio-sort-arrow{display:inline-block!important;color:#facc15!important;font-weight:900!important;margin-left:3px!important;white-space:nowrap!important;}
 html{width:100%;max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden}
 body{width:100%;max-width:100%;overflow-x:hidden;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 img,svg,video,canvas{max-width:100%;height:auto}

@@ -19046,7 +19046,7 @@ input,select,textarea,button{max-width:100%}
 <!-- === MINIX MOBILE TABLE READABILITY FIX 2026-08-05 === -->
 <style id="minix-mobile-table-readability-v2">
 /* Phones and tablets: every performance card gets the full screen width. */
-@media (max-width:1024px), (pointer:coarse) and (max-height:700px){
+@media (max-width:1400px), (pointer:coarse){
   #individualSection .table-grid,
   #summarySection .table-grid,
   #fullSummarySection .table-grid{
@@ -19068,7 +19068,8 @@ input,select,textarea,button{max-width:100%}
   #analyticsTable,
   #fullTraderPerformanceTable,
   #fullTraderChargesTable,
-  #fullSummarySection .final-user-patch-table-wrap{
+  #fullSummarySection .final-user-patch-table-wrap,
+  #fullTraderPerformanceTable .portfolio-collapse-wrap{
     width:100%!important;
     max-width:100%!important;
     overflow-x:auto!important;
@@ -19102,6 +19103,7 @@ input,select,textarea,button{max-width:100%}
     font-size:13px!important;
   }
   #fullTraderPerformanceTable .final-user-patch-table,
+  #fullTraderPerformanceTable .portfolio-collapse-table,
   #fullTraderPerformanceTable table{
     width:max-content!important;
     min-width:1180px!important;
@@ -19139,6 +19141,30 @@ input,select,textarea,button{max-width:100%}
     text-overflow:clip!important;
     line-height:1.2!important;
   }
+
+  html body #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(n),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(n),
+  html body #fullTraderPerformanceTable .final-user-patch-table th:nth-child(n),
+  html body #fullTraderPerformanceTable .final-user-patch-table td:nth-child(n),
+  html body #individualPerformanceTable table th:nth-child(n),
+  html body #individualPerformanceTable table td:nth-child(n),
+  html body #riskUtilizationTable table th:nth-child(n),
+  html body #riskUtilizationTable table td:nth-child(n){
+    width:auto!important;
+    max-width:none!important;
+  }
+
+  html body #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(1),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(1){min-width:190px!important;}
+  html body #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(2),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(2),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(3),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(3),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(4),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(4){min-width:145px!important;}
+
+  html body #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(n+5),
+  html body #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(n+5){min-width:82px!important;}
 
   #individualPerformanceTable th:nth-child(2),
   #individualPerformanceTable td:nth-child(2),
@@ -19191,7 +19217,7 @@ input,select,textarea,button{max-width:100%}
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-05-mobile-table-v2";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-05-mobile-table-v3-force";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})

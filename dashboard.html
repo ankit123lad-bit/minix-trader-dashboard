@@ -1,22 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Minix Trader Dashboard</title>
-  <meta name="description" content="Minix Trader Dashboard" />
-  <meta name="theme-color" content="#2563eb" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Minix Trader" />
-  <meta name="format-detection" content="telephone=no" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <script defer src="/pwa-install.js"></script>
 <Style>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Share Market / Trader Performance Dashboard</title>
   <script src="https://cdn.plot.ly/plotly-3.3.1.min.js"></script>
 <script>
@@ -2120,6 +2106,8 @@ tbody tr:hover td{
 })();
 </script>
 
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="manifest" href="manifest.json" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -11844,7 +11832,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-01-mobile-fullwidth-v3";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-01-photo-live-v2";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})
@@ -11855,316 +11843,6 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
 })();
 </script>
 <!-- === END MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
-
-
-
-<!-- === MINIX INDIVIDUAL PERFORMANCE FULL WIDTH MOBILE FIX 2026-08-01 V2 === -->
-<style id="minix-individual-full-width-mobile-fix-v2">
-/* Mobile/PWA: each Individual Performance report must use the full phone width. */
-@media (max-width:1180px){
-  #individualSection{
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    overflow-x:hidden!important;
-  }
-  #individualSection > .table-grid{
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr)!important;
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    gap:10px!important;
-  }
-  #individualSection > .table-grid > .table-card{
-    grid-column:1 / -1!important;
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    overflow:hidden!important;
-  }
-  #individualPerformanceTable,
-  #riskUtilizationTable,
-  #accuracyTable,
-  #analyticsTable{
-    display:block!important;
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    overflow-x:auto!important;
-    overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    overscroll-behavior-x:contain!important;
-    scrollbar-gutter:stable!important;
-  }
-  #individualPerformanceTable table,
-  #riskUtilizationTable table,
-  #accuracyTable table,
-  #analyticsTable table{
-    width:max-content!important;
-    min-width:100%!important;
-    max-width:none!important;
-    table-layout:auto!important;
-  }
-
-  /* Dynamic viewport units work correctly inside installed Android/iPhone PWAs. */
-  .tab-buttons,
-  #minixPushBar{
-    left:8px!important;
-    right:auto!important;
-    width:calc(100dvw - 16px)!important;
-    max-width:none!important;
-    margin:0!important;
-    box-sizing:border-box!important;
-    transform:none!important;
-  }
-}
-@supports not (width:100dvw){
-  @media (max-width:1180px){
-    .tab-buttons,#minixPushBar{width:calc(100vw - 16px)!important;}
-  }
-}
-</style>
-<script id="minix-individual-scroll-reset-v2">
-(function(){
-  'use strict';
-  function resetIndividualScroll(){
-    var sec=document.getElementById('individualSection');
-    if(!sec || getComputedStyle(sec).display==='none') return;
-    var selectors=[
-      '#individualPerformanceTable','#riskUtilizationTable','#accuracyTable','#analyticsTable',
-      '#monthWiseChargesTable','#allTradersDateWiseTable','#capitalUtilizationTable',
-      '#individualSection .table-card'
-    ];
-    document.querySelectorAll(selectors.join(',')).forEach(function(el){
-      try{ el.scrollLeft=0; }catch(e){}
-    });
-  }
-  document.addEventListener('click',function(ev){
-    var btn=ev.target && ev.target.closest ? ev.target.closest('.dashboard-tab') : null;
-    if(!btn) return;
-    var call=btn.getAttribute('onclick')||'';
-    if(call.indexOf('individualSection')!==-1){
-      setTimeout(resetIndividualScroll,80);
-      setTimeout(resetIndividualScroll,350);
-    }
-  },true);
-  window.addEventListener('orientationchange',function(){
-    setTimeout(resetIndividualScroll,180);
-    setTimeout(resetIndividualScroll,550);
-  },{passive:true});
-  window.addEventListener('pageshow',function(){setTimeout(resetIndividualScroll,180);},{passive:true});
-})();
-</script>
-<!-- === END MINIX INDIVIDUAL PERFORMANCE FULL WIDTH MOBILE FIX === -->
-
-
-<!-- === MINIX TRADER DAILY ENTRY PANEL RESTORED 2026-08-01 === -->
-<style id="minix-trader-entry-restored-css">
-#minixTraderVisiblePanel{
-  display:none;
-  margin:0 0 18px;
-  padding:22px;
-  border:1px solid #10b981;
-  border-radius:22px;
-  background:linear-gradient(145deg,#0b1b2f,#0a1728);
-  box-shadow:0 16px 45px rgba(0,0,0,.26);
-}
-#minixTraderVisiblePanel .mv-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-#minixTraderVisiblePanel .mv-head h2{margin:0;color:#f8fafc;font-size:20px}
-#minixTraderVisiblePanel .mv-user{display:inline-flex;padding:9px 15px;border-radius:999px;background:#065f46;color:#a7f3d0;font-weight:900;font-size:13px}
-#minixTraderVisiblePanel .mv-deadline{display:inline-block;margin-bottom:10px;padding:10px 14px;border-radius:12px;background:#991b1b;color:#fecaca;font-weight:900}
-#minixTraderVisiblePanel .mv-help{color:#bfdbfe;line-height:1.5;margin-bottom:14px}
-#minixTraderVisiblePanel .mv-statuses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 18px}
-#minixTraderVisiblePanel .mv-statuses label{display:flex;align-items:center;gap:12px;min-height:58px;padding:0 18px;border:1px solid #475569;border-radius:16px;background:#111827;color:#fff;font-size:17px;font-weight:900;cursor:pointer}
-#minixTraderVisiblePanel .mv-statuses input{width:20px;height:20px;accent-color:#2563eb}
-#minixTraderVisiblePanel .mv-entry-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
-#minixTraderVisiblePanel .mv-field label{display:block;margin:0 0 7px;color:#93c5fd;font-weight:900}
-#minixTraderVisiblePanel .mv-field input,
-#minixTraderVisiblePanel .mv-field textarea{width:100%;box-sizing:border-box;border:1px solid #334155;border-radius:14px;background:#071426;color:#fff;padding:15px;font:inherit;outline:none}
-#minixTraderVisiblePanel .mv-field input:focus,
-#minixTraderVisiblePanel .mv-field textarea:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.14)}
-#minixTraderVisiblePanel .mv-field input:disabled{opacity:.52;cursor:not-allowed}
-#minixTraderVisiblePanel .mv-field-wide{grid-column:1/-1}
-#minixTraderVisiblePanel .mv-field textarea{min-height:92px;resize:vertical}
-#minixTraderVisiblePanel .mv-auto-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:18px}
-#minixTraderVisiblePanel .mv-auto{min-height:78px;padding:14px 18px;border:1px solid #3b82f6;border-radius:16px;background:#172554}
-#minixTraderVisiblePanel .mv-auto span{display:block;color:#bfdbfe;margin-bottom:5px}
-#minixTraderVisiblePanel .mv-auto b{display:block;color:#34d399;font-size:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#minixTraderVisiblePanel .mv-submit{margin-top:17px;border:0;border-radius:14px;padding:14px 22px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:16px;font-weight:900;cursor:pointer}
-#minixTraderVisiblePanel .mv-submit:disabled{opacity:.6;cursor:wait}
-#minixTraderVisiblePanel .mv-message{display:none;margin-top:13px;padding:12px 14px;border-radius:12px;font-weight:800}
-#minixTraderVisiblePanel .mv-message.ok{display:block;background:#064e3b;color:#a7f3d0}
-#minixTraderVisiblePanel .mv-message.err{display:block;background:#7f1d1d;color:#fecaca}
-@media(max-width:1180px){#minixTraderVisiblePanel .mv-entry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:760px){
-  #minixTraderVisiblePanel{padding:15px;margin-bottom:22px;border-radius:17px}
-  #minixTraderVisiblePanel .mv-head h2{font-size:17px}
-  #minixTraderVisiblePanel .mv-statuses{grid-template-columns:1fr}
-  #minixTraderVisiblePanel .mv-entry-grid{grid-template-columns:1fr}
-  #minixTraderVisiblePanel .mv-auto-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  #minixTraderVisiblePanel .mv-auto{padding:12px;min-width:0}
-  #minixTraderVisiblePanel .mv-auto b{font-size:18px}
-  #minixTraderVisiblePanel .mv-submit{width:100%;margin-bottom:125px}
-}
-</style>
-<script id="minix-trader-entry-restored-js">
-(function(){
-  'use strict';
-  const PANEL_ID='minixTraderVisiblePanel';
-  let loadedKey='';
-  let lastUserKey='';
-
-  const E=id=>document.getElementById(id);
-  const N=v=>{const n=Number(String(v??0).replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:0};
-  const M=v=>(Number(v)<0?'-':'')+'₹'+Math.abs(Number(v)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
-  const H=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function user(){try{return JSON.parse(localStorage.getItem('minixUser')||'null')}catch(e){return null}}
-  function role(u){return String((u||user())?.role||'').trim().toLowerCase().replace(/[^a-z]/g,'')}
-  function isTrader(u){const r=role(u);return r==='trader'||r==='traders'||r==='trading'||r.startsWith('trader')}
-  function today(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),x={};p.forEach(a=>x[a.type]=a.value);return x.year+'-'+x.month+'-'+x.day}
-  function traderName(){
-    const u=user()||{};
-    const direct=String(u.trader_name||u.display_name||u.full_name||u.name||'').trim();
-    if(direct)return direct;
-    const a=Array.isArray(window.rawData)?window.rawData:[];
-    const names=[...new Set(a.map(r=>String(r['Trader Name']||r.trader_name||'').trim()).filter(Boolean))];
-    return names.length===1?names[0]:String(u.username||u.user_name||'').trim();
-  }
-  function client(){
-    const c=window.MINIX_CONFIG||{};
-    const url=c.supabaseUrl||localStorage.getItem('MINIX_SUPABASE_URL');
-    const key=c.supabaseAnonKey||localStorage.getItem('MINIX_SUPABASE_KEY');
-    return window.supabase&&url&&key?window.supabase.createClient(url,key):null;
-  }
-  function panelHtml(){
-    const fields=[
-      ['fno_total_fund','F&O Total Fund'],['cash_total_fund','Cash Total Fund'],['mcx_total_fund','MCX Total Fund'],['margin_utilized','Margin Utilized'],
-      ['fno_gross','F&O Gross'],['fno_charges','F&O Charges'],['cash_gross','Cash Gross'],['cash_charges','Cash Charges'],
-      ['mcx_gross','MCX Gross'],['mcx_charges','MCX Charges']
-    ];
-    return '<div class="mv-head"><h2 id="mv_report_title">📝 Today’s Trader Report</h2><span class="mv-user">'+H(traderName())+' • '+today().split('-').reverse().join('-')+'</span></div>'+
-      '<div class="mv-deadline">⏰ Final Submission Deadline: 4:15 PM</div>'+
-      '<div class="mv-help">આજે trade કર્યું હોય તો figures भरो. આજનો report Submit થયેલો હોય તો અહીંથી Edit કરી શકો; Adminને old → new changes દેખાશે.</div>'+
-      '<div class="mv-statuses">'+
-        '<label><input type="radio" name="mv_status" value="TRADED" checked> 🟢 Traded Today</label>'+
-        '<label><input type="radio" name="mv_status" value="NO_TRADE"> 🟡 No Trade Today</label>'+
-      '</div>'+
-      '<div class="mv-entry-grid">'+fields.map(x=>'<div class="mv-field"><label>'+x[1]+'</label><input id="mv_'+x[0]+'" type="number" step="0.01" inputmode="decimal" value="0"></div>').join('')+
-        '<div class="mv-field mv-field-wide"><label>Reason / Note</label><textarea id="mv_reason" placeholder="No Trade હોય તો કારણ લખી શકો"></textarea></div>'+
-      '</div>'+
-      '<div class="mv-auto-grid">'+
-        '<div class="mv-auto"><span>Total Fund — Automatic</span><b id="mv_total_fund">₹0</b></div>'+
-        '<div class="mv-auto"><span>Total Gross — Automatic</span><b id="mv_total_gross">₹0</b></div>'+
-        '<div class="mv-auto"><span>Total Charges — Automatic</span><b id="mv_total_charges">₹0</b></div>'+
-        '<div class="mv-auto"><span>Total Net P&amp;L — Automatic</span><b id="mv_total_net">₹0</b></div>'+
-      '</div>'+
-      '<button id="mv_submit_button" type="button" class="mv-submit">✅ Submit To Admin</button>'+
-      '<div id="mv_message" class="mv-message"></div>';
-  }
-  function ensurePanel(){
-    let p=E(PANEL_ID);
-    if(p)return p;
-    p=document.createElement('section');p.id=PANEL_ID;p.setAttribute('aria-label','Today Trader Report');p.innerHTML=panelHtml();
-    const tabs=document.querySelector('.tab-buttons');
-    if(tabs&&tabs.parentNode)tabs.parentNode.insertBefore(p,tabs);else(document.querySelector('.container')||document.body).prepend(p);
-    p.querySelectorAll('input[name="mv_status"]').forEach(x=>x.addEventListener('change',statusChanged));
-    p.querySelectorAll('.mv-entry-grid input').forEach(x=>x.addEventListener('input',calc));
-    E('mv_submit_button')?.addEventListener('click',submit);
-    return p;
-  }
-  function calc(){
-    const fund=N(E('mv_fno_total_fund')?.value)+N(E('mv_cash_total_fund')?.value)+N(E('mv_mcx_total_fund')?.value);
-    const gross=N(E('mv_fno_gross')?.value)+N(E('mv_cash_gross')?.value)+N(E('mv_mcx_gross')?.value);
-    const charges=N(E('mv_fno_charges')?.value)+N(E('mv_cash_charges')?.value)+N(E('mv_mcx_charges')?.value);
-    const net=gross-charges;
-    if(E('mv_total_fund'))E('mv_total_fund').textContent=M(fund);
-    if(E('mv_total_gross')){E('mv_total_gross').textContent=M(gross);E('mv_total_gross').style.color=gross<0?'#f87171':'#34d399'}
-    if(E('mv_total_charges'))E('mv_total_charges').textContent=M(charges);
-    if(E('mv_total_net')){E('mv_total_net').textContent=M(net);E('mv_total_net').style.color=net<0?'#f87171':'#34d399'}
-  }
-  function statusChanged(){
-    const traded=document.querySelector('input[name="mv_status"]:checked')?.value==='TRADED';
-    document.querySelectorAll('#'+PANEL_ID+' .mv-entry-grid input').forEach(x=>{x.disabled=!traded;if(!traded)x.value='0'});
-    calc();
-  }
-  function showMessage(msg,ok){const x=E('mv_message');if(!x)return;x.textContent=msg;x.className='mv-message '+(ok?'ok':'err')}
-  function fill(data){
-    if(!data)return;
-    if(E('mv_report_title'))E('mv_report_title').textContent='✏️ Edit Today’s Trader Report';
-    if(E('mv_submit_button'))E('mv_submit_button').textContent='✅ Save Edited Report';
-    const radio=document.querySelector('input[name="mv_status"][value="'+String(data.today_status||'TRADED')+'"]');if(radio)radio.checked=true;
-    ['fno_total_fund','cash_total_fund','mcx_total_fund','margin_utilized','fno_gross','fno_charges','cash_gross','cash_charges','mcx_gross','mcx_charges','reason'].forEach(k=>{const x=E('mv_'+k);if(x)x.value=data[k]??(k==='reason'?'':'0')});
-    statusChanged();calc();
-  }
-  async function loadExisting(force){
-    const name=traderName(),key=today()+'|'+name.toLowerCase();
-    if(!force&&loadedKey===key)return;
-    loadedKey=key;
-    const c=client();if(!c||!name)return;
-    try{
-      const {data,error}=await c.from('minix_daily_trader_reports').select('*').eq('report_date',today()).ilike('trader_name',name).maybeSingle();
-      if(error)throw error;
-      if(data)fill(data);
-    }catch(e){console.error('Trader report load failed',e)}
-  }
-  async function submit(){
-    const c=client(),name=traderName(),u=user()||{};
-    if(!c){showMessage('Supabase configuration મળ્યું નથી.',false);return}
-    if(!name){showMessage('Trader name મળ્યું નથી. ફરી login કરો.',false);return}
-    const status=document.querySelector('input[name="mv_status"]:checked')?.value||'TRADED';
-    const traded=status==='TRADED';
-    const payload={
-      report_date:today(),trader_name:name,today_status:status,
-      fno_total_fund:traded?N(E('mv_fno_total_fund')?.value):0,
-      cash_total_fund:traded?N(E('mv_cash_total_fund')?.value):0,
-      mcx_total_fund:traded?N(E('mv_mcx_total_fund')?.value):0,
-      margin_utilized:traded?N(E('mv_margin_utilized')?.value):0,
-      fno_gross:traded?N(E('mv_fno_gross')?.value):0,
-      fno_charges:traded?N(E('mv_fno_charges')?.value):0,
-      cash_gross:traded?N(E('mv_cash_gross')?.value):0,
-      cash_charges:traded?N(E('mv_cash_charges')?.value):0,
-      mcx_gross:traded?N(E('mv_mcx_gross')?.value):0,
-      mcx_charges:traded?N(E('mv_mcx_charges')?.value):0,
-      reason:String(E('mv_reason')?.value||'').trim(),
-      submitted_by:String(u.username||u.user_name||name),
-      updated_at:new Date().toISOString()
-    };
-    payload.total_margin=payload.fno_total_fund+payload.cash_total_fund+payload.mcx_total_fund;
-    const btn=E('mv_submit_button');if(btn){btn.disabled=true;btn.textContent='Saving…'}
-    try{
-      const {data,error}=await c.from('minix_daily_trader_reports').upsert(payload,{onConflict:'report_date,trader_name'}).select().single();
-      if(error)throw error;
-      fill(data||payload);
-      showMessage('✅ Today’s Trader Report Adminને successfully submit થઈ ગયો.',true);
-      if(typeof window.minixShowTodayReport==='function'){
-        window.MINIX_TODAY_SUBMISSIONS=(Array.isArray(window.MINIX_TODAY_SUBMISSIONS)?window.MINIX_TODAY_SUBMISSIONS:[]).filter(x=>String(x.trader_name||'').toLowerCase()!==name.toLowerCase());
-        window.MINIX_TODAY_SUBMISSIONS.push(data||payload);
-      }
-    }catch(e){console.error('Trader report save failed',e);showMessage('Report save ન થયો: '+(e.message||'Please try again.'),false)}
-    finally{if(btn){btn.disabled=false;btn.textContent=E('mv_report_title')?.textContent.includes('Edit')?'✅ Save Edited Report':'✅ Submit To Admin'}}
-  }
-  function sync(){
-    const u=user(),p=ensurePanel();
-    const key=u?String(u.username||u.user_name||u.trader_name||'')+'|'+role(u):'';
-    if(!u||!isTrader(u)){p.style.display='none';lastUserKey=key;return}
-    p.style.display='block';
-    if(lastUserKey!==key){
-      lastUserKey=key;loadedKey='';p.innerHTML=panelHtml();
-      p.querySelectorAll('input[name="mv_status"]').forEach(x=>x.addEventListener('change',statusChanged));
-      p.querySelectorAll('.mv-entry-grid input').forEach(x=>x.addEventListener('input',calc));
-      E('mv_submit_button')?.addEventListener('click',submit);
-    }
-    loadExisting(false);
-  }
-  window.minixSubmitVisibleTraderReport=submit;
-  window.minixRefreshTraderEntryPanel=function(){loadedKey='';sync()};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync);else sync();
-  setInterval(sync,700);
-  window.addEventListener('focus',sync);
-})();
-</script>
-<!-- === END MINIX TRADER DAILY ENTRY PANEL RESTORED === -->
 
 </body></html>
 </script>
@@ -16345,7 +16023,7 @@ section {
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-01-mobile-fullwidth-v3";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-01-photo-live-v2";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})
@@ -17743,6 +17421,9 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
 .minix-status-traded{background:#064e3b;color:#6ee7b7}.minix-status-none{background:#713f12;color:#fde68a}
 .minix-status-leave{background:#4c1d95;color:#ddd6fe}.minix-status-sick{background:#7f1d1d;color:#fecaca}
 .minix-status-pending{background:#7f1d1d;color:#fecaca}.minix-status-awaiting{background:#1e3a8a;color:#bfdbfe}.minix-status-late{background:#78350f;color:#fde68a}
+.minix-status-pending.minix-whatsapp-pending{border:1px solid #fb7185;cursor:pointer;font:inherit;box-shadow:0 0 0 1px #7f1d1d}
+.minix-status-pending.minix-whatsapp-pending:hover,.minix-status-pending.minix-whatsapp-pending:focus{background:#991b1b;color:#fff;outline:2px solid #22c55e;outline-offset:2px}
+.minix-whatsapp-hint{display:block;color:#86efac;font-size:10px;font-weight:800;margin-top:4px}
 .minix-entry-btn{position:fixed;right:18px;bottom:18px;z-index:99991;border:1px solid #6ee7b7;border-radius:13px;padding:12px 16px;background:#059669;color:#fff;font-weight:900;cursor:pointer;box-shadow:0 12px 30px #0008}
 .minix-entry-grid{display:grid;grid-template-columns:repeat(2,minmax(190px,1fr));gap:12px;margin-top:15px}
 .minix-entry-field label{display:block;color:#93c5fd;font-size:12px;font-weight:800;margin-bottom:6px}
@@ -17843,7 +17524,8 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
       mg=num(submission.mcx_gross);mc=num(submission.mcx_charges);
     }
     const gross=fg+cg+mg,charges=fc+cc+mc,net=gross-charges,base=utilized||margin;
-    return{name,margin,utilized,ff,cf,mf,fg,fc,cg,cc,mg,mc,gross,charges,net,roi:base?net/base*100:0,status:statusOf(all,today,submission),reason:String(submission?.reason||''),submittedAt:submissionTime(submission?.updated_at),late:isLate(submission?.updated_at)};
+    const phone=String(val(submission,['whatsapp_number','whatsapp','mobile_number','mobile','phone_number','phone'])||val(all[0],['WhatsApp Number','Whatsapp Number','WhatsApp','Whatsapp','Mobile Number','Mobile','Phone Number','Phone'])||'');
+    return{name,phone,margin,utilized,ff,cf,mf,fg,fc,cg,cc,mg,mc,gross,charges,net,roi:base?net/base*100:0,status:statusOf(all,today,submission),reason:String(submission?.reason||''),submittedAt:submissionTime(submission?.updated_at),late:isLate(submission?.updated_at)};
   }
   function build(){
     const all=rows(),key=istToday(),names=[...new Set(all.map(trader).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -17854,6 +17536,17 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   const cls=n=>n>0?'#34d399':n<0?'#f87171':'#cbd5e1';
   function metric(label,value,color){return '<div class="minix-today-kpi"><span>'+label+'</span><b style="color:'+(color||'#e2e8f0')+'">'+value+'</b></div>'}
   function cell(n){return '<td class="amount" style="color:'+cls(n)+'">'+money(n)+'</td>'}
+  function statusCell(x,key){
+    if(x.status.cls==='pending')return '<td><button type="button" class="minix-status minix-status-pending minix-whatsapp-pending" onclick="minixOpenPendingWhatsApp(\''+encodeURIComponent(x.name)+'\',\''+encodeURIComponent(x.phone||'')+'\',\''+key+'\')" title="Open WhatsApp reminder">'+x.status.text+'</button><span class="minix-whatsapp-hint">🟢 Click to send WhatsApp reminder</span></td>';
+    return '<td><span class="minix-status minix-status-'+x.status.cls+'">'+x.status.text+'</span>'+(x.submittedAt?'<div style="color:#93c5fd;margin-top:4px">Submitted: '+esc(x.submittedAt)+'</div>':'')+(x.reason?'<div style="color:#94a3b8;margin-top:3px">'+esc(x.reason)+'</div>':'')+'</td>';
+  }
+  window.minixOpenPendingWhatsApp=function(encodedName,encodedPhone,key){
+    const name=decodeURIComponent(encodedName||'Trader'),raw=decodeURIComponent(encodedPhone||''),date=String(key||'').split('-').reverse().join('-');
+    let phone=raw.replace(/\D/g,'');if(phone.length===10)phone='91'+phone;if(phone.startsWith('0')&&phone.length===11)phone='91'+phone.slice(1);
+    const msg='Hello '+name+',\n\nYour trading report for '+date+' is pending. Please submit today\'s report as soon as possible.\n\nThank you.';
+    const url=phone.length>=11?'https://wa.me/'+phone+'?text='+encodeURIComponent(msg):'https://api.whatsapp.com/send?text='+encodeURIComponent(msg);
+    window.open(url,'_blank','noopener');
+  };
   function render(){
     const {key,list}=build(),u=currentUser()||{},r=role(),manager=isManager();
     if(!list.length)return '<div class="minix-today-head"><h2>📊 Today’s Report</h2></div><p>No trader data is available for your login.</p>';
@@ -17869,7 +17562,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     const scope=/admin/i.test(r)?'All Traders':(/pm/i.test(r)?'My PM Team':(/researcher/i.test(r)?'My Research Team':'My Report'));
     const kpis=manager?'<div class="minix-today-kpis">'+(metric('Traders in My Scope',list.length)+metric('Profit Traders',profit,'#34d399')+metric('Loss Traders',loss,'#f87171')+metric('Win Rate',winRate.toFixed(2)+'%','#60a5fa')+metric(istMinutes()>975?'Report Pending':'Awaiting Report',pending,'#f87171')+metric('No Trade',noTrade,'#fbbf24')+metric('Late Submitted',late,'#f59e0b')+metric('Total Profit',money(totalProfit),'#34d399')+metric('Total Loss',money(totalLoss),'#f87171'))+'</div>':'';
     const highlights=manager?'<div class="minix-today-highlights"><div class="minix-highlight">🏆 <b>Top Today:</b> '+(top?esc(top.name)+' • '+money(top.net)+' • '+top.roi.toFixed(2)+'% ROI':'No traded data')+'<br>📈 <b>Highest ROI:</b> '+(high?esc(high.name)+' • '+high.roi.toFixed(2)+'%':'-')+'</div><div class="minix-highlight">⚠️ <b>Worst Today:</b> '+(worst?esc(worst.name)+' • '+money(worst.net)+' • '+worst.roi.toFixed(2)+'% ROI':'No traded data')+'<br>📉 <b>Lowest ROI:</b> '+(low?esc(low.name)+' • '+low.roi.toFixed(2)+'%':'-')+'</div></div>':'';
-    const table='<div class="minix-today-table-wrap"><table class="minix-today-table"><thead><tr><th>Trader Name</th><th>Status / Submission Time</th><th class="amount">F&amp;O Fund</th><th class="amount">Cash Fund</th><th class="amount">MCX Fund</th><th class="amount">Total Fund</th><th class="amount">Margin Utilized</th><th class="amount">F&amp;O Gross</th><th class="amount">F&amp;O Charges</th><th class="amount">Cash Gross</th><th class="amount">Cash Charges</th><th class="amount">MCX Gross</th><th class="amount">MCX Charges</th><th class="amount">Total Gross</th><th class="amount">Total Charges</th><th class="amount">Net P&amp;L</th><th class="amount">ROI</th></tr></thead><tbody>'+list.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td><td><span class="minix-status minix-status-'+x.status.cls+'">'+x.status.text+'</span>'+(x.submittedAt?'<div style="color:#93c5fd;margin-top:4px">Submitted: '+esc(x.submittedAt)+'</div>':'')+(x.reason?'<div style="color:#94a3b8;margin-top:3px">'+esc(x.reason)+'</div>':'')+'</td>'+cell(x.ff)+cell(x.cf)+cell(x.mf)+cell(x.margin)+cell(x.utilized)+cell(x.fg)+cell(x.fc)+cell(x.cg)+cell(x.cc)+cell(x.mg)+cell(x.mc)+cell(x.gross)+cell(x.charges)+cell(x.net)+'<td class="amount" style="color:'+cls(x.roi)+'">'+x.roi.toFixed(2)+'%</td></tr>').join('')+'</tbody>'+(manager?'<tfoot><tr><td>Grand Total</td><td>'+list.length+' Traders</td>'+cell(totals.ff)+cell(totals.cf)+cell(totals.mf)+cell(totals.margin)+cell(totals.utilized)+cell(totals.fg)+cell(totals.fc)+cell(totals.cg)+cell(totals.cc)+cell(totals.mg)+cell(totals.mc)+cell(totals.gross)+cell(totals.charges)+cell(totals.net)+'<td class="amount" style="color:'+cls(totals.roi)+'">'+totals.roi.toFixed(2)+'%</td></tr></tfoot>':'')+'</table></div>';
+    const table='<div class="minix-today-table-wrap"><table class="minix-today-table"><thead><tr><th>Trader Name</th><th>Status / Submission Time</th><th class="amount">Total Fund</th><th class="amount">Margin Utilized</th><th class="amount">Total Gross</th><th class="amount">Total Charges</th><th class="amount">Net P&amp;L</th><th class="amount">ROI</th><th class="amount">F&amp;O Fund</th><th class="amount">Cash Fund</th><th class="amount">MCX Fund</th><th class="amount">F&amp;O Gross</th><th class="amount">F&amp;O Charges</th><th class="amount">Cash Gross</th><th class="amount">Cash Charges</th><th class="amount">MCX Gross</th><th class="amount">MCX Charges</th></tr></thead><tbody>'+list.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td>'+statusCell(x,key)+cell(x.margin)+cell(x.utilized)+cell(x.gross)+cell(x.charges)+cell(x.net)+'<td class="amount" style="color:'+cls(x.roi)+'">'+x.roi.toFixed(2)+'%</td>'+cell(x.ff)+cell(x.cf)+cell(x.mf)+cell(x.fg)+cell(x.fc)+cell(x.cg)+cell(x.cc)+cell(x.mg)+cell(x.mc)+'</tr>').join('')+'</tbody>'+(manager?'<tfoot><tr><td>Grand Total</td><td>'+list.length+' Traders</td>'+cell(totals.margin)+cell(totals.utilized)+cell(totals.gross)+cell(totals.charges)+cell(totals.net)+'<td class="amount" style="color:'+cls(totals.roi)+'">'+totals.roi.toFixed(2)+'%</td>'+cell(totals.ff)+cell(totals.cf)+cell(totals.mf)+cell(totals.fg)+cell(totals.fc)+cell(totals.cg)+cell(totals.cc)+cell(totals.mg)+cell(totals.mc)+'</tr></tfoot>':'')+'</table></div>';
     return '<div class="minix-today-head"><h2>📊 Today’s Role-wise Report – '+key.split('-').reverse().join('-')+'</h2><span class="minix-scope-badge">'+esc(u.name||u.username||'User')+' • '+esc(r)+' • '+scope+'</span></div>'+kpis+highlights+table+'<div class="minix-push-actions"><button onclick="minixTestNotification()">Test Notification</button><button class="close" onclick="minixClosePushModal()">Close</button></div>';
   }
   function sb(){const c=window.MINIX_CONFIG||{};return window.supabase&&c.supabaseUrl&&c.supabaseAnonKey?window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey):null}
@@ -19247,11 +18940,59 @@ td .minix-person-name-btn{display:inline-block!important;}
 </script>
 <!-- === END MINIX GLOBAL ALL PERSON NAMES PHOTO CLICK === -->
 
+<!-- === MINIX UNIVERSAL MOBILE / TABLET RESPONSIVE SAFETY LAYER === -->
+<style id="minix-universal-responsive-v1">
+html{width:100%;max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden}
+body{width:100%;max-width:100%;overflow-x:hidden;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+img,svg,video,canvas{max-width:100%;height:auto}
+.container{width:100%;min-width:0}
+.table-card,.tablewrap,[class*="table-wrap"],[id$="Table"]{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
+input,select,textarea,button{max-width:100%}
+@media(max-width:1024px){
+  .container{padding:10px!important}
+  .header{align-items:flex-start!important}
+  .filters,.kpi-grid,.kpi-grid-5,.kpi-grid-6,.kpi-grid-8,.weekly-grid,.chart-grid,.table-grid,.segment-grid,.market-filter-grid,.daily-index-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .tab-buttons{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch;padding-bottom:5px}
+  .dashboard-tab,.clear-filter-btn{flex:0 0 auto;white-space:nowrap}
+  table{display:table}
+  th,td{white-space:nowrap}
+}
+@media(max-width:700px){
+  .container{padding:8px!important}
+  h1{font-size:21px!important;line-height:1.2}
+  .subtitle{font-size:12px!important}
+  .filters,.kpi-grid,.kpi-grid-5,.kpi-grid-6,.kpi-grid-8,.weekly-grid,.chart-grid,.table-grid,.segment-grid,.market-filter-grid,.daily-index-grid,.daily-index-meta,.pro-filter-row,.pro-api-row{grid-template-columns:1fr!important}
+  .section-box,.upload-box,.filters,.table-card,.chart-card,.kpi-card{max-width:100%;min-width:0}
+  .header>*{max-width:100%}
+  select,input[type="date"],input[type="text"],input[type="number"],input[type="password"],textarea,button{font-size:16px;min-height:44px}
+  .table-card{padding:8px!important}
+  .table-card::after{content:'↔ Table જોવા માટે ડાબે–જમણે scroll કરો';display:block;position:sticky;left:0;width:max-content;max-width:100%;margin-top:7px;color:#94a3b8;font-size:11px}
+  .trader-profile-card,.profile-main{align-items:flex-start!important}
+  .trader-profile-img{width:76px;height:76px}
+  .profile-person{min-width:92px}
+  .profile-person-img,.profile-initials{width:76px;height:76px}
+  .modal-overlay{padding:8px!important;padding-top:max(8px,env(safe-area-inset-top))!important;padding-bottom:max(8px,env(safe-area-inset-bottom))!important}
+  .modal{padding:12px!important;max-height:92dvh!important}
+  .bell-btn{width:54px!important;height:54px!important;right:max(12px,env(safe-area-inset-right))!important;bottom:max(12px,env(safe-area-inset-bottom))!important}
+}
+@media(max-width:380px){
+  .container{padding:6px!important}
+  h1{font-size:19px!important}
+  .kpi-card,.section-box,.table-card,.chart-card{padding:7px!important}
+  .dashboard-tab,.clear-filter-btn{padding:8px 11px!important;font-size:12px!important}
+}
+@media(orientation:landscape) and (max-height:600px){
+  .modal{max-height:94dvh!important}
+  .bell-btn{width:48px!important;height:48px!important;font-size:22px!important}
+}
+</style>
+<!-- === END MINIX UNIVERSAL MOBILE / TABLET RESPONSIVE SAFETY LAYER === -->
+
 
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-01-mobile-fullwidth-v3";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-01-photo-live-v2";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})
@@ -19262,245 +19003,6 @@ td .minix-person-name-btn{display:inline-block!important;}
 })();
 </script>
 <!-- === END MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
-
-
-
-<!-- === MINIX FINAL MOBILE LANDSCAPE / PWA RESPONSIVE FIX 2026-08-01 === -->
-<style id="minix-final-mobile-responsive-fix-v1">
-/* Keep the whole PWA inside the phone viewport. */
-html,body{max-width:100%!important;overflow-x:hidden!important}
-
-@media (max-width:1180px){
-  html{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
-  body{
-    width:100%!important;
-    max-width:100vw!important;
-    padding-bottom:calc(146px + env(safe-area-inset-bottom))!important;
-  }
-  .container{
-    width:100%!important;
-    max-width:100vw!important;
-    padding-left:8px!important;
-    padding-right:8px!important;
-    overflow-x:hidden!important;
-  }
-
-  /* Overall Performance: readable cards instead of nine squeezed cards. */
-  #summarySection .segment-grid,
-  #summarySection .kpi-grid-8.segment-grid{
-    display:grid!important;
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-    gap:8px!important;
-    width:100%!important;
-    max-width:100%!important;
-  }
-  #summarySection .segment-grid .kpi-card{
-    width:100%!important;
-    min-width:0!important;
-    min-height:86px!important;
-    height:auto!important;
-    padding:10px!important;
-    overflow:visible!important;
-  }
-  #summarySection .segment-grid .kpi-title{
-    font-size:11px!important;
-    line-height:1.2!important;
-    white-space:normal!important;
-    overflow:visible!important;
-    text-overflow:clip!important;
-    word-break:normal!important;
-  }
-  #summarySection .segment-grid .kpi-value{
-    display:block!important;
-    width:100%!important;
-    max-width:100%!important;
-    font-size:15px!important;
-    line-height:1.18!important;
-    white-space:normal!important;
-    overflow:visible!important;
-    text-overflow:clip!important;
-    overflow-wrap:anywhere!important;
-    word-break:break-word!important;
-  }
-
-  /* Every wide report/table gets its own clean horizontal scroller. */
-  .table-card,
-  .wide-table,
-  #monthWiseChargesTable,
-  #allTradersDateWiseTable,
-  #capitalUtilizationTable,
-  #fullFyDematMonthSummaryTable,
-  #fullTraderPerformanceTable,
-  #fullTraderChargesTable,
-  #individualPerformanceTable,
-  #riskUtilizationTable,
-  #accuracyTable,
-  #analyticsTable{
-    width:100%!important;
-    max-width:100%!important;
-    overflow-x:auto!important;
-    overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    overscroll-behavior-x:contain!important;
-  }
-  .table-card table,
-  .wide-table table,
-  #monthWiseChargesTable table,
-  #allTradersDateWiseTable table,
-  #capitalUtilizationTable table,
-  #fullFyDematMonthSummaryTable table,
-  #fullTraderPerformanceTable table,
-  #fullTraderChargesTable table,
-  #individualPerformanceTable table,
-  #riskUtilizationTable table,
-  #accuracyTable table,
-  #analyticsTable table{
-    width:max-content!important;
-    min-width:100%!important;
-    max-width:none!important;
-    table-layout:auto!important;
-    border-collapse:separate!important;
-    border-spacing:0!important;
-  }
-  .table-card th,.table-card td,
-  .wide-table th,.wide-table td,
-  #monthWiseChargesTable th,#monthWiseChargesTable td,
-  #allTradersDateWiseTable th,#allTradersDateWiseTable td,
-  #fullFyDematMonthSummaryTable th,#fullFyDematMonthSummaryTable td,
-  #fullTraderPerformanceTable th,#fullTraderPerformanceTable td,
-  #fullTraderChargesTable th,#fullTraderChargesTable td{
-    width:auto!important;
-    min-width:max-content!important;
-    max-width:none!important;
-    white-space:nowrap!important;
-    overflow:visible!important;
-    text-overflow:clip!important;
-    word-break:normal!important;
-  }
-  /* Name/description columns need enough room. */
-  .table-card th:first-child,.table-card td:first-child,
-  .wide-table th:first-child,.wide-table td:first-child{
-    min-width:120px!important;
-  }
-
-  /* Bottom Dashboard tabs and notification tools must never overlap. */
-  .tab-buttons{
-    position:fixed!important;
-    left:8px!important;
-    right:8px!important;
-    bottom:calc(8px + env(safe-area-inset-bottom))!important;
-    top:auto!important;
-    width:auto!important;
-    max-width:calc(100vw - 16px)!important;
-    min-height:50px!important;
-    display:flex!important;
-    flex-wrap:nowrap!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    gap:7px!important;
-    padding:6px!important;
-    z-index:99970!important;
-    background:rgba(7,17,31,.97)!important;
-    border:1px solid #334155!important;
-    border-radius:15px!important;
-    box-shadow:0 12px 34px rgba(0,0,0,.55)!important;
-    -webkit-overflow-scrolling:touch!important;
-  }
-  .tab-buttons .dashboard-tab,
-  .tab-buttons .clear-filter-btn{
-    flex:0 0 auto!important;
-    min-height:38px!important;
-    padding:8px 11px!important;
-    font-size:11px!important;
-    line-height:1.15!important;
-    white-space:nowrap!important;
-  }
-  #minixPushBar{
-    position:fixed!important;
-    left:8px!important;
-    right:8px!important;
-    bottom:calc(66px + env(safe-area-inset-bottom))!important;
-    width:auto!important;
-    max-width:calc(100vw - 16px)!important;
-    min-height:48px!important;
-    display:flex!important;
-    flex-wrap:nowrap!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    gap:7px!important;
-    padding:6px!important;
-    z-index:99980!important;
-    background:rgba(7,17,31,.97)!important;
-    border:1px solid #334155!important;
-    border-radius:15px!important;
-    box-shadow:0 12px 34px rgba(0,0,0,.55)!important;
-    -webkit-overflow-scrolling:touch!important;
-  }
-  #minixPushBar button{
-    flex:0 0 auto!important;
-    min-height:36px!important;
-    padding:8px 11px!important;
-    border-radius:10px!important;
-    font-size:11px!important;
-    line-height:1.15!important;
-    white-space:nowrap!important;
-  }
-
-  /* Keep floating controls above both bottom bars. */
-  #fundAlertBell.bell-btn,.bell-btn#fundAlertBell{
-    right:14px!important;
-    bottom:calc(154px + env(safe-area-inset-bottom))!important;
-  }
-  #bellToggleBtn{
-    right:20px!important;
-    bottom:calc(218px + env(safe-area-inset-bottom))!important;
-  }
-  #minixPwaInstallButton{
-    right:10px!important;
-    bottom:calc(154px + env(safe-area-inset-bottom))!important;
-  }
-}
-
-/* Normal portrait phone: two cards per row, still showing full amounts. */
-@media (max-width:700px){
-  #summarySection .segment-grid,
-  #summarySection .kpi-grid-8.segment-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-  #summarySection .segment-grid .kpi-value{font-size:14px!important}
-  .section-title{font-size:16px!important;line-height:1.25!important}
-}
-
-/* Very narrow phone: retain two useful columns but tighten spacing. */
-@media (max-width:390px){
-  #summarySection .segment-grid,
-  #summarySection .kpi-grid-8.segment-grid{
-    gap:6px!important;
-  }
-  #summarySection .segment-grid .kpi-card{padding:8px!important}
-  #summarySection .segment-grid .kpi-value{font-size:13px!important}
-}
-</style>
-<script id="minix-final-mobile-responsive-js-v1">
-(function(){
-  function enforceViewport(){
-    var meta=document.querySelector('meta[name="viewport"]');
-    if(!meta){
-      meta=document.createElement('meta');
-      meta.name='viewport';
-      (document.head||document.documentElement).appendChild(meta);
-    }
-    meta.setAttribute('content','width=device-width, initial-scale=1, viewport-fit=cover');
-  }
-  function markMobile(){
-    document.documentElement.classList.toggle('minix-mobile-layout',window.innerWidth<=1180);
-  }
-  enforceViewport();markMobile();
-  window.addEventListener('resize',markMobile,{passive:true});
-  window.addEventListener('orientationchange',function(){setTimeout(markMobile,120);},{passive:true});
-})();
-</script>
-<!-- === END MINIX FINAL MOBILE LANDSCAPE / PWA RESPONSIVE FIX === -->
 
 </body>
 </html>

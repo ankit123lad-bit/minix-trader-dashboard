@@ -2380,7 +2380,7 @@ tbody tr:hover td{
       <div id="fullFyDematMonthSummaryTable"></div>
     </div>
 
-    <div class="section-title">🏆 Trader Performance & Portfolio Summary</div>
+    <div class="section-title">🏆 Trader Performance Summary</div>
     <div class="table-card wide-table"><div id="fullTraderPerformanceTable"></div></div>
 
     <div class="section-title">💸 Trader-wise Charges & Statutory Breakdown</div>
@@ -2940,7 +2940,6 @@ function buildFullDashboardSummaryWithTraders(){
     chargeFields.forEach(f=>totals[f]+=r[f]);
   });
 
-  const fullIndexPct=marketPctPairForData(data,false);
   perfEl.innerHTML=`<table><thead><tr>
     <th>Rank</th>
     <th>Portfolio Name</th>
@@ -2948,8 +2947,6 @@ function buildFullDashboardSummaryWithTraders(){
     <th>Trader Name</th>
     <th class="amount">Fund</th>
     <th class="amount">Profit / Loss</th>
-    <th class="amount">Nifty 50 %</th>
-    <th class="amount">Bank Nifty %</th>
     <th class="amount">Total Charges</th>
     <th>Total ROI</th>
     <th>Winning Trades</th>
@@ -2965,7 +2962,6 @@ function buildFullDashboardSummaryWithTraders(){
         <td>${r.trader}</td>
         <td class="amount">${formatINR(r.fund)}</td>
         <td class="amount ${r.pnl>=0?'positive':'negative'}">${formatINR(r.pnl)}</td>
-        ${indexPctCell(fullIndexPct.nifty)}${indexPctCell(fullIndexPct.bank)}
         <td class="amount warning">${formatINR(r.charges)}</td>
         <td class="${roi>=0?'positive':'negative'}">${roi.toFixed(2)}%</td>
         <td class="positive">${r.win}</td>
@@ -2977,7 +2973,6 @@ function buildFullDashboardSummaryWithTraders(){
       <td colspan="4">Grand Total</td>
       <td class="amount">${formatINR(totals.fund)}</td>
       <td class="amount ${totals.pnl>=0?'positive':'negative'}">${formatINR(totals.pnl)}</td>
-      ${indexPctCell(fullIndexPct.nifty)}${indexPctCell(fullIndexPct.bank)}
       <td class="amount warning">${formatINR(totals.charges)}</td>
       <td class="${totals.pnl>=0?'positive':'negative'}">${totals.fund?(totals.pnl/totals.fund*100).toFixed(2):"0.00"}%</td>
       <td class="positive">${totals.win}</td>
@@ -3200,7 +3195,7 @@ function buildIndividualTables(){
   }).sort((a,b)=>b.mtd-a.mtd);
 
   const indIndexPct=marketPctPairForData(data, !!(indDateFilter?.value));
-  individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P&L</th><th class="amount">MTD P&L</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th><th>ROI</th><th>Risk</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
+  individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P&L</th><th class="amount">MTD P&L</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th><th>ROI</th><th>Risk</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
   riskUtilizationTable.innerHTML=`<table><thead><tr><th>Trader</th><th class="amount">Fund / Limit</th><th class="amount">Profit / Loss</th><th class="amount">Final Remaining</th><th>Calculation</th><th>Alert</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="amount">${formatINR(r.limit)}</td><td class="amount ${r.mtd<0?'negative':'positive'}">${formatINR(r.mtd)}</td><td class="amount ${r.remaining>=0?'positive':'negative'}"><b>${formatINR(r.remaining)}</b></td><td>${r.mtd>=0?'Fund + Profit':'Fund - Loss'}</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
   accuracyTable.innerHTML=`<table><thead><tr><th>Trader</th><th>Winning Trades</th><th>Losing Trades</th><th>Accuracy</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="positive">${r.win}</td><td class="negative">${r.loss}</td><td>${r.accuracy.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
   analyticsTable.innerHTML=`<table><thead><tr><th>Trader</th><th>ROI %</th><th class="amount">Total Profit</th><th class="amount">Total Loss</th><th>Profit Factor</th><th>Win Rate</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td>${r.roi.toFixed(1)}%</td><td class="amount positive">${formatINR(r.positiveTotal)}</td><td class="amount negative">${formatINR(r.negativeTotal)}</td><td class="${r.profitFactor>=1?'positive':'negative'}">${r.profitFactor===999?'∞':r.profitFactor.toFixed(2)}</td><td>${r.winRate.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
@@ -5104,7 +5099,7 @@ document.addEventListener('keydown', function(e){
     }).sort((a,b)=>b.mtd-a.mtd);
 
     const indIndexPct=marketPctPairForData(data, !!(indDateFilter?.value));
-    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P/L</th><th class="amount">MTD P/L</th><th class="amount">Nifty %</th><th class="amount">Bank %</th><th>ROI</th><th>Risk</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
+    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P/L</th><th class="amount">MTD P/L</th><th class="amount">Nifty %</th><th class="amount">Bank %</th><th>ROI</th><th>Risk</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
     riskUtilizationTable.innerHTML=`<table><thead><tr><th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Final</th><th>Calc</th><th>Alert</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="amount" title="${formatINR(r.limit)}">${formatFundShort(r.limit)}</td><td class="amount ${r.mtd<0?'negative':'positive'}">${formatINR(r.mtd)}</td><td class="amount ${r.remaining>=0?'positive':'negative'}"><b>${formatINR(r.remaining)}</b></td><td>${r.mtd>=0?'Fund + Profit':'Fund - Loss'}</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
     accuracyTable.innerHTML=`<table><thead><tr><th>Trader</th><th>Winning Trades</th><th>Losing Trades</th><th>Accuracy</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="positive">${r.win}</td><td class="negative">${r.loss}</td><td>${r.accuracy.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
     analyticsTable.innerHTML=`<table><thead><tr><th>Trader</th><th>ROI %</th><th class="amount">Profit</th><th class="amount">Loss</th><th>P.Factor</th><th>Win %</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td>${r.roi.toFixed(1)}%</td><td class="amount positive">${formatINR(r.positiveTotal)}</td><td class="amount negative">${formatINR(r.negativeTotal)}</td><td class="${r.profitFactor>=1?'positive':'negative'}">${r.profitFactor===999?'∞':r.profitFactor.toFixed(2)}</td><td>${r.winRate.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
@@ -5246,7 +5241,7 @@ select.ai-hidden-select{position:absolute!important;opacity:0!important;pointer-
     dayData.forEach(r=>{const t=r['Trader Name']||'Unknown',x=ensureTrader(t); x.day+=r.totalNet;});
     const rows=Object.values(byTrader).map(x=>{const total=x.win+x.loss; const accuracy=total?x.win/total*100:0; const traderRows=mtdData.filter(r=>(r['Trader Name']||'Unknown')===x.trader); const limit=getLatestTraderFund(traderRows); const roi=limit?x.mtd/limit*100:0; const remaining=limit+x.mtd; const riskObj=getRiskFromPnlAndFund(x.mtd,limit); const status=x.mtd<0?'❌':riskObj.pct>75?'⚠️':'✅'; const positiveTotal=x.values.filter(v=>v>0).reduce((a,b)=>a+b,0); const negativeTotal=x.values.filter(v=>v<0).reduce((a,b)=>a+b,0); const profitFactor=Math.abs(negativeTotal)>0?positiveTotal/Math.abs(negativeTotal):(positiveTotal>0?999:0); const winRate=total?x.win/total*100:0; return {...x,accuracy,roi,limit,remaining,riskPct:riskObj.pct,risk:riskObj.level,riskIcon:riskObj.icon,riskClass:riskObj.cls,status,positiveTotal,negativeTotal,profitFactor,winRate};}).sort((a,b)=>b.mtd-a.mtd);
     const indIndexPct=marketPctPairForData(data, !!(indDateFilter?.value));
-    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P/L</th><th class="amount">MTD P/L</th><th class="amount">Nifty %</th><th class="amount">Bank %</th><th>ROI</th><th>Risk</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
+    individualPerformanceTable.innerHTML=`<table><thead><tr><th>Rank</th><th>Trader</th><th class="amount">Day P/L</th><th class="amount">MTD P/L</th><th class="amount">Nifty %</th><th class="amount">Bank %</th><th>ROI</th><th>Risk</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.trader}</td><td class="amount ${r.day>=0?'positive':'negative'}">${formatINR(r.day)}</td><td class="amount ${r.mtd>=0?'positive':'negative'}">${formatINR(r.mtd)}</td>${indexPctCell(indIndexPct.nifty)}${indexPctCell(indIndexPct.bank)}<td>${r.roi.toFixed(1)}%</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
     riskUtilizationTable.innerHTML=`<table><thead><tr><th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Final</th><th>Calc</th><th>Alert</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="amount" title="${formatINR(r.limit)}">${formatFundShort(r.limit)}</td><td class="amount ${r.mtd<0?'negative':'positive'}">${formatINR(r.mtd)}</td><td class="amount ${r.remaining>=0?'positive':'negative'}"><b>${formatINR(r.remaining)}</b></td><td>${r.mtd>=0?'Fund + Profit':'Fund - Loss'}</td><td class="${r.riskClass}">${r.riskIcon} ${r.risk}</td></tr>`).join('')}</tbody></table>`;
     accuracyTable.innerHTML=`<table><thead><tr><th>Trader</th><th>Winning Trades</th><th>Losing Trades</th><th>Accuracy</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td class="positive">${r.win}</td><td class="negative">${r.loss}</td><td>${r.accuracy.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
     analyticsTable.innerHTML=`<table><thead><tr><th>Trader</th><th>ROI %</th><th class="amount">Profit</th><th class="amount">Loss</th><th>P.Factor</th><th>Win %</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.trader}</td><td>${r.roi.toFixed(1)}%</td><td class="amount positive">${formatINR(r.positiveTotal)}</td><td class="amount negative">${formatINR(r.negativeTotal)}</td><td class="${r.profitFactor>=1?'positive':'negative'}">${r.profitFactor===999?'∞':r.profitFactor.toFixed(2)}</td><td>${r.winRate.toFixed(1)}%</td></tr>`).join('')}</tbody></table>`;
@@ -13288,9 +13283,7 @@ setInterval(function(){
     var totals={fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0,brokerage:0,govCharges:0,totalCharges:0,details:{}};
     ['Clearing Charges','BSE Trx Chgs','NSE Trx Chgs','Sebi Chgs','STT','Stamp Duty','IPF Charges','GST'].forEach(function(f){totals.details[f]=0;});
     rows.forEach(function(r){ totals.fund+=r.fund; totals.pnl+=r.pnl; totals.charges+=r.charges; totals.win+=r.win; totals.loss+=r.loss; totals.dividend+=r.dividend; totals.brokerage+=r.brokerage; totals.govCharges+=r.govCharges; totals.totalCharges+=r.totalCharges; Object.keys(totals.details).forEach(function(f){totals.details[f]+=num(r.details[f]);}); });
-    var idx=(typeof marketPctPairForData==='function')?marketPctPairForData(data,false):{nifty:null,bank:null};
-    function idxCell(v){ return typeof indexPctCell==='function'?indexPctCell(v):'<td class="amount">'+(v==null?'-':pct(v))+'</td>'; }
-    perfEl.innerHTML='<div class="final-user-patch-table-wrap"><table class="final-user-patch-table"><thead><tr><th>Demat Account</th><th>Portfolio Name</th><th>Researcher Name</th><th>Trader Name</th><th class="amount">Fund</th><th class="amount">Profit / Loss</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th><th class="amount">Total Charges</th><th>Total ROI</th><th>Winning Trades</th><th>Losing Trades</th><th class="amount">Dividend Received</th></tr></thead><tbody>'+rows.map(function(r){var roi=r.fund?r.pnl/r.fund*100:0; return '<tr><td class="demat-account-cell">'+esc(r.demat)+'</td><td>'+esc(r.portfolio)+'</td><td>'+esc(r.researcher)+'</td><td>'+esc(r.trader)+'</td><td class="amount">'+money(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td>'+idxCell(idx.nifty)+idxCell(idx.bank)+'<td class="amount warning">'+money(r.charges)+'</td><td class="'+(roi>=0?'positive':'negative')+'">'+pct(roi)+'</td><td class="positive">'+r.win+'</td><td class="negative">'+r.loss+'</td><td class="amount positive">'+money(r.dividend)+'</td></tr>';}).join('')+'<tr style="background:#172554;font-weight:900;border-top:2px solid #60a5fa"><td colspan="4">Grand Total</td><td class="amount">'+money(totals.fund)+'</td><td class="amount '+(totals.pnl>=0?'positive':'negative')+'">'+money(totals.pnl)+'</td>'+idxCell(idx.nifty)+idxCell(idx.bank)+'<td class="amount warning">'+money(totals.charges)+'</td><td class="'+(totals.pnl>=0?'positive':'negative')+'">'+pct(totals.fund?totals.pnl/totals.fund*100:0)+'</td><td class="positive">'+totals.win+'</td><td class="negative">'+totals.loss+'</td><td class="amount positive">'+money(totals.dividend)+'</td></tr></tbody></table></div>';
+    perfEl.innerHTML='<div class="final-user-patch-table-wrap"><table class="final-user-patch-table"><thead><tr><th>Demat Account</th><th>Portfolio Name</th><th>Researcher Name</th><th>Trader Name</th><th class="amount">Fund</th><th class="amount">Profit / Loss</th><th class="amount">Total Charges</th><th>Total ROI</th><th>Winning Trades</th><th>Losing Trades</th><th class="amount">Dividend Received</th></tr></thead><tbody>'+rows.map(function(r){var roi=r.fund?r.pnl/r.fund*100:0; return '<tr><td class="demat-account-cell">'+esc(r.demat)+'</td><td>'+esc(r.portfolio)+'</td><td>'+esc(r.researcher)+'</td><td>'+esc(r.trader)+'</td><td class="amount">'+money(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td><td class="amount warning">'+money(r.charges)+'</td><td class="'+(roi>=0?'positive':'negative')+'">'+pct(roi)+'</td><td class="positive">'+r.win+'</td><td class="negative">'+r.loss+'</td><td class="amount positive">'+money(r.dividend)+'</td></tr>';}).join('')+'<tr style="background:#172554;font-weight:900;border-top:2px solid #60a5fa"><td colspan="4">Grand Total</td><td class="amount">'+money(totals.fund)+'</td><td class="amount '+(totals.pnl>=0?'positive':'negative')+'">'+money(totals.pnl)+'</td><td class="amount warning">'+money(totals.charges)+'</td><td class="'+(totals.pnl>=0?'positive':'negative')+'">'+pct(totals.fund?totals.pnl/totals.fund*100:0)+'</td><td class="positive">'+totals.win+'</td><td class="negative">'+totals.loss+'</td><td class="amount positive">'+money(totals.dividend)+'</td></tr></tbody></table></div>';
     window.__lastGovChargeRows={rows:rows,totals:totals}; renderGovChargeTable(); buildComparison(data);
   };
 
@@ -14053,11 +14046,10 @@ setInterval(function(){
   function totals(rows){var t={fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0,brokerage:0,gov:0,total:0,d:{Clearing:0,BSE:0,NSE:0,Sebi:0,STT:0,Stamp:0,IPF:0,GST:0}}; rows.forEach(function(r){t.fund+=r.fund;t.pnl+=r.pnl;t.charges+=r.charges;t.win+=r.win;t.loss+=r.loss;t.dividend+=r.dividend;t.brokerage+=r.brokerage;t.gov+=r.gov;t.total+=r.total;Object.keys(t.d).forEach(function(k){t.d[k]+=r.d[k];});}); return t;}
   function renderFullTables(){
     var perf=E('fullTraderPerformanceTable'), ch=E('fullTraderChargesTable'); if(!perf||!ch) return;
-    var rows=grouped(), t=totals(rows); var idx={nifty:null,bank:null}; try{if(typeof marketPctPairForData==='function')idx=marketPctPairForData(getData(),false)||idx;}catch(e){}
-    function idxTd(v){return '<td class="amount neutral">'+(v==null?'-':pct(v))+'</td>';}
-    var perfRows=rows.map(function(r){var roi=r.fund?r.pnl/r.fund*100:0;return '<tr><td class="demat-account-cell">'+esc(r.demat)+'</td><td>'+esc(r.portfolio)+'</td><td>'+esc(r.researcher)+'</td><td>'+esc(r.trader)+'</td><td class="amount">'+money(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+'<td class="amount warning">'+money(r.charges||r.total)+'</td><td class="'+(roi>=0?'positive':'negative')+'">'+pct(roi)+'</td><td class="positive">'+r.win+'</td><td class="negative">'+r.loss+'</td><td class="amount positive">'+money(r.dividend)+'</td></tr>';}).join('');
+    var rows=grouped(), t=totals(rows);
+    var perfRows=rows.map(function(r){var roi=r.fund?r.pnl/r.fund*100:0;return '<tr><td class="demat-account-cell">'+esc(r.demat)+'</td><td>'+esc(r.portfolio)+'</td><td>'+esc(r.researcher)+'</td><td>'+esc(r.trader)+'</td><td class="amount">'+money(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td><td class="amount warning">'+money(r.charges||r.total)+'</td><td class="'+(roi>=0?'positive':'negative')+'">'+pct(roi)+'</td><td class="positive">'+r.win+'</td><td class="negative">'+r.loss+'</td><td class="amount positive">'+money(r.dividend)+'</td></tr>';}).join('');
     var troi=t.fund?t.pnl/t.fund*100:0;
-    perf.innerHTML='<div class="final-user-patch-table-wrap"><table class="final-user-patch-table"><thead><tr><th>Demat A/c</th><th>Portfolio Name</th><th>Researcher Name</th><th>Trader Name</th><th class="amount">Fund</th><th class="amount">Profit / Loss</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th><th class="amount">Total Charges</th><th>Total ROI</th><th>Winning</th><th>Losing</th><th class="amount">Dividend</th></tr></thead><tbody>'+perfRows+'<tr class="grand-total-row"><td colspan="4">Grand Total</td><td class="amount">'+money(t.fund)+'</td><td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+'<td class="amount warning">'+money(t.charges||t.total)+'</td><td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td><td class="positive">'+t.win+'</td><td class="negative">'+t.loss+'</td><td class="amount positive">'+money(t.dividend)+'</td></tr></tbody></table></div>';
+    perf.innerHTML='<div class="final-user-patch-table-wrap"><table class="final-user-patch-table"><thead><tr><th>Demat A/c</th><th>Portfolio Name</th><th>Researcher Name</th><th>Trader Name</th><th class="amount">Fund</th><th class="amount">Profit / Loss</th><th class="amount">Total Charges</th><th>Total ROI</th><th>Winning</th><th>Losing</th><th class="amount">Dividend</th></tr></thead><tbody>'+perfRows+'<tr class="grand-total-row"><td colspan="4">Grand Total</td><td class="amount">'+money(t.fund)+'</td><td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td><td class="amount warning">'+money(t.charges||t.total)+'</td><td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td><td class="positive">'+t.win+'</td><td class="negative">'+t.loss+'</td><td class="amount positive">'+money(t.dividend)+'</td></tr></tbody></table></div>';
     var chRows=rows.map(function(r){return '<tr><td class="demat-account-cell">'+esc(r.demat)+'</td><td>'+esc(r.portfolio)+'</td><td>'+esc(r.researcher)+'</td><td>'+esc(r.trader)+'</td><td class="amount">'+money(r.brokerage)+'</td><td class="amount neutral">'+money(r.gov)+'</td><td class="amount warning">'+money(r.total)+'</td></tr>';}).join('');
     ch.innerHTML='<button type="button" class="gov-charge-toggle" onclick="toggleGovChargeDetails()">➕ Show Government Charges Details</button><span class="gov-charge-note">BRK = BRK + BRK GST | Govt = Gorv Chg - BRK - BRK GST</span><div class="final-user-patch-table-wrap"><table class="final-user-patch-table"><thead><tr><th>Demat Account</th><th>Portfolio Name</th><th>Researcher Name</th><th>Trader Name</th><th class="amount">BRK</th><th class="amount">Government Charges</th><th class="amount">Total Charges</th></tr></thead><tbody>'+chRows+'<tr class="grand-total-row"><td colspan="4">Grand Total</td><td class="amount">'+money(t.brokerage)+'</td><td class="amount neutral">'+money(t.gov)+'</td><td class="amount warning">'+money(t.total)+'</td></tr></tbody></table></div>';
   }
@@ -14269,7 +14261,7 @@ setInterval(function(){
   function shortHeaders(){
     var perf=document.querySelector('#fullTraderPerformanceTable table');
     if(perf){
-      var h=['Demat','Portfolio','Researcher','Trader','Fund','P/L','Nifty','Bank','Charges','ROI','Win','Loss','Dividend'];
+      var h=['Portfolio','Demat','Researcher','Trader','Fund','P/L','Charges','ROI','Win','Loss','Dividend'];
       perf.querySelectorAll('thead th').forEach(function(th,i){ if(h[i]) th.textContent=h[i]; });
     }
     var ch=document.querySelector('#fullTraderChargesTable table');
@@ -14798,23 +14790,19 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(4),
 #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(4){width:13%!important;}
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(5),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(5){width:8%!important;}
+#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(5){width:9%!important;}
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(6),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(6){width:9%!important;}
+#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(6){width:10%!important;}
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(7),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(7){width:5%!important;}
+#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(7){width:9%!important;}
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(8),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(8){width:5%!important;}
+#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(8){width:6%!important;}
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(9),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(9){width:8%!important;}
+#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(9){width:4%!important;}
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(10),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(10){width:5%!important;}
+#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(10){width:4%!important;}
 #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(11),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(11){width:3%!important;}
-#fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(12),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(12){width:3%!important;}
-#fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(13),
-#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(13){width:6%!important;}
+#fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(11){width:5%!important;}
 </style>
 
 <script id="portfolio-hide-unhide-summary-script">
@@ -14870,8 +14858,6 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
     }).sort(function(a,b){return b.pnl-a.pnl;});
   }
 
-  function idxPair(data){ var idx={nifty:null,bank:null}; try{ if(typeof marketPctPairForData==='function') idx=marketPctPairForData(data,false)||idx; }catch(e){} return idx; }
-  function idxTd(v){ return '<td class="amount neutral">'+(v==null?'-':pct(v))+'</td>'; }
   function dematList(obj){ return Object.keys(obj||{}).join(', ') || '-'; }
 
   window.togglePortfolioSummaryGroup=function(id){
@@ -14883,7 +14869,7 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
     var el=E('fullTraderPerformanceTable'); if(!el) return;
     var data=getRows();
     if(!data.length){ el.innerHTML='<p class="muted">No data available</p>'; return; }
-    var groups=buildGroups(data), idx=idxPair(data);
+    var groups=buildGroups(data);
     var t={fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0};
     groups.forEach(function(g){ t.fund+=g.fund; t.pnl+=g.pnl; t.charges+=g.charges; t.win+=g.win; t.loss+=g.loss; t.dividend+=g.dividend; });
     var body='';
@@ -14899,7 +14885,6 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
         '<td>-</td>'+
         '<td class="amount">'+money(g.fund)+'</td>'+
         '<td class="amount '+(g.pnl>=0?'positive':'negative')+'">'+money(g.pnl)+'</td>'+
-        idxTd(idx.nifty)+idxTd(idx.bank)+
         '<td class="amount warning">'+money(g.charges)+'</td>'+
         '<td class="'+(roi>=0?'positive':'negative')+'">'+pct(roi)+'</td>'+
         '<td class="positive">'+g.win+'</td>'+
@@ -14916,7 +14901,6 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
             '<td>'+esc(r.trader)+'</td>'+
             '<td class="amount">'+money(r.fund)+'</td>'+
             '<td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td>'+
-            idxTd(idx.nifty)+idxTd(idx.bank)+
             '<td class="amount warning">'+money(r.charges)+'</td>'+
             '<td class="'+(rroi>=0?'positive':'negative')+'">'+pct(rroi)+'</td>'+
             '<td class="positive">'+r.win+'</td>'+
@@ -14931,7 +14915,6 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
       '<td colspan="4">Grand Total</td>'+
       '<td class="amount">'+money(t.fund)+'</td>'+
       '<td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td>'+
-      idxTd(idx.nifty)+idxTd(idx.bank)+
       '<td class="amount warning">'+money(t.charges)+'</td>'+
       '<td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td>'+
       '<td class="positive">'+t.win+'</td>'+
@@ -14939,7 +14922,7 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
       '<td class="amount positive">'+money(t.dividend)+'</td>'+
     '</tr>';
     el.innerHTML='<div class="portfolio-collapse-wrap"><table class="portfolio-collapse-table"><thead><tr>'+
-      '<th>Portfolio</th><th>Demat</th><th>Researcher</th><th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Nifty</th><th class="amount">Bank</th><th class="amount">Charges</th><th>ROI</th><th>Win</th><th>Loss</th><th class="amount">Dividend</th>'+
+      '<th>Portfolio</th><th>Demat</th><th>Researcher</th><th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Charges</th><th>ROI</th><th>Win</th><th>Loss</th><th class="amount">Dividend</th>'+
       '</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
   };
 
@@ -15699,8 +15682,6 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
   function netOf(r){ return num((r&&r.totalNet)!=null?r.totalNet:val(r,['Net P&L','N P&L','P/L','Profit / Loss'],0)); }
   function chargesOf(r){ return num((r&&r.totalCharges)!=null?r.totalCharges:val(r,['Total Charges','Charges'],0)); }
   function dividendOf(r){ return num((r&&r.dividendReceived)!=null?r.dividendReceived:val(r,['Dividend Received','Dividend'],0)); }
-  function idxPair(data){ var idx={nifty:null,bank:null}; try{ if(typeof marketPctPairForData==='function') idx=marketPctPairForData(data,false)||idx; }catch(e){} return idx; }
-  function idxTd(v){ return '<td class="amount neutral">'+(v==null?'-':pct(v))+'</td>'; }
   function dematList(obj){ return Object.keys(obj||{}).join(', ')||'-'; }
   function sortValue(g,col){ if(col==='portfolio')return String(g.portfolio||'').toLowerCase(); if(col==='roi')return g.fund?g.pnl/g.fund*100:0; return num(g[col]); }
   function sortGroups(groups){ return groups.sort(function(a,b){var av=sortValue(a,portfolioSort.col),bv=sortValue(b,portfolioSort.col),c=(typeof av==='string')?av.localeCompare(bv):(av-bv);return c*portfolioSort.dir;}); }
@@ -15739,7 +15720,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     var data=getRows();
     if(!data.length){ el.innerHTML='<p class="muted">No data available</p>'; return; }
     window.__portfolioOpenState=window.__portfolioOpenState||{};
-    var groups=sortGroups(buildCorrectFundGroups(data)), idx=idxPair(data);
+    var groups=sortGroups(buildCorrectFundGroups(data));
     var t={fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0};
     groups.forEach(function(g){ t.fund+=g.fund; t.pnl+=g.pnl; t.charges+=g.charges; t.win+=g.win; t.loss+=g.loss; t.dividend+=g.dividend; });
     var body='';
@@ -15751,20 +15732,20 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
         '<td><span class="portfolio-toggle">'+(open?'−':'+')+'</span><span class="portfolio-name-text">'+esc(g.portfolio)+'</span><div class="portfolio-subtext">'+g.childRows.length+' rows | '+esc(dematList(g.demats))+'</div></td>'+ 
         '<td><b>Portfolio Total</b></td><td>-</td><td>-</td>'+ 
         '<td class="amount" title="'+money(g.fund)+'">'+fundShort(g.fund)+'</td>'+ 
-        '<td class="amount '+(g.pnl>=0?'positive':'negative')+'">'+money(g.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+
+        '<td class="amount '+(g.pnl>=0?'positive':'negative')+'">'+money(g.pnl)+'</td>'+
         '<td class="amount warning">'+money(g.charges)+'</td><td class="'+(roi>=0?'positive':'negative')+'">'+pct(roi)+'</td>'+ 
         '<td class="positive">'+g.win+'</td><td class="negative">'+g.loss+'</td><td class="amount positive">'+money(g.dividend)+'</td></tr>';
       if(open){
         g.childRows.forEach(function(r){ var rroi=r.fund?r.pnl/r.fund*100:0; body+='<tr class="portfolio-detail-row">'+
           '<td style="padding-left:28px!important;">↳ '+esc(g.portfolio)+'</td><td>'+esc(r.demat)+'</td><td>'+esc(r.researcher)+'</td><td>'+esc(r.trader)+'</td>'+ 
-          '<td class="amount" title="'+money(r.fund)+'">'+fundShort(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+
+          '<td class="amount" title="'+money(r.fund)+'">'+fundShort(r.fund)+'</td><td class="amount '+(r.pnl>=0?'positive':'negative')+'">'+money(r.pnl)+'</td>'+
           '<td class="amount warning">'+money(r.charges)+'</td><td class="'+(rroi>=0?'positive':'negative')+'">'+pct(rroi)+'</td>'+ 
           '<td class="positive">'+r.win+'</td><td class="negative">'+r.loss+'</td><td class="amount positive">'+money(r.dividend)+'</td></tr>'; });
       }
     });
     var troi=t.fund?t.pnl/t.fund*100:0;
-    var foot='<tr class="portfolio-grand-total"><td colspan="4">Grand Total</td><td class="amount" title="'+money(t.fund)+'">'+fundShort(t.fund)+'</td><td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+'<td class="amount warning">'+money(t.charges)+'</td><td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td><td class="positive">'+t.win+'</td><td class="negative">'+t.loss+'</td><td class="amount positive">'+money(t.dividend)+'</td></tr>';
-    el.innerHTML='<div class="portfolio-collapse-wrap"><table class="portfolio-collapse-table"><thead><tr>'+sortHeader('Portfolio','portfolio','')+'<th>Demat</th><th>Researcher</th><th>Trader</th>'+sortHeader('Fund','fund','amount')+sortHeader('P/L','pnl','amount')+'<th class="amount">Nifty</th><th class="amount">Bank</th>'+sortHeader('Charges','charges','amount')+sortHeader('ROI','roi','')+sortHeader('W','win','')+sortHeader('L','loss','')+sortHeader('Div','dividend','amount')+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
+    var foot='<tr class="portfolio-grand-total"><td colspan="4">Grand Total</td><td class="amount" title="'+money(t.fund)+'">'+fundShort(t.fund)+'</td><td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td><td class="amount warning">'+money(t.charges)+'</td><td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td><td class="positive">'+t.win+'</td><td class="negative">'+t.loss+'</td><td class="amount positive">'+money(t.dividend)+'</td></tr>';
+    el.innerHTML='<div class="portfolio-collapse-wrap"><table class="portfolio-collapse-table"><thead><tr>'+sortHeader('Portfolio','portfolio','')+'<th>Demat</th><th>Researcher</th><th>Trader</th>'+sortHeader('Fund','fund','amount')+sortHeader('P/L','pnl','amount')+sortHeader('Charges','charges','amount')+sortHeader('ROI','roi','')+sortHeader('W','win','')+sortHeader('L','loss','')+sortHeader('Div','dividend','amount')+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
   };
   window.togglePortfolioSummaryGroup=function(id){ window.__portfolioOpenState=window.__portfolioOpenState||{}; window.__portfolioOpenState[id]=!window.__portfolioOpenState[id]; window.renderPortfolioCollapseTable(); };
   var oldBuild=window.buildFullDashboardSummaryWithTraders;
@@ -19058,6 +19039,21 @@ input,select,textarea,button{max-width:100%}
 })();
 </script>
 <!-- === END MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
+
+<style id="minix-final-row-visibility-fix">
+/* Keep the last comparison row above fixed notification/report controls. */
+#finalComparisonSection{
+  margin-bottom:96px!important;
+}
+@media(max-width:900px){
+  #finalComparisonSection{
+    margin-bottom:148px!important;
+  }
+  #minixPushBar{
+    bottom:68px!important;
+  }
+}
+</style>
 
 </body>
 </html>

@@ -19062,15 +19062,43 @@ input,select,textarea,button{max-width:100%}
   display:none!important;
 }
 
-/* Keep the final Win Ratio values above the fixed notification/report buttons. */
-#summarySection{
-  padding-bottom:104px!important;
+/* Keep every section's final row/value above the fixed notification controls. */
+body:not(.auth-locked){
+  padding-bottom:120px!important;
   box-sizing:border-box!important;
 }
 @media(max-width:900px){
-  #summarySection{
-    padding-bottom:148px!important;
+  body:not(.auth-locked){
+    padding-bottom:168px!important;
   }
+}
+
+/* Use only the inner table scrollbar; two vertical scrollbars clipped Dividend. */
+#fullTraderPerformanceTable{
+  overflow:visible!important;
+  max-height:none!important;
+  scrollbar-gutter:auto!important;
+}
+#fullTraderPerformanceTable > .portfolio-collapse-wrap{
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  max-height:62vh!important;
+  scrollbar-gutter:stable!important;
+}
+
+/* Give the final Dividend/Grand Total amount enough room for every digit. */
+#fullTraderPerformanceTable .portfolio-collapse-table th:first-child,
+#fullTraderPerformanceTable .portfolio-collapse-table td:first-child{
+  width:15%!important;
+}
+#fullTraderPerformanceTable .portfolio-collapse-table th:last-child,
+#fullTraderPerformanceTable .portfolio-collapse-table td:last-child{
+  width:7%!important;
+  padding-right:18px!important;
+  box-sizing:border-box!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
 }
 </style>
 

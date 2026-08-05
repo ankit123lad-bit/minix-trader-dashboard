@@ -15764,7 +15764,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     });
     var troi=t.fund?t.pnl/t.fund*100:0;
     var foot='<tr class="portfolio-grand-total"><td colspan="4">Grand Total</td><td class="amount" title="'+money(t.fund)+'">'+fundShort(t.fund)+'</td><td class="amount '+(t.pnl>=0?'positive':'negative')+'">'+money(t.pnl)+'</td>'+idxTd(idx.nifty)+idxTd(idx.bank)+'<td class="amount warning">'+money(t.charges)+'</td><td class="'+(troi>=0?'positive':'negative')+'">'+pct(troi)+'</td><td class="positive">'+t.win+'</td><td class="negative">'+t.loss+'</td><td class="amount positive">'+money(t.dividend)+'</td></tr>';
-    el.innerHTML='<div class="portfolio-collapse-wrap"><table class="portfolio-collapse-table"><thead><tr>'+sortHeader('Portfolio','portfolio','')+'<th>Demat</th><th>Researcher</th><th>Trader</th>'+sortHeader('Fund','fund','amount')+sortHeader('P/L','pnl','amount')+'<th class="amount">Nifty</th><th class="amount">Bank</th>'+sortHeader('Charges','charges','amount')+sortHeader('ROI','roi','')+sortHeader('W','win','')+sortHeader('L','loss','')+sortHeader('Div','dividend','amount')+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
+    el.innerHTML='<div class="portfolio-collapse-wrap"><table class="portfolio-collapse-table"><thead><tr>'+sortHeader('Portfolio','portfolio','')+'<th>Demat</th><th>Researcher</th><th>Trader</th>'+sortHeader('Fund','fund','amount')+sortHeader('P/L','pnl','amount')+'<th class="amount">Nifty</th><th class="amount">Bank</th>'+sortHeader('Charges','charges','amount')+sortHeader('ROI','roi','')+sortHeader('Win','win','')+sortHeader('Loss','loss','')+sortHeader('Div','dividend','amount')+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
   };
   window.togglePortfolioSummaryGroup=function(id){ window.__portfolioOpenState=window.__portfolioOpenState||{}; window.__portfolioOpenState[id]=!window.__portfolioOpenState[id]; window.renderPortfolioCollapseTable(); };
   var oldBuild=window.buildFullDashboardSummaryWithTraders;
@@ -19022,6 +19022,54 @@ input,select,textarea,button{max-width:100%}
   select,input[type="date"],input[type="text"],input[type="number"],input[type="password"],textarea,button{font-size:16px;min-height:44px}
   .table-card{padding:8px!important}
   .table-card::after{content:'↔ Table જોવા માટે ડાબે–જમણે scroll કરો';display:block;position:sticky;left:0;width:max-content;max-width:100%;margin-top:7px;color:#94a3b8;font-size:11px}
+  /* Mobile financial tables: never squeeze or crop headers/amounts; scroll inside the card. */
+  #fullTraderPerformanceTable,
+  #fullTraderPerformanceTable .portfolio-collapse-wrap,
+  #riskUtilizationTable,#individualPerformanceTable,#accuracyTable,#analyticsTable,
+  #allTradersDateWiseTable,#aiSegmentMISCard .ai-mis-wrap{
+    width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;touch-action:pan-x pan-y!important;
+  }
+  #fullTraderPerformanceTable .portfolio-collapse-table{
+    width:max-content!important;min-width:1380px!important;max-width:none!important;table-layout:auto!important;
+  }
+  #fullTraderPerformanceTable .portfolio-collapse-table th,
+  #fullTraderPerformanceTable .portfolio-collapse-table td{
+    width:auto!important;max-width:none!important;min-width:82px!important;white-space:nowrap!important;
+    overflow:visible!important;text-overflow:clip!important;padding:9px 10px!important;
+  }
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(-n+4),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(-n+4){min-width:170px!important;}
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(-n+4){max-width:190px!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(5),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(5),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(6),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(6),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(9),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(9),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(13),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(13){min-width:125px!important;}
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(11),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(11),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(12),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(12){min-width:76px!important;}
+  #riskUtilizationTable table{width:max-content!important;min-width:900px!important;table-layout:auto!important;}
+  #individualPerformanceTable table{width:max-content!important;min-width:1100px!important;table-layout:auto!important;}
+  #accuracyTable table{width:max-content!important;min-width:700px!important;table-layout:auto!important;}
+  #analyticsTable table{width:max-content!important;min-width:800px!important;table-layout:auto!important;}
+  #allTradersDateWiseTable table,#aiSegmentMISTable{width:max-content!important;min-width:1800px!important;max-width:none!important;table-layout:auto!important;}
+  #riskUtilizationTable th,#riskUtilizationTable td,
+  #individualPerformanceTable th,#individualPerformanceTable td,
+  #accuracyTable th,#accuracyTable td,#analyticsTable th,#analyticsTable td,
+  #allTradersDateWiseTable th,#allTradersDateWiseTable td,#aiSegmentMISTable th,#aiSegmentMISTable td{
+    width:auto!important;max-width:none!important;min-width:96px!important;white-space:nowrap!important;
+    overflow:visible!important;text-overflow:clip!important;padding:9px 10px!important;
+  }
+  #riskUtilizationTable th.amount,#riskUtilizationTable td.amount,
+  #individualPerformanceTable th.amount,#individualPerformanceTable td.amount,
+  #analyticsTable th.amount,#analyticsTable td.amount,
+  #allTradersDateWiseTable th.amount,#allTradersDateWiseTable td.amount,
+  #aiSegmentMISTable th.amount,#aiSegmentMISTable td.amount{min-width:125px!important;}
   .trader-profile-card,.profile-main{align-items:flex-start!important}
   .trader-profile-img{width:76px;height:76px}
   .profile-person{min-width:92px}

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<Style>
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Share Market / Trader Performance Dashboard</title>
@@ -19043,11 +19043,155 @@ input,select,textarea,button{max-width:100%}
 </style>
 <!-- === END MINIX UNIVERSAL MOBILE / TABLET RESPONSIVE SAFETY LAYER === -->
 
+<!-- === MINIX MOBILE TABLE READABILITY FIX 2026-08-05 === -->
+<style id="minix-mobile-table-readability-v2">
+/* Phones and tablets: every performance card gets the full screen width. */
+@media (max-width:1024px), (pointer:coarse) and (max-height:700px){
+  #individualSection .table-grid,
+  #summarySection .table-grid,
+  #fullSummarySection .table-grid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+
+  #individualSection .table-card,
+  #summarySection .table-card,
+  #fullSummarySection .table-card{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+  }
+
+  #individualPerformanceTable,
+  #riskUtilizationTable,
+  #accuracyTable,
+  #analyticsTable,
+  #fullTraderPerformanceTable,
+  #fullTraderChargesTable,
+  #fullSummarySection .final-user-patch-table-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-x pan-y!important;
+    scrollbar-width:thin!important;
+    scrollbar-color:#64748b #0f172a!important;
+  }
+
+  #individualPerformanceTable table{
+    width:max-content!important;
+    min-width:880px!important;
+    max-width:none!important;
+    table-layout:auto!important;
+    font-size:13px!important;
+  }
+  #riskUtilizationTable table{
+    width:max-content!important;
+    min-width:780px!important;
+    max-width:none!important;
+    table-layout:auto!important;
+    font-size:13px!important;
+  }
+  #accuracyTable table,
+  #analyticsTable table{
+    width:max-content!important;
+    min-width:760px!important;
+    max-width:none!important;
+    table-layout:auto!important;
+    font-size:13px!important;
+  }
+  #fullTraderPerformanceTable .final-user-patch-table,
+  #fullTraderPerformanceTable table{
+    width:max-content!important;
+    min-width:1180px!important;
+    max-width:none!important;
+    table-layout:auto!important;
+    font-size:12px!important;
+  }
+  #fullTraderChargesTable .final-user-patch-table,
+  #fullTraderChargesTable table{
+    width:max-content!important;
+    min-width:900px!important;
+    max-width:none!important;
+    table-layout:auto!important;
+    font-size:12px!important;
+  }
+
+  #individualPerformanceTable th,
+  #individualPerformanceTable td,
+  #riskUtilizationTable th,
+  #riskUtilizationTable td,
+  #accuracyTable th,
+  #accuracyTable td,
+  #analyticsTable th,
+  #analyticsTable td,
+  #fullTraderPerformanceTable th,
+  #fullTraderPerformanceTable td,
+  #fullTraderChargesTable th,
+  #fullTraderChargesTable td{
+    width:auto!important;
+    min-width:max-content!important;
+    max-width:none!important;
+    padding:9px 10px!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    line-height:1.2!important;
+  }
+
+  #individualPerformanceTable th:nth-child(2),
+  #individualPerformanceTable td:nth-child(2),
+  #riskUtilizationTable th:first-child,
+  #riskUtilizationTable td:first-child{
+    min-width:170px!important;
+  }
+
+  #individualSection ::-webkit-scrollbar:horizontal,
+  #summarySection ::-webkit-scrollbar:horizontal,
+  #fullSummarySection ::-webkit-scrollbar:horizontal{
+    display:block!important;
+    height:8px!important;
+  }
+  #individualSection ::-webkit-scrollbar-thumb,
+  #summarySection ::-webkit-scrollbar-thumb,
+  #fullSummarySection ::-webkit-scrollbar-thumb{
+    background:#64748b!important;
+    border-radius:999px!important;
+  }
+  #individualSection ::-webkit-scrollbar-track,
+  #summarySection ::-webkit-scrollbar-track,
+  #fullSummarySection ::-webkit-scrollbar-track{
+    background:#0f172a!important;
+  }
+
+  #individualSection .table-card::after,
+  #fullSummarySection .table-card::after{
+    content:'↔ આખું table જોવા ડાબે–જમણે swipe કરો';
+    display:block;
+    width:max-content;
+    max-width:100%;
+    margin-top:8px;
+    color:#93c5fd;
+    font-size:12px;
+    font-weight:700;
+  }
+}
+
+@media (max-width:700px){
+  #individualPerformanceTable table{min-width:840px!important;}
+  #riskUtilizationTable table{min-width:740px!important;}
+  #fullTraderPerformanceTable .final-user-patch-table,
+  #fullTraderPerformanceTable table{min-width:1120px!important;}
+}
+</style>
+<!-- === END MINIX MOBILE TABLE READABILITY FIX === -->
+
 
 <!-- === MINIX LIVE DEPLOY / PHOTO CACHE FIX === -->
 <script id="minix-live-photo-cache-fix">
 (function(){
-  window.MINIX_DASHBOARD_BUILD = "2026-08-01-photo-live-v2";
+  window.MINIX_DASHBOARD_BUILD = "2026-08-05-mobile-table-v2";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("/service-worker.js", {updateViaCache:"none"})

@@ -17473,7 +17473,9 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   const trader=r=>String(val(r,['Trader Name','Trader','trader_name','traderName','username'])||'').trim();
   const currentUser=()=>{try{return JSON.parse(localStorage.getItem('minixUser')||'null')}catch(e){return null}};
   const role=()=>String(currentUser()?.role||'Trader').trim();
-  const isManager=()=>/^(admin|pm|researcher)$/i.test(role());
+  const normalizedRole=()=>role().replace(/[\s_-]+/g,'').toLowerCase();
+  const isManager=()=>/^(admin|pm|portfolio|portfoliomanager|portfolioname|researcher|researchername)$/.test(normalizedRole());
+  const canSendWhatsApp=()=>normalizedRole()==='admin';
   function parseDate(v){
     if(v instanceof Date&&!isNaN(v))return v;
     const s=String(v||'').trim(); let m;
@@ -17536,11 +17538,12 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   const cls=n=>n>0?'#34d399':n<0?'#f87171':'#cbd5e1';
   function metric(label,value,color){return '<div class="minix-today-kpi"><span>'+label+'</span><b style="color:'+(color||'#e2e8f0')+'">'+value+'</b></div>'}
   function cell(n){return '<td class="amount" style="color:'+cls(n)+'">'+money(n)+'</td>'}
-  function statusCell(x,key){
-    if(x.status.cls==='pending')return '<td><button type="button" class="minix-status minix-status-pending minix-whatsapp-pending" onclick="minixOpenPendingWhatsApp(\''+encodeURIComponent(x.name)+'\',\''+encodeURIComponent(x.phone||'')+'\',\''+key+'\')" title="Open WhatsApp reminder">'+x.status.text+'</button><span class="minix-whatsapp-hint">🟢 Click to send WhatsApp reminder</span></td>';
+  function statusCell(x,key,allowWhatsApp){
+    if(x.status.cls==='pending'&&allowWhatsApp)return '<td><button type="button" class="minix-status minix-status-pending minix-whatsapp-pending" onclick="minixOpenPendingWhatsApp(\''+encodeURIComponent(x.name)+'\',\''+encodeURIComponent(x.phone||'')+'\',\''+key+'\')" title="Open WhatsApp reminder">'+x.status.text+'</button><span class="minix-whatsapp-hint">🟢 Click to send WhatsApp reminder</span></td>';
     return '<td><span class="minix-status minix-status-'+x.status.cls+'">'+x.status.text+'</span>'+(x.submittedAt?'<div style="color:#93c5fd;margin-top:4px">Submitted: '+esc(x.submittedAt)+'</div>':'')+(x.reason?'<div style="color:#94a3b8;margin-top:3px">'+esc(x.reason)+'</div>':'')+'</td>';
   }
   window.minixOpenPendingWhatsApp=function(encodedName,encodedPhone,key){
+    if(!canSendWhatsApp())return;
     const name=decodeURIComponent(encodedName||'Trader'),raw=decodeURIComponent(encodedPhone||''),date=String(key||'').split('-').reverse().join('-');
     let phone=raw.replace(/\D/g,'');if(phone.length===10)phone='91'+phone;if(phone.startsWith('0')&&phone.length===11)phone='91'+phone.slice(1);
     const msg='Hello '+name+',\n\nYour trading report for '+date+' is pending. Please submit today\'s report as soon as possible.\n\nThank you.';
@@ -17548,7 +17551,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     window.open(url,'_blank','noopener');
   };
   function render(){
-    const {key,list}=build(),u=currentUser()||{},r=role(),manager=isManager();
+    const {key,list}=build(),u=currentUser()||{},r=role(),manager=isManager(),allowWhatsApp=canSendWhatsApp();
     if(!list.length)return '<div class="minix-today-head"><h2>📊 Today’s Report</h2></div><p>No trader data is available for your login.</p>';
     const profit=list.filter(x=>x.net>0).length,loss=list.filter(x=>x.net<0).length;
     const noTrade=list.filter(x=>x.status.cls==='none').length,leave=list.filter(x=>x.status.cls==='leave'||x.status.cls==='sick').length;
@@ -17559,10 +17562,10 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     const byRoi=[...ranked].sort((a,b)=>b.roi-a.roi),high=byRoi[0]||null,low=byRoi[byRoi.length-1]||null;
     const totals=list.reduce((t,x)=>{['margin','utilized','ff','cf','mf','fg','fc','cg','cc','mg','mc','gross','charges','net'].forEach(k=>t[k]+=x[k]);return t},{margin:0,utilized:0,ff:0,cf:0,mf:0,fg:0,fc:0,cg:0,cc:0,mg:0,mc:0,gross:0,charges:0,net:0});
     totals.roi=(totals.utilized||totals.margin)?totals.net/(totals.utilized||totals.margin)*100:0;
-    const scope=/admin/i.test(r)?'All Traders':(/pm/i.test(r)?'My PM Team':(/researcher/i.test(r)?'My Research Team':'My Report'));
+    const scope=/admin/i.test(r)?'All Traders':(/pm|portfolio/i.test(r)?'My Portfolio Team':(/researcher/i.test(r)?'My Research Team':'My Report'));
     const kpis=manager?'<div class="minix-today-kpis">'+(metric('Traders in My Scope',list.length)+metric('Profit Traders',profit,'#34d399')+metric('Loss Traders',loss,'#f87171')+metric('Win Rate',winRate.toFixed(2)+'%','#60a5fa')+metric(istMinutes()>975?'Report Pending':'Awaiting Report',pending,'#f87171')+metric('No Trade',noTrade,'#fbbf24')+metric('Late Submitted',late,'#f59e0b')+metric('Total Profit',money(totalProfit),'#34d399')+metric('Total Loss',money(totalLoss),'#f87171'))+'</div>':'';
     const highlights=manager?'<div class="minix-today-highlights"><div class="minix-highlight">🏆 <b>Top Today:</b> '+(top?esc(top.name)+' • '+money(top.net)+' • '+top.roi.toFixed(2)+'% ROI':'No traded data')+'<br>📈 <b>Highest ROI:</b> '+(high?esc(high.name)+' • '+high.roi.toFixed(2)+'%':'-')+'</div><div class="minix-highlight">⚠️ <b>Worst Today:</b> '+(worst?esc(worst.name)+' • '+money(worst.net)+' • '+worst.roi.toFixed(2)+'% ROI':'No traded data')+'<br>📉 <b>Lowest ROI:</b> '+(low?esc(low.name)+' • '+low.roi.toFixed(2)+'%':'-')+'</div></div>':'';
-    const table='<div class="minix-today-table-wrap"><table class="minix-today-table"><thead><tr><th>Trader Name</th><th>Status / Submission Time</th><th class="amount">Total Fund</th><th class="amount">Margin Utilized</th><th class="amount">Total Gross</th><th class="amount">Total Charges</th><th class="amount">Net P&amp;L</th><th class="amount">ROI</th><th class="amount">F&amp;O Fund</th><th class="amount">Cash Fund</th><th class="amount">MCX Fund</th><th class="amount">F&amp;O Gross</th><th class="amount">F&amp;O Charges</th><th class="amount">Cash Gross</th><th class="amount">Cash Charges</th><th class="amount">MCX Gross</th><th class="amount">MCX Charges</th></tr></thead><tbody>'+list.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td>'+statusCell(x,key)+cell(x.margin)+cell(x.utilized)+cell(x.gross)+cell(x.charges)+cell(x.net)+'<td class="amount" style="color:'+cls(x.roi)+'">'+x.roi.toFixed(2)+'%</td>'+cell(x.ff)+cell(x.cf)+cell(x.mf)+cell(x.fg)+cell(x.fc)+cell(x.cg)+cell(x.cc)+cell(x.mg)+cell(x.mc)+'</tr>').join('')+'</tbody>'+(manager?'<tfoot><tr><td>Grand Total</td><td>'+list.length+' Traders</td>'+cell(totals.margin)+cell(totals.utilized)+cell(totals.gross)+cell(totals.charges)+cell(totals.net)+'<td class="amount" style="color:'+cls(totals.roi)+'">'+totals.roi.toFixed(2)+'%</td>'+cell(totals.ff)+cell(totals.cf)+cell(totals.mf)+cell(totals.fg)+cell(totals.fc)+cell(totals.cg)+cell(totals.cc)+cell(totals.mg)+cell(totals.mc)+'</tr></tfoot>':'')+'</table></div>';
+    const table='<div class="minix-today-table-wrap"><table class="minix-today-table"><thead><tr><th>Trader Name</th><th>Status / Submission Time</th><th class="amount">Total Fund</th><th class="amount">Margin Utilized</th><th class="amount">Total Gross</th><th class="amount">Total Charges</th><th class="amount">Net P&amp;L</th><th class="amount">ROI</th><th class="amount">F&amp;O Fund</th><th class="amount">Cash Fund</th><th class="amount">MCX Fund</th><th class="amount">F&amp;O Gross</th><th class="amount">F&amp;O Charges</th><th class="amount">Cash Gross</th><th class="amount">Cash Charges</th><th class="amount">MCX Gross</th><th class="amount">MCX Charges</th></tr></thead><tbody>'+list.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td>'+statusCell(x,key,allowWhatsApp)+cell(x.margin)+cell(x.utilized)+cell(x.gross)+cell(x.charges)+cell(x.net)+'<td class="amount" style="color:'+cls(x.roi)+'">'+x.roi.toFixed(2)+'%</td>'+cell(x.ff)+cell(x.cf)+cell(x.mf)+cell(x.fg)+cell(x.fc)+cell(x.cg)+cell(x.cc)+cell(x.mg)+cell(x.mc)+'</tr>').join('')+'</tbody>'+(manager?'<tfoot><tr><td>Grand Total</td><td>'+list.length+' Traders</td>'+cell(totals.margin)+cell(totals.utilized)+cell(totals.gross)+cell(totals.charges)+cell(totals.net)+'<td class="amount" style="color:'+cls(totals.roi)+'">'+totals.roi.toFixed(2)+'%</td>'+cell(totals.ff)+cell(totals.cf)+cell(totals.mf)+cell(totals.fg)+cell(totals.fc)+cell(totals.cg)+cell(totals.cc)+cell(totals.mg)+cell(totals.mc)+'</tr></tfoot>':'')+'</table></div>';
     return '<div class="minix-today-head"><h2>📊 Today’s Role-wise Report – '+key.split('-').reverse().join('-')+'</h2><span class="minix-scope-badge">'+esc(u.name||u.username||'User')+' • '+esc(r)+' • '+scope+'</span></div>'+kpis+highlights+table+'<div class="minix-push-actions"><button onclick="minixTestNotification()">Test Notification</button><button class="close" onclick="minixClosePushModal()">Close</button></div>';
   }
   function sb(){const c=window.MINIX_CONFIG||{};return window.supabase&&c.supabaseUrl&&c.supabaseAnonKey?window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey):null}

@@ -19012,6 +19012,64 @@ input,select,textarea,button{max-width:100%}
   table{display:table}
   th,td{white-space:nowrap}
 }
+@media (max-width:1200px), (hover:none) and (pointer:coarse){
+  /* Landscape phones/tablets must use one full-width table card per row. */
+  #individualSection .table-grid,.table-grid{grid-template-columns:1fr!important;}
+  #individualSection .table-card,.table-card{width:100%!important;max-width:100%!important;min-width:0!important;}
+
+  /* Every wide financial table scrolls inside its own card instead of being squeezed. */
+  #fullTraderPerformanceTable,#fullTraderPerformanceTable .portfolio-collapse-wrap,
+  #fullTraderChargesTable,#fullTraderChargesTable .charges-portfolio-wrap,
+  #fullFyDematMonthSummaryTable,#riskUtilizationTable,#individualPerformanceTable,
+  #accuracyTable,#analyticsTable,#allTradersDateWiseTable,#aiSegmentMISCard .ai-mis-wrap{
+    width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;touch-action:pan-x pan-y!important;overscroll-behavior-inline:contain!important;
+  }
+  #fullTraderPerformanceTable .portfolio-collapse-table{width:max-content!important;min-width:1380px!important;max-width:none!important;table-layout:auto!important;}
+  #fullTraderChargesTable table{width:max-content!important;min-width:980px!important;max-width:none!important;table-layout:auto!important;}
+  #fullFyDematMonthSummaryTable table{width:max-content!important;min-width:1100px!important;max-width:none!important;table-layout:auto!important;}
+  #riskUtilizationTable table{width:max-content!important;min-width:900px!important;max-width:none!important;table-layout:auto!important;}
+  #individualPerformanceTable table{width:max-content!important;min-width:1100px!important;max-width:none!important;table-layout:auto!important;}
+  #accuracyTable table{width:max-content!important;min-width:700px!important;max-width:none!important;table-layout:auto!important;}
+  #analyticsTable table{width:max-content!important;min-width:800px!important;max-width:none!important;table-layout:auto!important;}
+  #allTradersDateWiseTable table,#aiSegmentMISTable{width:max-content!important;min-width:1800px!important;max-width:none!important;table-layout:auto!important;}
+
+  #fullTraderPerformanceTable .portfolio-collapse-table th,
+  #fullTraderPerformanceTable .portfolio-collapse-table td,
+  #fullTraderChargesTable th,#fullTraderChargesTable td,
+  #fullFyDematMonthSummaryTable th,#fullFyDematMonthSummaryTable td,
+  #riskUtilizationTable th,#riskUtilizationTable td,
+  #individualPerformanceTable th,#individualPerformanceTable td,
+  #accuracyTable th,#accuracyTable td,#analyticsTable th,#analyticsTable td,
+  #allTradersDateWiseTable th,#allTradersDateWiseTable td,#aiSegmentMISTable th,#aiSegmentMISTable td{
+    width:auto!important;max-width:none!important;min-width:96px!important;white-space:nowrap!important;
+    overflow:visible!important;text-overflow:clip!important;padding:9px 10px!important;box-sizing:border-box!important;
+  }
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(-n+4),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(-n+4){min-width:170px!important;}
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(-n+4){max-width:190px!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(5),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(5),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(6),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(6),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(9),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(9),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(13),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(13){min-width:125px!important;}
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(11),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(11),
+  #fullTraderPerformanceTable .portfolio-collapse-table th:nth-child(12),
+  #fullTraderPerformanceTable .portfolio-collapse-table td:nth-child(12){min-width:76px!important;}
+  #riskUtilizationTable th.amount,#riskUtilizationTable td.amount,
+  #individualPerformanceTable th.amount,#individualPerformanceTable td.amount,
+  #analyticsTable th.amount,#analyticsTable td.amount,
+  #allTradersDateWiseTable th.amount,#allTradersDateWiseTable td.amount,
+  #aiSegmentMISTable th.amount,#aiSegmentMISTable td.amount{min-width:125px!important;}
+
+  /* Notification actions become part of the page flow and never cover a table. */
+  #minixPushBar{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;top:auto!important;
+    width:auto!important;margin:12px 8px max(12px,env(safe-area-inset-bottom))!important;z-index:20!important;display:flex!important;}
+}
 @media(max-width:700px){
   .container{padding:8px!important}
   h1{font-size:21px!important;line-height:1.2}

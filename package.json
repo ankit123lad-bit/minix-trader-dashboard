@@ -1,0 +1,21 @@
+{
+  "name": "minix-trader-dashboard",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Minix Trader Dashboard PWA with Android and iOS Capacitor wrappers",
+  "scripts": {
+    "data:build": "node scripts/build-data.mjs",
+    "web:sync": "node scripts/sync-web.mjs",
+    "cap:sync": "npm run web:sync && npx cap sync",
+    "android": "npm run cap:sync && npx cap open android",
+    "ios": "npm run cap:sync && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}

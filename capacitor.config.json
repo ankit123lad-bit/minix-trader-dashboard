@@ -1,0 +1,12 @@
+{
+  "appId": "com.minix.traderdashboard",
+  "appName": "Minix Trader",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

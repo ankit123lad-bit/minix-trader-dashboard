@@ -1,9 +1,10 @@
-const CACHE_NAME = "minix-pwa-shell-v5-fullwidth-fix";
+const CACHE_NAME = "minix-pwa-shell-v6-mobile-app";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/dashboard",
   "/dashboard.html",
+  "/mobile.html",
   "/admin",
   "/admin.html",
   "/config.js",

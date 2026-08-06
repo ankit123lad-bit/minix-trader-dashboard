@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<script>if(innerWidth<=900&&!/desktop=1/.test(location.search))location.replace('mobile.html')</script>
 <html lang="en">
 <Style>
   <meta charset="UTF-8" />
@@ -16085,6 +16084,10 @@ section {
   window.minixRemoveRankColumns=scheduleRankCleanup;
 })();
 </script>
+<a id="minixOpenMobileDesign" href="mobile.html" style="display:none">Open Mobile Design</a>
+<style>
+@media(max-width:900px){body:not(.auth-locked) #minixOpenMobileDesign{display:block!important;position:fixed;right:12px;top:12px;z-index:99990;background:#0369a1;color:#fff;text-decoration:none;padding:9px 12px;border-radius:11px;font:900 12px Arial;box-shadow:0 8px 22px #0008}}
+</style>
 </body>
 
 </html>

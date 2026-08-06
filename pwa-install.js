@@ -95,8 +95,3 @@
     }
   });
 })();
-(function(){
-  if(window.innerWidth<=900 && !/desktop=1/.test(location.search) && !/mobile\.html$/i.test(location.pathname)){
-    location.replace('mobile.html');
-  }
-})();

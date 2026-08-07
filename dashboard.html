@@ -18148,6 +18148,117 @@ function updateFundUtilizedKpis() {
     overallUtilized,
     'warning'
   );
+
+  /*
+   * FINAL KPI CALCULATION FIX
+   * ROI uses the same Total Fund shown in each KPI card.
+   * Trading days are counted once per unique date after combining that
+   * date's Net P&L. A zero fund always shows 0.00% ROI.
+   */
+  function sumNetField(field) {
+    return (rows || []).reduce(function (total, row) {
+      return total + numberValue(row && row[field]);
+    }, 0);
+  }
+
+  function setRoiKpi(id, netPnl, totalFund) {
+    var element = byId(id);
+    if (!element) return;
+
+    var roi = totalFund > 0
+      ? (netPnl / totalFund) * 100
+      : 0;
+
+    if (!isFinite(roi)) roi = 0;
+
+    element.textContent = roi.toFixed(2) + '%';
+    element.className =
+      'kpi-value ' +
+      (roi > 0
+        ? 'positive'
+        : roi < 0
+          ? 'negative'
+          : 'neutral');
+  }
+
+  function tradingDayStats(field) {
+    var dateWiseNet = {};
+
+    (rows || []).forEach(function (row) {
+      var day = dateKey(getDate(row));
+      if (!day) return;
+
+      dateWiseNet[day] =
+        (dateWiseNet[day] || 0) +
+        numberValue(row && row[field]);
+    });
+
+    var positive = 0;
+    var negative = 0;
+
+    Object.keys(dateWiseNet).forEach(function (day) {
+      var dailyNet = dateWiseNet[day];
+
+      if (dailyNet > 0.004) {
+        positive++;
+      } else if (dailyNet < -0.004) {
+        negative++;
+      }
+    });
+
+    return {
+      positive: positive,
+      negative: negative,
+      total: positive + negative
+    };
+  }
+
+  function setTradingDayKpis(prefix, field) {
+    var stats = tradingDayStats(field);
+
+    var positiveId = prefix
+      ? prefix + 'PositiveDays'
+      : 'positiveDays';
+
+    var negativeId = prefix
+      ? prefix + 'NegativeDays'
+      : 'negativeDays';
+
+    var totalId = prefix
+      ? prefix + 'TradingDays'
+      : 'totalTradingDaysOverall';
+
+    var positiveElement = byId(positiveId);
+    var negativeElement = byId(negativeId);
+    var totalElement = byId(totalId);
+
+    if (positiveElement) {
+      positiveElement.textContent = stats.positive;
+    }
+
+    if (negativeElement) {
+      negativeElement.textContent = stats.negative;
+    }
+
+    if (totalElement) {
+      totalElement.textContent = stats.total;
+    }
+  }
+
+  var cashNetTotal = sumNetField('cashNet');
+  var fnoNetTotal = sumNetField('fnoNet');
+  var mcxNetTotal = sumNetField('mcxNet');
+  var overallNetTotal = sumNetField('totalNet');
+
+  setRoiKpi('cashRoi', cashNetTotal, values.cash.fund);
+  setRoiKpi('fnoRoi', fnoNetTotal, values.fno.fund);
+  setRoiKpi('mcxRoi', mcxNetTotal, values.mcx.fund);
+  setRoiKpi('overallRoi', overallNetTotal, overallFund);
+
+  setTradingDayKpis('cash', 'cashNet');
+  setTradingDayKpis('fno', 'fnoNet');
+  setTradingDayKpis('mcx', 'mcxNet');
+  setTradingDayKpis('', 'totalNet');
 }
 
   function startKpiFix() {

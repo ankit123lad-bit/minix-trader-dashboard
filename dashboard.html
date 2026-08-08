@@ -2108,9 +2108,6 @@ tbody tr:hover td{
 
   <meta name="theme-color" content="#2563eb" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="mobile-app-ui.css?v=20260808b" />
-  <script defer src="pwa-install.js?v=20260808b"></script>
-  <script defer src="mobile-app-ui.js?v=20260808b"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -17534,8 +17531,8 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     return{key,list};
   }
   const cls=n=>n>0?'#34d399':n<0?'#f87171':'#cbd5e1';
-  function metric(label,value,color){return '<div class="minix-today-kpi"><span>'+label+'</span><b style="color:'+(color||'#e2e8f0')+'">'+value+'</b></div>'}
-  function cell(n){return '<td class="amount" style="color:'+cls(n)+'">'+money(n)+'</td>'}
+  function metric(label,value,color){const semantic=color==='#34d399'?' positive':color==='#f87171'?' negative':'';return '<div class="minix-today-kpi"><span>'+label+'</span><b class="'+semantic.trim()+'">'+value+'</b></div>'}
+  function cell(n){return '<td class="amount '+(n>0?'positive':n<0?'negative':'neutral')+'">'+money(n)+'</td>'}
   function statusCell(x,key,allowWhatsApp){
     if(x.status.cls==='pending'&&allowWhatsApp)return '<td><button type="button" class="minix-status minix-status-pending minix-whatsapp-pending" onclick="minixOpenPendingWhatsApp(\''+encodeURIComponent(x.name)+'\',\''+encodeURIComponent(x.phone||'')+'\',\''+key+'\')" title="Open WhatsApp reminder">'+x.status.text+'</button><span class="minix-whatsapp-hint">🟢 Click to send WhatsApp reminder</span></td>';
     return '<td><span class="minix-status minix-status-'+x.status.cls+'">'+x.status.text+'</span>'+(x.submittedAt?'<div style="color:#93c5fd;margin-top:4px">Submitted: '+esc(x.submittedAt)+'</div>':'')+(x.reason?'<div style="color:#94a3b8;margin-top:3px">'+esc(x.reason)+'</div>':'')+'</td>';
@@ -17563,7 +17560,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     const scope=/admin/i.test(r)?'All Traders':(/pm|portfolio/i.test(r)?'My Portfolio Team':(/researcher/i.test(r)?'My Research Team':'My Report'));
     const kpis=manager?'<div class="minix-today-kpis">'+(metric('Traders in My Scope',list.length)+metric('Profit Traders',profit,'#34d399')+metric('Loss Traders',loss,'#f87171')+metric('Win Rate',winRate.toFixed(2)+'%','#60a5fa')+metric(istMinutes()>975?'Report Pending':'Awaiting Report',pending,'#f87171')+metric('No Trade',noTrade,'#fbbf24')+metric('Late Submitted',late,'#f59e0b')+metric('Total Profit',money(totalProfit),'#34d399')+metric('Total Loss',money(totalLoss),'#f87171'))+'</div>':'';
     const highlights=manager?'<div class="minix-today-highlights"><div class="minix-highlight">🏆 <b>Top Today:</b> '+(top?esc(top.name)+' • '+money(top.net)+' • '+top.roi.toFixed(2)+'% ROI':'No traded data')+'<br>📈 <b>Highest ROI:</b> '+(high?esc(high.name)+' • '+high.roi.toFixed(2)+'%':'-')+'</div><div class="minix-highlight">⚠️ <b>Worst Today:</b> '+(worst?esc(worst.name)+' • '+money(worst.net)+' • '+worst.roi.toFixed(2)+'% ROI':'No traded data')+'<br>📉 <b>Lowest ROI:</b> '+(low?esc(low.name)+' • '+low.roi.toFixed(2)+'%':'-')+'</div></div>':'';
-    const table='<div class="minix-today-table-wrap"><table class="minix-today-table"><thead><tr><th>Trader Name</th><th>Status / Submission Time</th><th class="amount">Total Fund</th><th class="amount">Margin Utilized</th><th class="amount">Total Gross</th><th class="amount">Total Charges</th><th class="amount">Net P&amp;L</th><th class="amount">ROI</th><th class="amount">F&amp;O Fund</th><th class="amount">Cash Fund</th><th class="amount">MCX Fund</th><th class="amount">F&amp;O Gross</th><th class="amount">F&amp;O Charges</th><th class="amount">Cash Gross</th><th class="amount">Cash Charges</th><th class="amount">MCX Gross</th><th class="amount">MCX Charges</th></tr></thead><tbody>'+list.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td>'+statusCell(x,key,allowWhatsApp)+cell(x.margin)+cell(x.utilized)+cell(x.gross)+cell(x.charges)+cell(x.net)+'<td class="amount" style="color:'+cls(x.roi)+'">'+x.roi.toFixed(2)+'%</td>'+cell(x.ff)+cell(x.cf)+cell(x.mf)+cell(x.fg)+cell(x.fc)+cell(x.cg)+cell(x.cc)+cell(x.mg)+cell(x.mc)+'</tr>').join('')+'</tbody>'+(manager?'<tfoot><tr><td>Grand Total</td><td>'+list.length+' Traders</td>'+cell(totals.margin)+cell(totals.utilized)+cell(totals.gross)+cell(totals.charges)+cell(totals.net)+'<td class="amount" style="color:'+cls(totals.roi)+'">'+totals.roi.toFixed(2)+'%</td>'+cell(totals.ff)+cell(totals.cf)+cell(totals.mf)+cell(totals.fg)+cell(totals.fc)+cell(totals.cg)+cell(totals.cc)+cell(totals.mg)+cell(totals.mc)+'</tr></tfoot>':'')+'</table></div>';
+    const table='<div class="minix-today-table-wrap"><table class="minix-today-table"><thead><tr><th>Trader Name</th><th>Status / Submission Time</th><th class="amount">Total Fund</th><th class="amount">Margin Utilized</th><th class="amount">Total Gross</th><th class="amount">Total Charges</th><th class="amount">Net P&amp;L</th><th class="amount">ROI</th><th class="amount">F&amp;O Fund</th><th class="amount">Cash Fund</th><th class="amount">MCX Fund</th><th class="amount">F&amp;O Gross</th><th class="amount">F&amp;O Charges</th><th class="amount">Cash Gross</th><th class="amount">Cash Charges</th><th class="amount">MCX Gross</th><th class="amount">MCX Charges</th></tr></thead><tbody>'+list.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td>'+statusCell(x,key,allowWhatsApp)+cell(x.margin)+cell(x.utilized)+cell(x.gross)+cell(x.charges)+cell(x.net)+'<td class="amount '+(x.roi>0?'positive':x.roi<0?'negative':'neutral')+'">'+x.roi.toFixed(2)+'%</td>'+cell(x.ff)+cell(x.cf)+cell(x.mf)+cell(x.fg)+cell(x.fc)+cell(x.cg)+cell(x.cc)+cell(x.mg)+cell(x.mc)+'</tr>').join('')+'</tbody>'+(manager?'<tfoot><tr><td>Grand Total</td><td>'+list.length+' Traders</td>'+cell(totals.margin)+cell(totals.utilized)+cell(totals.gross)+cell(totals.charges)+cell(totals.net)+'<td class="amount '+(totals.roi>0?'positive':totals.roi<0?'negative':'neutral')+'">'+totals.roi.toFixed(2)+'%</td>'+cell(totals.ff)+cell(totals.cf)+cell(totals.mf)+cell(totals.fg)+cell(totals.fc)+cell(totals.cg)+cell(totals.cc)+cell(totals.mg)+cell(totals.mc)+'</tr></tfoot>':'')+'</table></div>';
     return '<div class="minix-today-head"><h2>📊 Today’s Role-wise Report – '+key.split('-').reverse().join('-')+'</h2><span class="minix-scope-badge">'+esc(u.name||u.username||'User')+' • '+esc(r)+' • '+scope+'</span></div>'+kpis+highlights+table+'<div class="minix-push-actions"><button onclick="minixTestNotification()">Test Notification</button><button class="close" onclick="minixClosePushModal()">Close</button></div>';
   }
   function sb(){const c=window.MINIX_CONFIG||{};return window.supabase&&c.supabaseUrl&&c.supabaseAnonKey?window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey):null}
@@ -19216,5 +19213,540 @@ body:not(.auth-locked){
 }
 </style>
 
+<!-- Approved 7-screen mobile app UI. Loaded last so desktop styles stay original and mobile styles win only below 768px. -->
+<link rel="stylesheet" href="mobile-v7-ui.css?v=20260808-navfix" />
+<link rel="stylesheet" href="mobile-v7-reference.css?v=20260808-navfix" />
+<link id="minixForceMobileBase" rel="stylesheet" href="mobile-v7-force.css?v=20260808-navfix" media="not all" />
+<link id="minixForceMobileReference" rel="stylesheet" href="mobile-v7-reference-force.css?v=20260808-navfix" media="not all" />
+<link rel="stylesheet" href="mobile-v7-responsive-fix.css?v=20260808-navfix" />
+<link rel="stylesheet" href="mobile-v7-table-contrast-fix.css?v=20260808-navfix" />
+<link rel="stylesheet" href="mobile-v7-official-table.css?v=20260808-navfix" />
+<link rel="stylesheet" href="mobile-v7-government-mis.css?v=20260808-navfix" />
+<script>
+(function(){
+  var forceMobile=new URLSearchParams(location.search).get('mobile')==='1';
+  var mq=window.matchMedia?window.matchMedia('(max-width:1024px)'):null;
+  function syncGovernmentTheme(){document.documentElement.classList.toggle('minix-government-mis',forceMobile||!!(mq&&mq.matches));}
+  syncGovernmentTheme();
+  if(mq){if(mq.addEventListener)mq.addEventListener('change',syncGovernmentTheme);else if(mq.addListener)mq.addListener(syncGovernmentTheme);}
+  if(!forceMobile)return;
+  document.documentElement.classList.add('minix-force-mobile','minix-government-mis');
+  var base=document.getElementById('minixForceMobileBase');
+  var reference=document.getElementById('minixForceMobileReference');
+  if(base)base.media='all';
+  if(reference)reference.media='all';
+})();
+</script>
+<style id="minix-user-file-final-fix">
+/* Keep the user's original file visible, editable and selectable. */
+html body,
+html body *{
+  -webkit-user-select:text!important;
+  user-select:text!important;
+}
+html body :is(#summarySection,#individualSection,#fullSummarySection,#chargesPortfolioGovModal,#brokerageChargesDetailsModal) table,
+html body :is(#summarySection,#individualSection,#fullSummarySection,#chargesPortfolioGovModal,#brokerageChargesDetailsModal) table *{
+  -webkit-user-select:text!important;
+  user-select:text!important;
+  -webkit-touch-callout:default!important;
+}
+html body :is(button,a,select,option,input[type="button"],input[type="submit"],.dashboard-tab,.minix-mobile-nav-btn){
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+body.auth-locked #minixAuthOverlay{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+#minixAuthOverlay .auth-card{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+#minixAuthOverlay #minixUser,
+#minixAuthOverlay #minixPass{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  -webkit-user-select:text!important;
+  user-select:text!important;
+  background:#fff!important;
+  color:#1b1f23!important;
+  -webkit-text-fill-color:#1b1f23!important;
+  caret-color:#2563eb!important;
+  cursor:text!important;
+}
+#minixAuthOverlay #minixUser::placeholder,
+#minixAuthOverlay #minixPass::placeholder{color:#777!important;-webkit-text-fill-color:#777!important;opacity:1!important}
+</style>
+<script id="minix-user-file-final-fix-script">
+(function(){
+  'use strict';
+  function repair(){
+    var overlay=document.getElementById('minixAuthOverlay');
+    if(document.body&&document.body.classList.contains('auth-locked')&&overlay){
+      overlay.style.setProperty('display','flex','important');
+      overlay.style.setProperty('visibility','visible','important');
+      overlay.style.setProperty('opacity','1','important');
+    }
+    ['minixUser','minixPass'].forEach(function(id){
+      var input=document.getElementById(id);if(!input)return;
+      input.disabled=false;input.readOnly=false;
+      input.removeAttribute('disabled');input.removeAttribute('readonly');
+      input.style.setProperty('pointer-events','auto','important');
+      input.style.setProperty('color','#1b1f23','important');
+      input.style.setProperty('-webkit-text-fill-color','#1b1f23','important');
+      input.style.setProperty('caret-color','#2563eb','important');
+    });
+  }
+  document.addEventListener('click',function(e){
+    var input=e.target&&e.target.closest&&e.target.closest('#minixUser,#minixPass');
+    if(input){repair();input.focus();}
+  },true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',repair);else repair();
+  window.addEventListener('load',repair);setTimeout(repair,400);setTimeout(repair,1200);
+})();
+</script>
+<style id="minix-complete-government-ui-audit-v2">
+/* Complete final audit: one formal light presentation for every dashboard
+   screen, generated report, modal, popup and mobile orientation. */
+html.minix-government-mis{
+  --audit-page:#f3f4f4;--audit-surface:#fff;--audit-head:#e7e9eb;
+  --audit-soft:#f5f6f6;--audit-text:#1b1f23;--audit-muted:#62686e;
+  --audit-grid:#b9bec4;--audit-line:#d8dce0;--audit-accent:#496a8a;
+  --audit-profit:#16713b;--audit-loss:#a12626;
+}
+
+/* Every popup stays above the app bars; the page never shows two scrollbars. */
+html.minix-government-mis body :is(#fundAlertModal,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,.minix-push-overlay,.minix-entry-overlay,#minixAdminEntryOverlay){
+  z-index:3000000!important;
+  background:rgba(35,39,43,.42)!important;
+  color:var(--audit-text)!important;
+}
+html.minix-government-mis body.minix-overlay-active{overflow:hidden!important}
+html.minix-government-mis body.minix-overlay-active :is(#minixMobileAppBar,#minixMobileBottomNav,#fundAlertBell,#minixPushBar,.minix-entry-btn){display:none!important}
+
+/* Shared popup surfaces. */
+html.minix-government-mis body :is(#fundAlertModal>.modal,#gptChargesFullModal .gpt-modal-box,#govDetailsModal>div,#chargesPortfolioGovModal .charges-modal-box,#brokerageChargesDetailsModal .brokerage-modal-box,.minix-push-card,.minix-entry-card){
+  border:1px solid var(--audit-grid)!important;
+  border-radius:4px!important;
+  background:var(--audit-surface)!important;
+  color:var(--audit-text)!important;
+  box-shadow:0 14px 40px rgba(0,0,0,.20)!important;
+}
+html.minix-government-mis body :is(#fundAlertModal,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,.minix-push-overlay,.minix-entry-overlay) :is(h1,h2,h3,h4,p,span,small,strong,b,div,label){
+  color:inherit;
+  text-shadow:none!important;
+}
+html.minix-government-mis body :is(#fundAlertModal .modal-head,#gptChargesFullModal .gpt-modal-head,#govDetailsModal [class*="head"],#chargesPortfolioGovModal .charges-modal-head,#brokerageChargesDetailsModal .brokerage-modal-head,.minix-today-head,.mh-head,.minix-entry-head){
+  border-bottom:1px solid var(--audit-grid)!important;
+  background:var(--audit-head)!important;
+  color:var(--audit-text)!important;
+}
+html.minix-government-mis body :is(#gptChargesModalBody,#aiFinalGovContent,#aiGovDetailContent,#aiGovTotalContent,#govDetailContent,#chargesPortfolioGovModal .charges-modal-content,#brokerageChargesDetailsModal .brokerage-modal-content){
+  border:1px solid var(--audit-grid)!important;
+  border-radius:3px!important;
+  background:#fff!important;
+  color:var(--audit-text)!important;
+  scrollbar-gutter:stable!important;
+}
+
+/* Fund transfer alerts. */
+html.minix-government-mis body #fundAlertModal{padding:12px!important}
+html.minix-government-mis body #fundAlertModal>.modal{width:min(880px,100%)!important;max-height:calc(100dvh - 24px)!important;padding:0 14px 14px!important;overflow:auto!important}
+html.minix-government-mis body #fundAlertModal .modal-head{position:sticky!important;top:0!important;z-index:4!important;margin:0 -14px 10px!important;padding:11px 14px!important}
+html.minix-government-mis body #fundAlertModal .modal-head h2{color:var(--audit-text)!important;font-size:18px!important}
+html.minix-government-mis body #fundAlertModal .muted{color:var(--audit-muted)!important}
+html.minix-government-mis body #fundAlertModal .modal-nav button{border:1px solid var(--audit-grid)!important;border-radius:3px!important;background:#f0f1f2!important;color:#30353a!important;box-shadow:none!important}
+html.minix-government-mis body #fundAlertModal .alert-item{margin:8px 0!important;padding:12px!important;border:1px solid var(--audit-line)!important;border-left:4px solid var(--audit-grid)!important;border-radius:3px!important;background:#fff!important;color:var(--audit-text)!important;box-shadow:none!important;line-height:1.45!important}
+html.minix-government-mis body #fundAlertModal .alert-item:has(.pill-add){border-left-color:var(--audit-profit)!important}
+html.minix-government-mis body #fundAlertModal .alert-item:has(.pill-withdraw){border-left-color:var(--audit-loss)!important}
+html.minix-government-mis body #fundAlertModal .pill{border-radius:3px!important}
+html.minix-government-mis body #fundAlertModal .pill-add{background:#e8f3ec!important;color:var(--audit-profit)!important}
+html.minix-government-mis body #fundAlertModal .pill-withdraw{background:#f7eaea!important;color:var(--audit-loss)!important}
+
+/* Today report, daily history and entry forms. */
+html.minix-government-mis body .minix-push-overlay{padding:12px!important}
+html.minix-government-mis body .minix-push-card{width:min(1180px,100%)!important;max-height:calc(100dvh - 24px)!important;padding:14px!important;overflow:auto!important}
+html.minix-government-mis body .minix-report-grid{gap:8px!important}
+html.minix-government-mis body .minix-report-item{border:1px solid var(--audit-line)!important;border-radius:3px!important;background:var(--audit-soft)!important;color:var(--audit-text)!important;box-shadow:none!important}
+html.minix-government-mis body .minix-report-item span{color:var(--audit-muted)!important}
+html.minix-government-mis body .minix-report-item b{color:var(--audit-text)!important}
+html.minix-government-mis body #minixHistoryRoot{background:#fff!important;color:var(--audit-text)!important}
+html.minix-government-mis body #minixHistoryRoot :is(.mh-kpi,.mh-wrap){border:1px solid var(--audit-grid)!important;border-radius:3px!important;background:#fff!important;color:var(--audit-text)!important}
+html.minix-government-mis body #minixHistoryRoot .mh-kpi small{color:var(--audit-muted)!important}
+html.minix-government-mis body #minixHistoryRoot input,
+html.minix-government-mis body :is(.minix-entry-field input,.minix-entry-field select,.minix-entry-field textarea){border:1px solid var(--audit-grid)!important;border-radius:3px!important;background:#fff!important;color:var(--audit-text)!important;-webkit-text-fill-color:var(--audit-text)!important;caret-color:var(--audit-accent)!important}
+html.minix-government-mis body .minix-entry-note{border:1px solid var(--audit-line)!important;border-radius:3px!important;background:#eef1f3!important;color:#38546e!important}
+
+/* Every generated table uses the same readable MIS palette. */
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card,.minix-entry-card) table{
+  border-collapse:collapse!important;
+  background:#fff!important;
+  color:var(--audit-text)!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card,.minix-entry-card) table th{
+  border:1px solid var(--audit-grid)!important;
+  background:var(--audit-head)!important;
+  color:#30353a!important;
+  text-shadow:none!important;
+  opacity:1!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card,.minix-entry-card) table td{
+  border:1px solid var(--audit-line)!important;
+  background:#fff!important;
+  color:var(--audit-text)!important;
+  text-shadow:none!important;
+  opacity:1!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card,.minix-entry-card) table tbody tr:nth-child(even)>td{background:#f7f8f8!important}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card,.minix-entry-card) table tbody tr:hover>td{background:#eef1f3!important}
+html.minix-government-mis body table :is(.portfolio-grand-total,.charges-grand-total,.grand-total-row,.gov-total-row,.brokerage-total-row)>td,
+html.minix-government-mis body table tfoot td{border-top:2px solid var(--audit-accent)!important;background:#e7e9eb!important;color:var(--audit-text)!important;font-weight:800!important}
+html.minix-government-mis body table :is(.portfolio-group-row,.charges-portfolio-group-row,.gov-group-row,.brokerage-group-row)>td{background:#eef1f3!important;color:var(--audit-text)!important}
+html.minix-government-mis body table :is(td,th).positive,
+html.minix-government-mis body table :is(td,th).positive *{color:var(--audit-profit)!important;background-color:inherit!important}
+html.minix-government-mis body table :is(td,th).negative,
+html.minix-government-mis body table :is(td,th).negative *{color:var(--audit-loss)!important;background-color:inherit!important}
+html.minix-government-mis body table :is(td,th).warning,
+html.minix-government-mis body table :is(td,th).neutral{color:var(--audit-text)!important}
+
+/* Full report cards and table wrappers left dark by older patches. */
+html.minix-government-mis body :is(#allTradersDateWiseTable,#aiSegmentMISCard,#fullTraderPerformanceTable,#fullTraderChargesTable,#fullFyDematMonthSummaryTable,#monthWiseChargesTable,.gpt-table-scroll,.final-user-patch-table-wrap,.portfolio-collapse-wrap,.charges-portfolio-wrap,.ai-mis-wrap,.ai-mis-detail-wrap){
+  border-color:var(--audit-grid)!important;
+  background:#fff!important;
+  color:var(--audit-text)!important;
+  box-shadow:none!important;
+}
+html.minix-government-mis body :is(#allTradersDateWiseTable,#aiSegmentMISCard,#fullTraderPerformanceTable,#fullTraderChargesTable,#fullFyDematMonthSummaryTable,#monthWiseChargesTable,.gpt-table-scroll,.final-user-patch-table-wrap,.portfolio-collapse-wrap,.charges-portfolio-wrap,.ai-mis-wrap,.ai-mis-detail-wrap)::-webkit-scrollbar{display:block!important;width:10px!important;height:10px!important}
+html.minix-government-mis body :is(#allTradersDateWiseTable,#aiSegmentMISCard,#fullTraderPerformanceTable,#fullTraderChargesTable,#fullFyDematMonthSummaryTable,#monthWiseChargesTable,.gpt-table-scroll,.final-user-patch-table-wrap,.portfolio-collapse-wrap,.charges-portfolio-wrap,.ai-mis-wrap,.ai-mis-detail-wrap)::-webkit-scrollbar-thumb{background:#969da4!important;border-radius:10px!important}
+html.minix-government-mis body :is(#allTradersDateWiseTable,#aiSegmentMISCard,#fullTraderPerformanceTable,#fullTraderChargesTable,#fullFyDematMonthSummaryTable,#monthWiseChargesTable,.gpt-table-scroll,.final-user-patch-table-wrap,.portfolio-collapse-wrap,.charges-portfolio-wrap,.ai-mis-wrap,.ai-mis-detail-wrap)::-webkit-scrollbar-track{background:#e7e9eb!important}
+
+/* Controls and semantic colours. */
+html.minix-government-mis body :is(.close-btn,.gpt-modal-close,.gov-close-btn,.ai-gov-close,.ai-gov-total-close,.ai-final-gov-close,.charges-modal-close,.brokerage-modal-close,.minix-push-actions .close){border:1px solid #b78383!important;border-radius:3px!important;background:#f7eaea!important;color:var(--audit-loss)!important;box-shadow:none!important}
+html.minix-government-mis body :is(.minix-push-actions button,.gpt-table-btn,.charges-detail-btn,.portfolio-toggle,.charges-portfolio-toggle,.toggle-btn){border:1px solid var(--audit-grid)!important;border-radius:3px!important;background:#f0f1f2!important;color:#30353a!important;box-shadow:none!important}
+html.minix-government-mis body :is(.positive,.pill-add,.push-enabled){color:var(--audit-profit)!important}
+html.minix-government-mis body :is(.negative,.pill-withdraw,.push-disabled){color:var(--audit-loss)!important}
+
+/* Text is copyable in every report; only controls suppress selection. */
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#fundAlertModal,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card) :is(table,table *,p,span,b,strong,small,div){user-select:text!important;-webkit-user-select:text!important;-webkit-touch-callout:default!important}
+html.minix-government-mis body :is(button,a,select,.dashboard-tab,.minix-mobile-nav-btn){user-select:none!important;-webkit-user-select:none!important}
+
+@media(max-width:700px){
+  html.minix-government-mis body :is(#fundAlertModal,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,.minix-push-overlay,.minix-entry-overlay){padding:6px!important}
+  html.minix-government-mis body :is(#fundAlertModal>.modal,#gptChargesFullModal .gpt-modal-box,#govDetailsModal>div,#chargesPortfolioGovModal .charges-modal-box,#brokerageChargesDetailsModal .brokerage-modal-box,.minix-push-card,.minix-entry-card){width:100%!important;height:auto!important;max-height:calc(100dvh - 12px)!important;padding:9px!important}
+  html.minix-government-mis body .minix-report-grid{grid-template-columns:1fr!important}
+}
+@media(orientation:landscape) and (max-height:700px){
+  html.minix-government-mis body :is(#fundAlertModal,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,.minix-push-overlay,.minix-entry-overlay){align-items:stretch!important;padding:4px!important}
+  html.minix-government-mis body :is(#fundAlertModal>.modal,#gptChargesFullModal .gpt-modal-box,#govDetailsModal>div,#chargesPortfolioGovModal .charges-modal-box,#brokerageChargesDetailsModal .brokerage-modal-box,.minix-push-card,.minix-entry-card){width:100%!important;height:calc(100dvh - 8px)!important;max-height:calc(100dvh - 8px)!important;border-radius:2px!important}
+}
+</style>
+<style id="minix-final-neutral-filters-full-amounts-v3">
+/* Boss-facing neutral MIS presentation: controls and tables use no decorative
+   colours. Only actual profit/loss values retain green/red semantics. */
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters{
+  overflow:visible!important;
+  border:1px solid #c8cdd2!important;
+  border-radius:4px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters>div{
+  border-color:#dde1e4!important;
+  background:#fff!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters label{
+  color:#4a4f54!important;
+  font-weight:600!important;
+  opacity:1!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters :is(input,select),
+html.minix-government-mis body .ai-check-btn{
+  border:1px solid #aeb4ba!important;
+  border-radius:4px!important;
+  background:#fff!important;
+  color:#202428!important;
+  -webkit-text-fill-color:#202428!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+html.minix-government-mis body .ai-check-btn::after{color:#4a4f54!important}
+html.minix-government-mis body .ai-check-menu{
+  border:1px solid #aeb4ba!important;
+  border-radius:4px!important;
+  background:#fff!important;
+  color:#202428!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.16)!important;
+}
+html.minix-government-mis body .ai-check-actions{
+  border-bottom:1px solid #d7dbdf!important;
+  background:#fff!important;
+}
+html.minix-government-mis body .ai-check-actions button{
+  border:1px solid #b8bdc2!important;
+  border-radius:3px!important;
+  background:#eef0f2!important;
+  color:#202428!important;
+  box-shadow:none!important;
+}
+html.minix-government-mis body .ai-check-row,
+html.minix-government-mis body .ai-check-row:hover,
+html.minix-government-mis body .ai-check-row:has(input[type="checkbox"]:checked){
+  border:1px solid transparent!important;
+  background:#fff!important;
+  color:#202428!important;
+  font-weight:600!important;
+}
+html.minix-government-mis body .ai-check-row:hover{background:#f1f2f3!important}
+html.minix-government-mis body .ai-check-row::before{
+  border-color:#858b91!important;
+  border-radius:2px!important;
+  background:#fff!important;
+}
+html.minix-government-mis body .ai-check-row:has(input[type="checkbox"]:checked)::before{
+  border-color:#555b61!important;
+  background:#555b61!important;
+  color:#fff!important;
+}
+html.minix-government-mis body .ai-check-menu::-webkit-scrollbar-thumb{background:#a1a6ab!important}
+html.minix-government-mis body .ai-check-menu::-webkit-scrollbar-track{background:#eceeef!important}
+
+/* Remove the navy label blocks left inside portfolio/group rows. */
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card) table td :is(div,span,b,strong,a):not(.positive):not(.negative){
+  background:transparent!important;
+  color:inherit!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+html.minix-government-mis body table :is(.portfolio-toggle,.charges-portfolio-toggle,.toggle-btn){
+  border:1px solid #9da3a9!important;
+  background:#eef0f2!important;
+  color:#202428!important;
+}
+
+/* Keep every number complete. Wide MIS reports scroll horizontally instead
+   of squeezing or painting amounts over neighbouring columns. */
+html.minix-government-mis body :is(#individualPerformanceTable,#riskUtilizationTable,#accuracyTable,#analyticsTable,#monthWiseChargesTable,#allTradersDateWiseTable,#capitalUtilizationTable,#fullFyDematMonthSummaryTable,#fullTraderPerformanceTable,#fullTraderChargesTable,#gptChargesModalBody,#govDetailContent,#aiFinalGovContent,#aiGovDetailContent,#aiGovTotalContent,.charges-modal-content,.brokerage-modal-content,.minix-today-table-wrap,.mh-wrap,.perfect-scroll-table,.portfolio-collapse-wrap,.charges-portfolio-wrap,.final-user-patch-table-wrap,.ai-mis-wrap,.ai-mis-detail-wrap){
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:auto!important;
+  scrollbar-gutter:stable!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card) table{
+  width:max-content!important;
+  min-width:100%!important;
+  table-layout:auto!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card) table :is(th,td){
+  width:auto!important;
+  max-width:none!important;
+  padding:8px 10px!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:1.25!important;
+}
+html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,#minixHistoryRoot,.minix-push-card) table :is(th,td).amount{
+  min-width:125px!important;
+  text-align:right!important;
+  font-variant-numeric:tabular-nums!important;
+}
+html.minix-government-mis body :is(#fullTraderPerformanceTable,#fullTraderChargesTable,#chargesPortfolioGovModal,#brokerageChargesDetailsModal) table :is(th,td):first-child{
+  min-width:205px!important;
+}
+
+/* Today's report must use the same neutral cards and readable text. */
+html.minix-government-mis body .minix-today-kpi,
+html.minix-government-mis body .minix-highlight{
+  border:1px solid #cfd3d7!important;
+  border-radius:4px!important;
+  background:#f7f8f8!important;
+  color:#202428!important;
+  box-shadow:none!important;
+}
+html.minix-government-mis body .minix-today-kpi span{color:#5e646a!important}
+html.minix-government-mis body .minix-today-kpi b{color:#202428!important}
+html.minix-government-mis body .minix-today-kpi b.positive{color:var(--audit-profit)!important}
+html.minix-government-mis body .minix-today-kpi b.negative{color:var(--audit-loss)!important}
+html.minix-government-mis body .minix-scope-badge{
+  border:1px solid #b8bdc2!important;
+  border-radius:4px!important;
+  background:#eef0f2!important;
+  color:#202428!important;
+}
+
+@media(max-width:700px){
+  html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters{
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    padding:10px!important;
+  }
+  html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters>div{
+    display:block!important;
+    min-height:0!important;
+  }
+  html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters label{
+    display:block!important;
+    height:auto!important;
+    margin:0 0 4px!important;
+    font-size:12px!important;
+  }
+  html.minix-government-mis body .ai-check-btn,
+  html.minix-government-mis body :is(#summarySection,#individualSection,#fullSummarySection)>.filters input{
+    width:100%!important;
+    height:40px!important;
+    min-height:40px!important;
+    max-height:40px!important;
+    font-size:14px!important;
+  }
+}
+</style>
+<style id="minix-universal-horizontal-navigation-v4">
+/* Every genuinely wide report gets the same visible Left/Right navigation. */
+html.minix-government-mis body .minix-table-scroll-controls{
+  display:flex;
+  width:100%!important;
+  max-width:100%!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+  margin:8px 0!important;
+  padding:6px 0!important;
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  background:#fff!important;
+  box-sizing:border-box!important;
+}
+html.minix-government-mis body .minix-table-scroll-controls .minix-scroll-hint{
+  flex:1 1 230px!important;
+  min-width:0!important;
+  white-space:normal!important;
+  color:#5e646a!important;
+}
+html.minix-government-mis body .minix-table-scroll-controls button{
+  display:inline-flex!important;
+  min-width:108px!important;
+  height:42px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:1px solid #aeb4ba!important;
+  border-radius:4px!important;
+  background:#f5f6f7!important;
+  color:#202428!important;
+  box-shadow:none!important;
+  font-weight:700!important;
+}
+html.minix-government-mis body .minix-table-scroll-controls button:disabled{
+  opacity:.42!important;
+  color:#656b71!important;
+}
+
+/* The date-wise toolbar must wrap inside the card instead of being cropped. */
+html.minix-government-mis body .gpt-table-toolbar{
+  display:flex!important;
+  width:100%!important;
+  max-width:100%!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  position:static!important;
+  left:auto!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+html.minix-government-mis body .gpt-table-toolbar .gpt-table-btn{
+  max-width:100%!important;
+  height:auto!important;
+  min-height:42px!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:1.25!important;
+}
+html.minix-government-mis body :is(.summary-note,.ai-fast-note,.gpt-table-note){
+  max-width:100%!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+
+/* One sticky header row, not individually sticky cells. This removes the
+   Utilized value/header collision seen while vertically scrolling. */
+html.minix-government-mis body #allTradersDateWiseTable table thead{
+  position:sticky!important;
+  top:0!important;
+  z-index:70!important;
+}
+html.minix-government-mis body #allTradersDateWiseTable table thead th{
+  position:static!important;
+  height:44px!important;
+  min-height:44px!important;
+  padding:8px 10px!important;
+  vertical-align:middle!important;
+  line-height:1.15!important;
+  background:#e7e9eb!important;
+  color:#30353a!important;
+}
+html.minix-government-mis body #allTradersDateWiseTable table tbody td,
+html.minix-government-mis body #allTradersDateWiseTable table tfoot td{
+  position:static!important;
+}
+html.minix-government-mis body #allTradersDateWiseTable table tbody tr:nth-child(odd)>td:first-child{
+  background:#fff!important;
+  color:#202428!important;
+}
+html.minix-government-mis body #allTradersDateWiseTable table tbody tr:nth-child(even)>td:first-child{
+  background:#f7f8f8!important;
+  color:#202428!important;
+}
+
+/* Remove remaining navy rectangles behind portfolio/trader labels. */
+html.minix-government-mis body :is(#fullTraderPerformanceTable,#fullTraderChargesTable,#chargesPortfolioGovModal,#brokerageChargesDetailsModal) table td *{
+  background:transparent!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+
+@media(max-width:700px){
+  html.minix-government-mis body .minix-table-scroll-controls{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+  }
+  html.minix-government-mis body .minix-table-scroll-controls .minix-scroll-hint{
+    grid-column:1/-1!important;
+  }
+  html.minix-government-mis body .minix-table-scroll-controls button{
+    width:100%!important;
+    min-width:0!important;
+  }
+  html.minix-government-mis body .gpt-table-toolbar .gpt-table-btn{
+    flex:1 1 100%!important;
+    width:100%!important;
+  }
+}
+</style>
+<script id="minix-complete-overlay-overlap-fix-v2">
+(function(){
+  'use strict';
+  var selector='#fundAlertModal,#gptChargesFullModal,#govDetailsModal,#chargesPortfolioGovModal,#brokerageChargesDetailsModal,.minix-push-overlay,.minix-entry-overlay,#minixAdminEntryOverlay,#traderImageModal';
+  var scheduled=false;
+  function visible(el){if(!el)return false;var s=getComputedStyle(el);return s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0';}
+  function sync(){
+    scheduled=false;
+    var open=Array.prototype.some.call(document.querySelectorAll(selector),visible);
+    document.body.classList.toggle('minix-overlay-active',open);
+    if(open){if(!document.body.dataset.minixAuditOverflow)document.body.dataset.minixAuditOverflow=document.body.style.overflow||'__EMPTY__';if(document.body.style.getPropertyValue('overflow')!=='hidden'||document.body.style.getPropertyPriority('overflow')!=='important')document.body.style.setProperty('overflow','hidden','important');}
+    else if(document.body.dataset.minixAuditOverflow){var old=document.body.dataset.minixAuditOverflow;delete document.body.dataset.minixAuditOverflow;if(old==='__EMPTY__')document.body.style.removeProperty('overflow');else document.body.style.overflow=old;}
+  }
+  function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(sync);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule);else schedule();
+  new MutationObserver(schedule).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class']});
+  window.addEventListener('load',schedule);
+})();
+</script>
+<script src="pwa-install.js?v=20260808-navfix"></script>
+<script src="mobile-v7-ui.js?v=20260808-duplicatefix"></script>
+<link rel="stylesheet" href="all-traders-final-fix.css?v=20260808-duplicatefix" />
+<script src="all-traders-final-fix.js?v=20260808-duplicatefix"></script>
 </body>
 </html>

@@ -1,0 +1,110 @@
+/* Final All Traders table fix: readable columns, clean header and reliable scrolling. */
+#allTradersDateWiseTable {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 62vh !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  scrollbar-gutter: stable !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y !important;
+  background: #fff !important;
+}
+
+#allTradersDateWiseTable table,
+#allTradersDateWiseTable .all-traders-perfect-table {
+  width: max-content !important;
+  min-width: 1650px !important;
+  max-width: none !important;
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+  white-space: nowrap !important;
+}
+
+/* Static opaque header prevents the first data value from painting inside UTILIZED. */
+#allTradersDateWiseTable thead,
+#allTradersDateWiseTable thead tr,
+#allTradersDateWiseTable thead th,
+#allTradersDateWiseTable tbody td,
+#allTradersDateWiseTable tfoot td {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+}
+
+#allTradersDateWiseTable thead th {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 10px 12px !important;
+  overflow: hidden !important;
+  color: #28313b !important;
+  background: #eef1f4 !important;
+  border: 1px solid #d5dbe2 !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  font-weight: 800 !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+#allTradersDateWiseTable tbody td,
+#allTradersDateWiseTable tfoot td {
+  min-width: 112px !important;
+  height: 42px !important;
+  padding: 9px 12px !important;
+  overflow: visible !important;
+  color: #20262d !important;
+  background: #fff !important;
+  border: 1px solid #dbe0e6 !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  white-space: nowrap !important;
+}
+
+#allTradersDateWiseTable tbody tr:nth-child(even) td { background: #f7f8fa !important; }
+#allTradersDateWiseTable th:first-child,
+#allTradersDateWiseTable td:first-child { min-width: 130px !important; }
+#allTradersDateWiseTable th:nth-child(5),
+#allTradersDateWiseTable td:nth-child(5),
+#allTradersDateWiseTable th.ai-utilized-col,
+#allTradersDateWiseTable td.ai-utilized-col { min-width: 130px !important; }
+#allTradersDateWiseTable th.ai-utilized-col {
+  color: #28313b !important;
+  background: #eef1f4 !important;
+  text-align: right !important;
+}
+#allTradersDateWiseTable td.ai-utilized-col { color: #20262d !important; text-align: right !important; }
+
+/* Remove every old navy/black first-column and inline label block. */
+html body #allTradersDateWiseTable thead tr th:first-child,
+html body #allTradersDateWiseTable thead tr th:nth-child(1) {
+  color: #28313b !important;
+  background: #eef1f4 !important;
+  box-shadow: none !important;
+}
+html body #allTradersDateWiseTable tbody tr td:first-child,
+html body #allTradersDateWiseTable tbody tr td:nth-child(1) {
+  color: #20262d !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+html body #allTradersDateWiseTable tbody tr:nth-child(even) td:first-child,
+html body #allTradersDateWiseTable tbody tr:nth-child(even) td:nth-child(1) {
+  background: #f7f8fa !important;
+}
+#allTradersDateWiseTable td span,
+#allTradersDateWiseTable td b,
+#allTradersDateWiseTable td strong,
+#allTradersDateWiseTable td a {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.minix-all-traders-nav { display:none !important; }
+
+@media (max-width: 700px) {
+  #allTradersDateWiseTable table,
+  #allTradersDateWiseTable .all-traders-perfect-table { min-width: 1650px !important; }
+}

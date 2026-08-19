@@ -2171,17 +2171,18 @@ tbody tr:hover td{
     <div class="filters">
       <div><label>Financial Year</label><select id="fyFilter"></select></div>
       <div><label>Company Name</label><select id="companyFilter"></select></div>
+      <div><label>Portfolio Name</label><select id="portfolioFilter"></select></div>
       <div><label>Trader Name</label><select id="traderFilter"></select></div>
       <div><label>Strategy</label><select id="strategyFilter"></select></div>
       <div><label>Month Name</label><select id="monthFilter"></select></div>
       <div><label>Week Name</label><select id="weekFilter"></select></div>
       <div>
         <label>From Date</label>
-        <input type="date" id="fromDateFilter" onclick="openDatePicker(this)" onfocus="openDatePicker(this)" />
+        <input type="date" id="fromDateFilter" autocomplete="off" onclick="openDatePicker(this)" onfocus="openDatePicker(this)" />
       </div>
       <div>
         <label>To Date</label>
-        <input type="date" id="toDateFilter" onclick="openDatePicker(this)" onfocus="openDatePicker(this)" />
+        <input type="date" id="toDateFilter" autocomplete="off" onclick="openDatePicker(this)" onfocus="openDatePicker(this)" />
       </div>
     </div>
 
@@ -2385,6 +2386,14 @@ tbody tr:hover td{
 
     <div class="section-title">💸 Trader-wise Charges & Statutory Breakdown</div>
     <div class="table-card wide-table"><div id="fullTraderChargesTable"></div></div>
+
+    <div class="section-title">💰 Fund & ROI Summary — Company & Trader Wise</div>
+    <div class="table-card wide-table"><h3>🏢 Company Wise</h3><div id="fundRoiCompanyTable"></div></div>
+    <div class="table-card wide-table">
+      <h3>👤 Trader Wise</h3>
+      <div class="muted" style="font-size:12px;margin-bottom:8px;">Fund = current capital allocated (summed across a trader's demat/portfolio accounts, at their latest trading date). ROI % = Net P&L ÷ Fund, for the period covered by the slicers above.</div>
+      <div id="fundRoiTraderTable"></div>
+    </div>
   </div>
 
 </div>
@@ -2848,7 +2857,7 @@ function filterData(prefix){
 
   let fy, co, tr, st, mo, wk, dt, researcher="All", portfolio="All", fromDt='', toDt='';
   if(prefix===''){
-    fy=getSummary('fyFilter'); co=getSummary('companyFilter'); tr=getSummary('traderFilter'); st=getSummary('strategyFilter'); mo=getSummary('monthFilter'); wk=getSummary('weekFilter'); dt='All';
+    fy=getSummary('fyFilter'); co=getSummary('companyFilter'); portfolio=getSummary('portfolioFilter'); tr=getSummary('traderFilter'); st=getSummary('strategyFilter'); mo=getSummary('monthFilter'); wk=getSummary('weekFilter'); dt='All';
     fromDt=dateInputToISO(document.getElementById('fromDateFilter')?.value||'');
     toDt=dateInputToISO(document.getElementById('toDateFilter')?.value||'');
   }else{
@@ -3534,6 +3543,7 @@ function getCascadeConfig(prefix){
   return [
     {id:'fyFilter',field:'Financial Year',sort:'alpha'},
     {id:'companyFilter',field:'company',sort:'alpha'},
+    {id:'portfolioFilter',field:'portfolio',sort:'alpha'},
     {id:'traderFilter',field:'Trader Name',sort:'alpha'},
     {id:'strategyFilter',field:'strategy',sort:'alpha'},
     {id:'monthFilter',field:'monthLabel',sort:'month'},
@@ -3909,6 +3919,7 @@ function clearAllFilters(){
     'fyFilter','companyFilter','traderFilter','strategyFilter','monthFilter','weekFilter',
     'indFyFilter','indCompanyFilter','indResearcherFilter','indPortfolioFilter','indTraderFilter','indStrategyFilter','indMonthFilter','indWeekFilter',
     'fullFyFilter','fullCompanyFilter','fullMonthFilter',
+    'dematFilter','indDematFilter','chartDematFilter','fullDematFilter',
     'marketIndexFilter','marketYearFilter','marketMonthFilter','marketDateFilter'
   ];
   const dateIds = ['fromDateFilter','toDateFilter','indDateFilter'];
@@ -17824,6 +17835,15 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     ]) || 'Default').trim();
   }
 
+  function getResearcher(row) {
+    return String(rowValue(row, [
+      'Researcher Name',
+      'Researcher',
+      'researcher_name',
+      'researcher'
+    ]) || '').trim();
+  }
+
   function getDate(row) {
     var value = rowValue(row, [
       'dateLabel',
@@ -17920,6 +17940,15 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
       );
     }
 
+    // Used only for the combined Total Fund/Utilized KPI below - matches
+    // everything that isn't MCX in one pass, so a row labelled "FNO & Cash"
+    // (normalised to FNOCASH) is counted exactly once. Calling FNO and CASH
+    // as two separate segments and adding the results - as this file used to
+    // do - double-counts every "FNO & Cash" row, since it matches both.
+    if (required === 'EQUITY') {
+      return rowStrategy !== 'MCX';
+    }
+
     return rowStrategy === required;
   }
 
@@ -17985,7 +18014,15 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
       if (!day) return;
 
       var accountId =
-        getTrader(row) + '|' + getAccount(row);
+        getTrader(row) + '|' + getAccount(row) + '|' + getResearcher(row);
+      // Researcher Name is deliberately part of this key: it can mark a
+      // genuinely separate, concurrent pool on the exact same demat/portfolio
+      // account rather than just a relabel over time - e.g. Harsh Rathod's
+      // Fintech account has Researcher "Harsh Rathod" (Rs 45L) and Researcher
+      // "Kunj Naik" (Rs 2.5Cr) both active on the same dates right through the
+      // latest data. Without Researcher in the key, this function's day-max
+      // step picks whichever of the two is bigger and silently drops the
+      // other, undercounting that trader's true total fund.
 
       var amount =
         type === 'utilized'
@@ -18128,14 +18165,20 @@ function updateFundUtilizedKpis() {
   });
 
   /*
-   * Cash fund FNO & Cashનો shared fund છે.
-   * તેથી Overall Totalમાં Cash fund ફરી ઉમેરવો નહીં.
+   * FIX: previously this added the FNO card's fund to the MCX card's fund,
+   * which (a) always excluded Cash entirely - wiping out cash-only traders
+   * like Kanwal Prakash Singh and Dhrumil Modhiya, who'd show ₹0 total - and
+   * (b) would have double-counted any row labelled "FNO & Cash" if Cash had
+   * ever been added in too, since that label matches both the FNO and Cash
+   * segment checks above. Computing one combined "EQUITY" pass (everything
+   * that isn't MCX) fixes both: Cash-only traders are included, and nothing
+   * gets counted twice.
    */
   var overallFund =
-    values.fno.fund + values.mcx.fund;
+    capitalAverageTotal(rows, 'EQUITY', 'fund') + values.mcx.fund;
 
   var overallUtilized =
-    values.fno.utilized + values.mcx.utilized;
+    capitalAverageTotal(rows, 'EQUITY', 'utilized') + values.mcx.utilized;
 
   setKpi(
     'overallTotalFund',
@@ -18501,17 +18544,20 @@ function updateFundUtilizedKpis() {
 (function(){
   function card(id){var e=document.getElementById(id);return e&&e.closest('.kpi-card')}
   function apply(){
-    var cashFund=card('cashTotalFund'),cashUsed=card('cashTotalUtilized');
-    if(cashFund){
-      cashFund.style.removeProperty('display');
-      var cf=document.getElementById('cashTotalFund');
-      if(cf&&cf.textContent!=='₹0'){cf.textContent='₹0';cf.title='₹0';cf.className='kpi-value neutral'}
-    }
+    // NOTE: Cash Fund used to be force-zeroed here regardless of the real
+    // computed value. Removed because several traders (e.g. Kanwal Prakash
+    // Singh, ~₹100 Cr) trade ONLY in the Cash segment with no FNO/MCX at all,
+    // so hiding Cash Fund made their entire allocated capital disappear from
+    // this KPI card. Cash Utilized is left force-zeroed since that genuinely
+    // is always 0 in the underlying data for Cash-strategy rows.
+    var cashUsed=card('cashTotalUtilized');
     if(cashUsed){
       cashUsed.style.removeProperty('display');
       var cu=document.getElementById('cashTotalUtilized');
       if(cu&&cu.textContent!=='₹0'){cu.textContent='₹0';cu.title='₹0';cu.className='kpi-value warning'}
     }
+    var cashFund=card('cashTotalFund');
+    if(cashFund){ cashFund.style.removeProperty('display'); }
     ['cashTotalUtilized','fnoTotalUtilized','mcxTotalUtilized','overallTotalUtilized'].forEach(function(id){
       var c=card(id),t=c&&c.querySelector('.kpi-title');
       if(t&&t.textContent!=='📌 Utilized')t.textContent='📌 Utilized';
@@ -19212,6 +19258,597 @@ body:not(.auth-locked){
   text-overflow:clip!important;
 }
 </style>
+
+<style id="ai-fund-roi-collapse-style">
+#fundRoiTraderTable .fundroi-wrap,#fundRoiCompanyTable .fundroi-wrap{
+  width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:auto!important;
+  max-height:62vh!important;border:1px solid #334155!important;border-radius:14px!important;background:#0f172a!important;
+}
+#fundRoiTraderTable table.fundroi-table,#fundRoiCompanyTable table.fundroi-table{width:100%!important;border-collapse:collapse!important;font-size:12px!important;}
+#fundRoiTraderTable .fundroi-table th,#fundRoiTraderTable .fundroi-table td,#fundRoiCompanyTable .fundroi-table th,#fundRoiCompanyTable .fundroi-table td{padding:9px!important;border-bottom:1px solid #334155!important;white-space:nowrap!important;}
+#fundRoiTraderTable .fundroi-table th,#fundRoiCompanyTable .fundroi-table th{color:#93c5fd!important;background:#0f172a!important;position:sticky!important;top:0!important;z-index:1!important;text-align:left!important;}
+#fundRoiTraderTable .fundroi-table td.amount,#fundRoiTraderTable .fundroi-table th.amount,#fundRoiCompanyTable .fundroi-table td.amount,#fundRoiCompanyTable .fundroi-table th.amount{text-align:right!important;font-variant-numeric:tabular-nums!important;}
+#fundRoiTraderTable .fundroi-group-row,#fundRoiCompanyTable .fundroi-group-row{background:linear-gradient(90deg,#172554,#111827)!important;font-weight:900!important;cursor:pointer!important;}
+#fundRoiTraderTable .fundroi-group-row:hover td,#fundRoiCompanyTable .fundroi-group-row:hover td{background:#1e3a8a!important;}
+#fundRoiTraderTable .fundroi-detail-row,#fundRoiCompanyTable .fundroi-detail-row{background:#0b1220!important;}
+#fundRoiTraderTable .fundroi-detail-row td,#fundRoiCompanyTable .fundroi-detail-row td{white-space:normal!important;}
+#fundRoiTraderTable .fundroi-toggle,#fundRoiCompanyTable .fundroi-toggle{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:20px!important;height:20px!important;border-radius:6px!important;background:#2563eb!important;color:#fff!important;font-weight:900!important;margin-right:6px!important;box-shadow:0 4px 10px rgba(37,99,235,.25)!important;}
+#fundRoiTraderTable .fundroi-name-text,#fundRoiCompanyTable .fundroi-name-text{color:#fff!important;font-weight:900!important;}
+#fundRoiTraderTable .fundroi-subtext,#fundRoiCompanyTable .fundroi-subtext{color:#93c5fd!important;font-size:10px!important;font-weight:800!important;margin-left:26px!important;white-space:normal!important;}
+#fundRoiTraderTable .fundroi-grand-total,#fundRoiCompanyTable .fundroi-grand-total{background:#052e16!important;font-weight:900!important;border-top:2px solid #22c55e!important;}
+#fundRoiTraderTable .fundroi-grand-total td,#fundRoiCompanyTable .fundroi-grand-total td{background:#052e16!important;}
+</style>
+<script id="ai-fund-roi-company-trader-summary">
+(function(){
+  var D=document;
+  function E(id){return D.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function getRows(){
+    try{ if(typeof getFullSummaryFilteredData==='function') return getFullSummaryFilteredData()||[]; }catch(e){}
+    return (typeof preparedData!=='undefined' && Array.isArray(preparedData))?preparedData:[];
+  }
+  function numFromFund(v){
+    if(v===null||v===undefined||v==='') return 0;
+    if(typeof v==='number') return isFinite(v)?v:0;
+    var x=String(v).replace(/[₹,\s]/g,'').replace(/\((.*?)\)/,'-$1');
+    var n=parseFloat(x);
+    return isFinite(n)?n:0;
+  }
+  // Fund is split into two buckets, not by raw Strategy text: MCX (commodity
+  // margin, always genuinely separate) vs "Equity" (FNO/Cash/"FNO & Cash"
+  // combined into one bucket). This matters because some traders relabel the
+  // SAME evolving capital limit over time as their activity changes - e.g.
+  // Neeraj Kumar Tiwari has exactly one row per day, and its Strategy label
+  // just changes from "FNO" to "FNO & Cash" to "Cash" over the months as his
+  // trading shifts, never two rows the same day. Splitting by raw Strategy
+  // there would triple-count one pool as three. Other traders (e.g. Lokesh
+  // Bhati) DO run FNO and MCX as genuinely separate, concurrent books with
+  // two rows on the same days - MCX is kept separate for exactly that reason.
+  function fundBucketFor(r){
+    var s=String((r&&(r.strategy??r['Strategy']))??'').toUpperCase().replace(/[^A-Z]/g,'');
+    return s==='MCX' ? 'MCX' : 'EQUITY';
+  }
+  function dematKeyFor(r){
+    // Researcher Name IS part of this key: it can genuinely represent a
+    // second, concurrent capital pool managed alongside the trader's own -
+    // e.g. Harsh Rathod's Fintech/Jaymin Desai account has BOTH Researcher
+    // "Harsh Rathod" (Rs 45L) AND Researcher "Kunj Naik" (Rs 2.5Cr) active on
+    // the exact same dates, right through the latest data - two real,
+    // simultaneous pools, not one relabelled over time. Dropping Researcher
+    // from the key would silently lose one of the two.
+    return [
+      r && (r.company||r['Company Name']||''),
+      r && (r['Trader Name']||r.trader||'Unknown'),
+      r && (r['Demat Account']||r.demat||''),
+      r && (r['Portfolio Name']||''),
+      r && (r['Researcher Name']||''),
+      fundBucketFor(r)
+    ].join('|');
+  }
+  // NOTE: The dashboard's own existing getLatestTraderFund/sumUniqueDematFund only
+  // looks at whichever single calendar day is the very latest across the whole row
+  // set, and drops any demat account that didn't happen to have a row logged on
+  // that exact day (e.g. if one demat account's last entry that period was FNO on
+  // the 30th, but only an MCX entry got logged for it on the 31st, its FNO fund
+  // is silently missed even though it's still the real allocation). For accurate
+  // month-by-month and per-trader/company figures, this instead takes each unique
+  // demat account's own most recent entry within the given rows and sums those -
+  // so a demat account without an entry on the very last day still counts using
+  // its latest available entry in that period.
+  function fundFor(rows){
+    try{
+      var map={};
+      (rows||[]).forEach(function(r){
+        var f=numFromFund(r.Fund??r.fund??r['Fund']??r['Capital']??r.capital);
+        if(!f) return;
+        var key=dematKeyFor(r);
+        var d=r.parsedDate?new Date(r.parsedDate):null;
+        var cur=map[key];
+        if(!cur || (d && (!cur.date || d>cur.date))){
+          map[key]={fund:f, date:d};
+        }
+      });
+      return Object.keys(map).reduce(function(a,k){return a+map[k].fund;},0);
+    }catch(e){
+      try{ if(typeof window.getLatestTraderFund==='function') return window.getLatestTraderFund(rows)||0; }catch(e2){}
+      return 0;
+    }
+  }
+  // Uses the same account+bucket grouping as fundFor above (see the note near
+  // dematKeyFor/fundBucketFor), so Latest Fund and Avg Fund stay internally
+  // consistent with each other and don't triple-count relabeled pools like
+  // Neeraj's, while still correctly separating genuinely parallel books like
+  // Lokesh's FNO+MCX.
+  function avgFundForRows(rows){
+    try{
+      var groups={};
+      (rows||[]).forEach(function(r){
+        var f=numFromFund(r.Fund??r.fund??r['Fund']??r['Capital']??r.capital);
+        if(!f) return;
+        var key=dematKeyFor(r);
+        var day=r.dateLabel||(r.parsedDate?new Date(r.parsedDate).toISOString().slice(0,10):null);
+        if(!day) return;
+        if(!groups[key]) groups[key]={};
+        groups[key][day]=Math.max(groups[key][day]||0, f);
+      });
+      return Object.keys(groups).reduce(function(total,key){
+        var days=Object.keys(groups[key]);
+        if(!days.length) return total;
+        var sum=days.reduce(function(a,d){return a+groups[key][d];},0);
+        return total+(sum/days.length);
+      },0);
+    }catch(e){ return 0; }
+  }
+  function roiCell(roi){
+    if(roi===null || roi===undefined || !isFinite(roi)) return '<td class="amount muted">N/A</td>';
+    return '<td class="amount '+(roi>=0?'positive':'negative')+'">'+roi.toFixed(2)+'%</td>';
+  }
+  function pnlCell(v){ v=v||0; return '<td class="amount '+(v>=0?'positive':'negative')+'">'+formatINR(v)+'</td>'; }
+  function pctIndexCell(v){
+    if(v===null || v===undefined || isNaN(Number(v))) return '<td class="amount muted">-</td>';
+    var n=Number(v);
+    return '<td class="amount '+(n>=0?'positive':(n<0?'negative':'neutral'))+'">'+(n>=0?'+':'')+n.toFixed(2)+'%</td>';
+  }
+  // NOTE: This dashboard has at least 3 separate historical implementations of
+  // window.marketPctByMode / marketPctForIndexPeriod layered on top of each other,
+  // and the one that currently wins reads from window.indexPreparedData - which the
+  // normal data-load path never actually populates (only the plain indexPreparedData
+  // variable gets set). Rather than depend on whichever of those happens to be active,
+  // this reads indexPreparedData directly so it works regardless of that history.
+  function getIndexRows(indexName){
+    try{
+      var bare=(typeof indexPreparedData!=='undefined' && Array.isArray(indexPreparedData))?indexPreparedData:[];
+      var winData=Array.isArray(window.indexPreparedData)?window.indexPreparedData:[];
+      var arr=bare.length?bare:winData;
+      return arr.filter(function(r){return r && r.index===indexName && r.iso && Number(r.close);})
+        .sort(function(a,b){return a.iso<b.iso?-1:(a.iso>b.iso?1:0);});
+    }catch(e){ return []; }
+  }
+  function pctChangeForRange(indexName,startIso,endIso){
+    var rows=getIndexRows(indexName);
+    if(!rows.length) return null;
+    var inRange=rows.filter(function(r){return r.iso>=startIso && r.iso<=endIso;});
+    if(!inRange.length) return null;
+    var last=inRange[inRange.length-1];
+    var before=rows.filter(function(r){return r.iso<startIso;});
+    var base=before.length?before[before.length-1].close:inRange[0].close;
+    if(!base) return null;
+    return ((last.close-base)/base)*100;
+  }
+  function niftyBankForMonth(monthLabel){
+    try{
+      var mm=(typeof monthLabelToMarketMonth==='function')?monthLabelToMarketMonth(monthLabel):String(monthLabel||'').trim().replace(' ','-');
+      function pctForIndexMonth(indexName){
+        var all=getIndexRows(indexName).filter(function(r){return r.month===mm;});
+        if(!all.length) return null;
+        var last=all[all.length-1];
+        var before=getIndexRows(indexName).filter(function(r){return r.iso<all[0].iso;});
+        var base=before.length?before[before.length-1].close:all[0].close;
+        if(!base) return null;
+        return ((last.close-base)/base)*100;
+      }
+      return {nifty:pctForIndexMonth('Nifty 50'), bank:pctForIndexMonth('Nifty Bank')};
+    }catch(e){ return {nifty:null,bank:null}; }
+  }
+  function niftyBankForRows(rows){
+    try{
+      var isos=(rows||[]).map(function(r){return r.dateLabel;}).filter(Boolean).sort();
+      if(!isos.length) return {nifty:null,bank:null};
+      var startIso=isos[0], endIso=isos[isos.length-1];
+      return {nifty:pctChangeForRange('Nifty 50',startIso,endIso), bank:pctChangeForRange('Nifty Bank',startIso,endIso)};
+    }catch(e){ return {nifty:null,bank:null}; }
+  }
+
+  function buildFundRoiSummaryTable(){
+    var compEl=E('fundRoiCompanyTable'), trEl=E('fundRoiTraderTable');
+    if(!compEl||!trEl) return;
+    var data=getRows();
+
+    // Diagnostic line: shows what's actually loaded right now, regardless of filters,
+    // so we can tell a filter problem apart from a data-loading problem at a glance.
+    var allData=(typeof preparedData!=='undefined' && Array.isArray(preparedData))?preparedData:[];
+    var allCompanies=Array.from(new Set(allData.map(function(r){return r.company||r['Company Name']||'Not Available';}))).sort();
+    var diagHtml='<div class="muted" style="font-size:11px;margin-top:6px;">Data check: '+allData.length+' rows loaded in dashboard right now | Companies found: '+(allCompanies.length?esc(allCompanies.join(', ')):'none')+'</div>';
+
+    if(!data||!data.length){
+      compEl.innerHTML="<p class='muted'>No data available</p>"+diagHtml;
+      trEl.innerHTML="<p class='muted'>No data available</p>";
+      return;
+    }
+
+    // ---- Trader Wise, broken down by Month ----
+    var monthGroups={};
+    data.forEach(function(r){
+      var comp=r.company||r['Company Name']||'Not Available';
+      var trader=r['Trader Name']||'Unknown';
+      var month=r.monthLabel||'Unknown';
+      var key=comp+'||'+trader+'||'+month;
+      if(!monthGroups[key]) monthGroups[key]={company:comp,trader:trader,month:month,rows:[],netPnl:0,sortDate:null};
+      var g=monthGroups[key];
+      g.rows.push(r);
+      g.netPnl+=Number(r.totalNet)||0;
+      if(r.parsedDate && (!g.sortDate || r.parsedDate<g.sortDate)) g.sortDate=r.parsedDate;
+    });
+    var monthRows=Object.keys(monthGroups).map(function(k){
+      var g=monthGroups[k];
+      var fund=fundFor(g.rows);
+      var roi=fund?(g.netPnl/fund*100):null;
+      var avgFund=avgFundForRows(g.rows);
+      var avgRoi=avgFund?(g.netPnl/avgFund*100):null;
+      var idx=niftyBankForMonth(g.month);
+      return {company:g.company,trader:g.trader,month:g.month,fund:fund,netPnl:g.netPnl,roi:roi,avgFund:avgFund,avgRoi:avgRoi,sortDate:g.sortDate,nifty:idx.nifty,bank:idx.bank};
+    }).sort(function(a,b){
+      if(a.company!==b.company) return String(a.company).localeCompare(String(b.company));
+      if(a.trader!==b.trader) return String(a.trader).localeCompare(String(b.trader));
+      return (a.sortDate&&b.sortDate) ? (a.sortDate-b.sortDate) : String(a.month).localeCompare(String(b.month));
+    });
+
+    // ---- Trader Wise overall (all months combined, used for Company rollup + grand total) ----
+    var traderGroups={};
+    data.forEach(function(r){
+      var comp=r.company||r['Company Name']||'Not Available';
+      var trader=r['Trader Name']||'Unknown';
+      var key=comp+'||'+trader;
+      if(!traderGroups[key]) traderGroups[key]={company:comp,trader:trader,rows:[],netPnl:0};
+      traderGroups[key].rows.push(r);
+      traderGroups[key].netPnl+=Number(r.totalNet)||0;
+    });
+    var traderOverall=Object.keys(traderGroups).map(function(k){
+      var g=traderGroups[k];
+      var fund=fundFor(g.rows);
+      var roi=fund?(g.netPnl/fund*100):null;
+      var avgFund=avgFundForRows(g.rows);
+      var avgRoi=avgFund?(g.netPnl/avgFund*100):null;
+      var idx=niftyBankForRows(g.rows);
+      return {company:g.company,trader:g.trader,fund:fund,netPnl:g.netPnl,roi:roi,avgFund:avgFund,avgRoi:avgRoi,nifty:idx.nifty,bank:idx.bank};
+    });
+
+    var byCompany={};
+    traderOverall.forEach(function(r){
+      if(!byCompany[r.company]) byCompany[r.company]={company:r.company,fund:0,avgFund:0,netPnl:0,traders:0};
+      byCompany[r.company].fund+=r.fund;
+      byCompany[r.company].avgFund+=r.avgFund;
+      byCompany[r.company].netPnl+=r.netPnl;
+      byCompany[r.company].traders+=1;
+    });
+    Object.keys(byCompany).forEach(function(k){
+      var idx=niftyBankForRows(data.filter(function(r){return (r.company||r['Company Name']||'Not Available')===k;}));
+      byCompany[k].nifty=idx.nifty; byCompany[k].bank=idx.bank;
+    });
+    var companyRows=Object.keys(byCompany).map(function(k){
+      var c=byCompany[k];
+      return {company:c.company,fund:c.fund,avgFund:c.avgFund,netPnl:c.netPnl,traders:c.traders,roi:c.fund?(c.netPnl/c.fund*100):null,avgRoi:c.avgFund?(c.netPnl/c.avgFund*100):null,nifty:c.nifty,bank:c.bank};
+    }).sort(function(a,b){return b.netPnl-a.netPnl;});
+
+    // ---- Company Wise, broken down by Month ----
+    var companyMonthGroups={};
+    data.forEach(function(r){
+      var comp=r.company||r['Company Name']||'Not Available';
+      var month=r.monthLabel||'Unknown';
+      var key=comp+'||'+month;
+      if(!companyMonthGroups[key]) companyMonthGroups[key]={company:comp,month:month,rows:[],netPnl:0,sortDate:null,traderSet:{}};
+      var g=companyMonthGroups[key];
+      g.rows.push(r);
+      g.netPnl+=Number(r.totalNet)||0;
+      g.traderSet[r['Trader Name']||'Unknown']=true;
+      if(r.parsedDate && (!g.sortDate || r.parsedDate<g.sortDate)) g.sortDate=r.parsedDate;
+    });
+    var companyMonthRows=Object.keys(companyMonthGroups).map(function(k){
+      var g=companyMonthGroups[k];
+      var fund=fundFor(g.rows);
+      var roi=fund?(g.netPnl/fund*100):null;
+      var avgFund=avgFundForRows(g.rows);
+      var avgRoi=avgFund?(g.netPnl/avgFund*100):null;
+      var idx=niftyBankForMonth(g.month);
+      return {company:g.company,month:g.month,fund:fund,netPnl:g.netPnl,roi:roi,avgFund:avgFund,avgRoi:avgRoi,sortDate:g.sortDate,nifty:idx.nifty,bank:idx.bank,traders:Object.keys(g.traderSet).length};
+    }).sort(function(a,b){
+      if(a.company!==b.company) return String(a.company).localeCompare(String(b.company));
+      return (a.sortDate&&b.sortDate) ? (a.sortDate-b.sortDate) : String(a.month).localeCompare(String(b.month));
+    });
+
+    var grandFund=companyRows.reduce(function(a,c){return a+c.fund;},0);
+    var grandAvgFund=companyRows.reduce(function(a,c){return a+c.avgFund;},0);
+    var grandPnl=companyRows.reduce(function(a,c){return a+c.netPnl;},0);
+    var grandTraders=companyRows.reduce(function(a,c){return a+c.traders;},0);
+    var grandRoi=grandFund?(grandPnl/grandFund*100):null;
+    var grandAvgRoi=grandAvgFund?(grandPnl/grandAvgFund*100):null;
+    var grandIdx=niftyBankForRows(data);
+
+    // ---- Company Wise table (collapsible, month breakdown, Latest+Avg Fund, Nifty/Bank %) ----
+    compEl.innerHTML='<div class="fundroi-wrap"><table class="fundroi-table"><thead><tr><th>Company</th><th class="amount">Latest Fund</th><th class="amount">Avg Fund</th><th class="amount">Net P&L</th><th class="amount">Latest ROI %</th><th class="amount">Avg ROI %</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th><th class="amount">No. of Traders</th></tr></thead><tbody>'+
+      companyRows.map(function(c,i){
+        var id='fundroiC_'+i+'_'+String(c.company).replace(/[^a-zA-Z0-9]/g,'_');
+        if(window.__fundRoiCompanyOpenState[id]===undefined) window.__fundRoiCompanyOpenState[id]=false;
+        var open=!!window.__fundRoiCompanyOpenState[id];
+        var myMonths=companyMonthRows.filter(function(m){return m.company===c.company;});
+        var groupRow='<tr class="fundroi-group-row" onclick="toggleFundRoiCompanyGroup(\''+id+'\')"><td><span class="fundroi-toggle">'+(open?'−':'+')+'</span><span class="fundroi-name-text">'+esc(c.company)+'</span><div class="fundroi-subtext">'+myMonths.length+' month'+(myMonths.length===1?'':'s')+'</div></td><td class="amount">'+formatINR(c.fund)+'</td><td class="amount">'+formatINR(c.avgFund)+'</td>'+pnlCell(c.netPnl)+roiCell(c.roi)+roiCell(c.avgRoi)+pctIndexCell(c.nifty)+pctIndexCell(c.bank)+'<td class="amount">'+c.traders+'</td></tr>';
+        var detailRows='';
+        if(open){
+          myMonths.forEach(function(m){
+            detailRows+='<tr class="fundroi-detail-row"><td style="padding-left:28px!important;">↳ '+esc(m.month)+'</td><td class="amount">'+formatINR(m.fund)+'</td><td class="amount">'+formatINR(m.avgFund)+'</td>'+pnlCell(m.netPnl)+roiCell(m.roi)+roiCell(m.avgRoi)+pctIndexCell(m.nifty)+pctIndexCell(m.bank)+'<td class="amount">'+m.traders+'</td></tr>';
+          });
+        }
+        return groupRow+detailRows;
+      }).join('')+
+      '</tbody><tfoot><tr class="fundroi-grand-total"><td><b>Grand Total</b></td><td class="amount"><b>'+formatINR(grandFund)+'</b></td><td class="amount"><b>'+formatINR(grandAvgFund)+'</b></td>'+pnlCell(grandPnl)+roiCell(grandRoi)+roiCell(grandAvgRoi)+pctIndexCell(grandIdx.nifty)+pctIndexCell(grandIdx.bank)+'<td class="amount"><b>'+grandTraders+'</b></td></tr></tfoot></table></div>'+
+      '<div class="muted" style="font-size:11px;margin-top:6px;">Latest Fund = capital currently allocated (as of the latest trading day in the period). Avg Fund = average capital deployed across all trading days in the period (matches the "2. Overall Performance Summary" methodology). ROI % is shown against both for comparison.</div>'+
+      diagHtml;
+
+    // ---- Trader Wise table (collapsible, month breakdown, Latest+Avg Fund, Nifty/Bank %) ----
+    trEl.innerHTML='<div class="fundroi-wrap"><table class="fundroi-table"><thead><tr><th>Trader</th><th class="amount">Latest Fund</th><th class="amount">Avg Fund</th><th class="amount">Net P&L</th><th class="amount">Latest ROI %</th><th class="amount">Avg ROI %</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th></tr></thead><tbody>'+
+      traderOverall.sort(function(a,b){
+        if(a.company!==b.company) return String(a.company).localeCompare(String(b.company));
+        return b.netPnl-a.netPnl;
+      }).map(function(t,i){
+        var id='fundroi_'+i+'_'+String(t.company+'_'+t.trader).replace(/[^a-zA-Z0-9]/g,'_');
+        if(window.__fundRoiOpenState[id]===undefined) window.__fundRoiOpenState[id]=false;
+        var open=!!window.__fundRoiOpenState[id];
+        var myMonths=monthRows.filter(function(m){return m.company===t.company && m.trader===t.trader;});
+        var groupRow='<tr class="fundroi-group-row" onclick="toggleFundRoiGroup(\''+id+'\')"><td><span class="fundroi-toggle">'+(open?'−':'+')+'</span><span class="fundroi-name-text">'+esc(t.trader)+'</span><div class="fundroi-subtext">'+esc(t.company)+' • '+myMonths.length+' month'+(myMonths.length===1?'':'s')+'</div></td><td class="amount">'+formatINR(t.fund)+'</td><td class="amount">'+formatINR(t.avgFund)+'</td>'+pnlCell(t.netPnl)+roiCell(t.roi)+roiCell(t.avgRoi)+pctIndexCell(t.nifty)+pctIndexCell(t.bank)+'</tr>';
+        var detailRows='';
+        if(open){
+          myMonths.forEach(function(m){
+            detailRows+='<tr class="fundroi-detail-row"><td style="padding-left:28px!important;">↳ '+esc(m.month)+'</td><td class="amount">'+formatINR(m.fund)+'</td><td class="amount">'+formatINR(m.avgFund)+'</td>'+pnlCell(m.netPnl)+roiCell(m.roi)+roiCell(m.avgRoi)+pctIndexCell(m.nifty)+pctIndexCell(m.bank)+'</tr>';
+          });
+        }
+        return groupRow+detailRows;
+      }).join('')+
+      '</tbody><tfoot><tr class="fundroi-grand-total"><td><b>Grand Total</b></td><td class="amount"><b>'+formatINR(grandFund)+'</b></td><td class="amount"><b>'+formatINR(grandAvgFund)+'</b></td>'+pnlCell(grandPnl)+roiCell(grandRoi)+roiCell(grandAvgRoi)+pctIndexCell(grandIdx.nifty)+pctIndexCell(grandIdx.bank)+'</tr></tfoot></table></div>'+
+      '<div class="muted" style="font-size:11px;margin-top:6px;">Latest Fund = capital currently allocated (as of the latest trading day in the period). Avg Fund = average capital deployed across all trading days in the period (matches the "2. Overall Performance Summary" methodology). ROI % is shown against both for comparison.</div>';
+  }
+
+  window.__fundRoiOpenState=window.__fundRoiOpenState||{};
+  window.toggleFundRoiGroup=function(id){
+    window.__fundRoiOpenState[id]=!window.__fundRoiOpenState[id];
+    buildFundRoiSummaryTable();
+  };
+  window.__fundRoiCompanyOpenState=window.__fundRoiCompanyOpenState||{};
+  window.toggleFundRoiCompanyGroup=function(id){
+    window.__fundRoiCompanyOpenState[id]=!window.__fundRoiCompanyOpenState[id];
+    buildFundRoiSummaryTable();
+  };
+
+  window.buildFundRoiSummaryTable=buildFundRoiSummaryTable;
+
+  var oldBuild=window.buildFullDashboardSummaryWithTraders;
+  window.buildFullDashboardSummaryWithTraders=function(){
+    var r; try{ if(typeof oldBuild==='function') r=oldBuild.apply(this,arguments); }catch(e){}
+    setTimeout(buildFundRoiSummaryTable,120);
+    return r;
+  };
+  window.addEventListener('load',function(){ setTimeout(buildFundRoiSummaryTable,1400); });
+})();
+</script>
+
+<script id="ai-force-clear-date-filters">
+(function(){
+  var IDS=['fromDateFilter','toDateFilter','indDateFilter','chartDateFilter'];
+  var lockActive=false;
+  var suppressUntil=0;
+  window.__aiDateLockDebug=function(){return {lockActive:lockActive, suppressUntil:suppressUntil, now:Date.now()};};
+
+  function forceClearDates(){
+    suppressUntil=Date.now()+300;
+    IDS.forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      if(el.value){ el.value=''; try{ el.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){} }
+    });
+  }
+
+  function activateLock(){
+    lockActive=true;
+    forceClearDates();
+    [50,150,300,600,1000,1500,2500,4000].forEach(function(ms){ setTimeout(forceClearDates,ms); });
+  }
+
+  // Wrap window.clearAllFilters itself (rather than relying on the button's click
+  // event, which can be intercepted/stopped earlier by other capturing-phase
+  // listeners in this file before it ever reaches a listener on the button).
+  // This runs no matter which code path ends up calling clearAllFilters().
+  function wrapClearAllFilters(){
+    if(typeof window.clearAllFilters!=='function' || window.clearAllFilters.__aiDateLockWrapped) return;
+    var old=window.clearAllFilters;
+    var wrapped=function(){
+      var r; try{ r=old.apply(this,arguments); }catch(e){}
+      activateLock();
+      return r;
+    };
+    wrapped.__aiDateLockWrapped=true;
+    window.clearAllFilters=wrapped;
+  }
+  wrapClearAllFilters();
+  // Other patches in this file also reassign window.clearAllFilters after this point
+  // in some load orders, so keep re-wrapping until it settles.
+  var wrapTries=0;
+  var wrapTimer=setInterval(function(){
+    wrapTries++;
+    wrapClearAllFilters();
+    if(wrapTries>40) clearInterval(wrapTimer);
+  },250);
+
+  // Also attach directly to the button as a redundant secondary path.
+  function attachClearButton(){
+    var btn=document.querySelector('button.clear-filter-btn');
+    if(!btn || btn.__aiForceClearDateAttached) return;
+    btn.__aiForceClearDateAttached=true;
+    btn.addEventListener('click',activateLock);
+  }
+
+  // Once the user deliberately picks a real date themselves, release the lock
+  // so their choice sticks (don't fight a genuine manual selection).
+  IDS.forEach(function(id){
+    document.addEventListener('change',function(e){
+      if(e.target && e.target.id===id && Date.now()>suppressUntil){
+        lockActive=false;
+      }
+    },true);
+  });
+
+  // Persistent low-frequency guard: as long as the lock is active (i.e. the person
+  // asked to clear filters and hasn't manually picked a new date since), keep
+  // pulling the date fields back to blank even if something else re-populates
+  // them later (e.g. after a delayed data refresh).
+  setInterval(function(){
+    if(!lockActive) return;
+    var stillSet=false;
+    IDS.forEach(function(id){ var el=document.getElementById(id); if(el && el.value) stillSet=true; });
+    if(stillSet) forceClearDates();
+  },1000);
+
+  document.addEventListener('DOMContentLoaded',attachClearButton);
+  window.addEventListener('load',attachClearButton);
+  setTimeout(attachClearButton,1000);
+})();
+</script>
+
+<style id="ai-fix-date-filter-visibility">
+/* Root cause: #summarySection > .filters (and siblings) use display:flex; flex-flow:row
+   with no wrapping, so all 8 slicers get squeezed into one row and shrink down to a
+   few pixels wide on narrow/mobile screens - which is why From/To Date became
+   unreadable. Font-size/height for these inputs are already fine elsewhere; the
+   actual fix needed is to let them wrap onto multiple lines on small screens. */
+@media(max-width:640px){
+  #summarySection > .filters,
+  #individualSection > .filters,
+  #chartsSection > .filters,
+  #fullSummarySection > .filters{
+    flex-wrap:wrap!important;
+    height:auto!important;
+    max-height:none!important;
+  }
+  #summarySection > .filters > div,
+  #individualSection > .filters > div,
+  #chartsSection > .filters > div,
+  #fullSummarySection > .filters > div{
+    flex:1 1 45%!important;
+    min-width:130px!important;
+  }
+}
+@media(max-width:420px){
+  #summarySection > .filters > div,
+  #individualSection > .filters > div,
+  #chartsSection > .filters > div,
+  #fullSummarySection > .filters > div{
+    flex:1 1 100%!important;
+    min-width:0!important;
+  }
+}
+
+/* On common laptop widths (~1200-1536px) the 8 slicers in one row still leave the
+   From/To Date boxes only ~120-160px wide. At the 17px font used elsewhere, the
+   native browser date control (day/month/year + calendar icon) doesn't fit and the
+   last digit of the year gets clipped behind the calendar icon. Shrinking the font
+   and the icon reclaims just enough room to show the complete date.
+   NOTE: selectors below double up the ID (e.g. #summarySection #fromDateFilter) to
+   beat other rules like "#summarySection > .filters input" on specificity, since a
+   bare "#fromDateFilter" alone is LESS specific than an id+class+element combo and
+   loses even with !important on both sides. */
+#summarySection #fromDateFilter,#summarySection #toDateFilter,
+#individualSection #indDateFilter,#chartsSection #chartDateFilter,
+#fullSummarySection #fromDateFilter,#fullSummarySection #toDateFilter,
+#fromDateFilter#fromDateFilter,#toDateFilter#toDateFilter,
+#indDateFilter#indDateFilter,#chartDateFilter#chartDateFilter{
+  font-size:12px!important;
+  padding:6px 4px!important;
+}
+#fromDateFilter::-webkit-calendar-picker-indicator,
+#toDateFilter::-webkit-calendar-picker-indicator,
+#indDateFilter::-webkit-calendar-picker-indicator,
+#chartDateFilter::-webkit-calendar-picker-indicator{
+  width:12px!important;
+  height:12px!important;
+  margin:0!important;
+  padding:0!important;
+  opacity:0.75!important;
+}
+@media(max-width:640px){
+  #summarySection #fromDateFilter,#summarySection #toDateFilter,
+  #individualSection #indDateFilter,#chartsSection #chartDateFilter,
+  #fullSummarySection #fromDateFilter,#fullSummarySection #toDateFilter,
+  #fromDateFilter#fromDateFilter,#toDateFilter#toDateFilter,
+  #indDateFilter#indDateFilter,#chartDateFilter#chartDateFilter{
+    font-size:16px!important;
+    padding:8px 10px!important;
+  }
+  #fromDateFilter::-webkit-calendar-picker-indicator,
+  #toDateFilter::-webkit-calendar-picker-indicator,
+  #indDateFilter::-webkit-calendar-picker-indicator,
+  #chartDateFilter::-webkit-calendar-picker-indicator{
+    width:18px!important;
+    height:18px!important;
+  }
+}
+</style>
+
+<script id="ai-portfolio-filter-summary-tab">
+(function(){
+  // Several earlier patches wrap window.filterData one after another (each
+  // capturing the previous version as "oldFilterData" and adding its own
+  // extra filter, e.g. Demat Account). This file's own base filterData(prefix)
+  // was updated to respect a new "portfolioFilter" select on the main
+  // "Dashboard Summary" tab, but since it's a plain function declaration it
+  // gets shadowed by those later window.filterData wrappers, which never
+  // re-check portfolioFilter themselves. Wrapping window.filterData one more
+  // time here - after all the others have already loaded - guarantees the
+  // portfolio filter is actually applied regardless of that chain.
+  function wrap(){
+    if(typeof window.filterData!=='function' || window.filterData.__aiPortfolioWrapped) return;
+    var old=window.filterData;
+    var wrapped=function(prefix){
+      var rows=old.apply(this,arguments)||[];
+      if(prefix==='' || prefix===undefined){
+        var el=document.getElementById('portfolioFilter');
+        var val=el?el.value:'All';
+        if(val && val!=='All'){
+          rows=rows.filter(function(r){return String(r.portfolio)===String(val);});
+        }
+      }
+      return rows;
+    };
+    wrapped.__aiPortfolioWrapped=true;
+    window.filterData=wrapped;
+    window.getFilteredData=function(){return filterData('');};
+    window.getMonthlyFilteredData=function(){return getFilteredData();};
+    window.getWeeklyFilteredData=function(){return getFilteredData();};
+  }
+  wrap();
+  var tries=0;
+  var timer=setInterval(function(){ tries++; wrap(); if(tries>40) clearInterval(timer); },250);
+
+  // Make sure changing the Portfolio Name dropdown actually re-renders,
+  // same as the other main-tab slicers.
+  function attach(){
+    var el=document.getElementById('portfolioFilter');
+    if(!el || el.__aiPortfolioChangeAttached) return;
+    el.__aiPortfolioChangeAttached=true;
+    el.addEventListener('change',function(){
+      try{ if(typeof updateDashboard==='function') updateDashboard(); }catch(e){}
+      try{ if(typeof refreshFundAlertBell==='function') refreshFundAlertBell(); }catch(e){}
+    });
+  }
+  attach();
+  var tries2=0;
+  var timer2=setInterval(function(){ tries2++; attach(); if(tries2>40) clearInterval(timer2); },250);
+
+  // A shared cascade-rebuild helper (setSelectOptionsCascade/aiVals) preserves a
+  // select's value across rebuilds by reading its `dataset.multiValues`
+  // attribute - but that attribute is only ever kept in sync for the
+  // dashboard's other, checkbox-based multi-select filters. Since
+  // portfolioFilter is a plain native <select>, nothing updates that
+  // attribute when the user actually picks an option, so the very next
+  // cascade rebuild (triggered by that same change) sees a stale
+  // dataset.multiValues (still '["All"]') and immediately resets the
+  // dropdown back to "All" right after the user's own selection. Updating
+  // the attribute ourselves, in the capturing phase (so it runs before any
+  // other change handling), keeps the selection from being wiped out.
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.id==='portfolioFilter'){
+      try{ e.target.dataset.multiValues=JSON.stringify([e.target.value]); }catch(err){}
+    }
+  },true);
+})();
+</script>
 
 </body>
 </html>

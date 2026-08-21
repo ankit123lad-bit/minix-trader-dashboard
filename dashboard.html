@@ -2888,7 +2888,7 @@ function updateSegmentSummary(prefix,grossField,expenseField,netField,data,total
   setText(prefix+"NegativeDays",neg);
   setText(prefix+"TradingDays",pos+neg);
 }
-function totalCapitalUsed(data){const byTrader={};data.forEach(r=>{const t=r["Trader Name"]||"Unknown";byTrader[t]=Math.max(byTrader[t]||0,getRowFund(r));});return Object.values(byTrader).reduce((a,b)=>a+b,0)}
+function totalCapitalUsed(data){return sumUniqueFund(data);}
 function setPercent(id,v){const el=document.getElementById(id);if(!el)return;el.textContent=(isFinite(v)?v:0).toFixed(2)+"%";el.className="kpi-value "+(v>=0?"positive":"negative")}
 
 function getFullSummaryFilteredData(){
@@ -2927,7 +2927,11 @@ function buildFullDashboardSummaryWithTraders(){
       chargeFields.forEach(f=>byTrader[key][f]=0);
     }
     const x=byTrader[key];
-    x.fund=Math.max(x.fund,getRowFund(r));
+    { const fk=fundDematKey(r), fv=getRowFund(r), fd=r.parsedDate?new Date(r.parsedDate):null;
+      if(!x._fundMap) x._fundMap={};
+      const fcur=x._fundMap[fk];
+      if(fv && (!fcur || (fd && (!fcur.date||fd>fcur.date)))) x._fundMap[fk]={fund:fv,date:fd};
+    }
     x.pnl+=r.totalNet||0;
     x.charges+=r.totalCharges||0;
     x.dividend+=r.dividendReceived||0;
@@ -2935,6 +2939,7 @@ function buildFullDashboardSummaryWithTraders(){
     if((r.totalNet||0)<0)x.loss++;
     chargeFields.forEach(f=>x[f]+=toNumber(r[f]));
   });
+  Object.values(byTrader).forEach(x=>{ x.fund = x._fundMap ? Object.values(x._fundMap).reduce((a,o)=>a+o.fund,0) : 0; });
 
   const rows=Object.values(byTrader).sort((a,b)=>b.pnl-a.pnl);
   const totals={fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0};
@@ -3093,6 +3098,52 @@ function formatNumber2(v){return new Intl.NumberFormat("en-IN",{minimumFractionD
 
 function buildRankingTables(){const weeklyData=getWeeklyFilteredData();const monthlyData=getMonthlyFilteredData();const weeklyTraders=ranking(weeklyData,"Trader Name");const monthlyTraders=ranking(monthlyData,"Trader Name");const weeklyPMs=ranking(weeklyData,"Portfolio Name");const monthlyPMs=ranking(monthlyData,"Portfolio Name");topWeekly.innerHTML=tableHtml(weeklyTraders.slice(0,5));worstWeekly.innerHTML=tableHtml([...weeklyTraders].sort((a,b)=>a[1]-b[1]).slice(0,5));topMonthly.innerHTML=tableHtml(monthlyTraders.slice(0,5));worstMonthly.innerHTML=tableHtml([...monthlyTraders].sort((a,b)=>a[1]-b[1]).slice(0,5));topPMWeekly.innerHTML=tableHtml(weeklyPMs.slice(0,5));worstPMWeekly.innerHTML=tableHtml([...weeklyPMs].sort((a,b)=>a[1]-b[1]).slice(0,5));topPM.innerHTML=tableHtml(monthlyPMs.slice(0,5));worstPM.innerHTML=tableHtml([...monthlyPMs].sort((a,b)=>a[1]-b[1]).slice(0,5))}
 function getRowFund(r){return toNumber(r["Fund"]??r["fund"]??r["Capital"]??r["capital"]??0)}
+// ---- FIX (Aug 2026): Fund/Avg Fund bug ----
+// A trader can have MULTIPLE genuinely concurrent fund pools active on the
+// SAME date - e.g. Lokesh Bhati (Jainam-MCX + Jainam-FNO + SMC-FNO + Fintech-FNO),
+// Pooja Chaudhary (two Fintech lines, Rs.5.15Cr + Rs.5L), Harsh Rathod (two
+// Researcher pools: himself + Kunj Naik). Older code throughout this file
+// grouped by Trader(+Date) and took Math.max() of the Fund values found -
+// which keeps only the LARGEST concurrent pool and silently drops the rest,
+// undercounting Total Fund and Avg Fund. Some other traders (e.g. Neeraj
+// Kumar Tiwari) just relabel ONE evolving pool's Strategy over time (FNO ->
+// FNO & Cash -> Cash) with never more than one row per day - splitting by
+// raw Strategy there would wrongly triple-count one pool as three.
+// fundDematKey() distinguishes real concurrent pools (by Demat Account +
+// Researcher Name + MCX-vs-Equity bucket) without splitting relabeled ones.
+// sumUniqueFund() takes each pool's own latest entry within the given rows
+// and sums across pools - the correct replacement for the old Math.max logic.
+function fundBucketForRow(r){
+  var s=String((r&&(r.strategy??r['Strategy']))??'').toUpperCase().replace(/[^A-Z]/g,'');
+  return s==='MCX' ? 'MCX' : 'EQUITY';
+}
+function fundDematKey(r){
+  return [
+    r && (r.company||r['Company Name']||''),
+    r && (r['Trader Name']||r.trader||'Unknown'),
+    r && (r['Demat Account']||r.demat||''),
+    r && (r['Portfolio Name']||''),
+    r && (r['Researcher Name']||''),
+    fundBucketForRow(r)
+  ].join('|');
+}
+function sumUniqueFund(rows){
+  try{
+    var map={};
+    (rows||[]).forEach(function(r){
+      var f=getRowFund(r);
+      if(!f) return;
+      var key=fundDematKey(r);
+      var d=r.parsedDate?new Date(r.parsedDate):null;
+      var cur=map[key];
+      if(!cur || (d && (!cur.date || d>cur.date))){
+        map[key]={fund:f,date:d};
+      }
+    });
+    return Object.keys(map).reduce(function(a,k){return a+map[k].fund;},0);
+  }catch(e){ return 0; }
+}
+// ---- END FIX ----
 function getLatestTraderFund(rows){
   const valid=rows.filter(r=>r.parsedDate);
   if(!valid.length)return 0;
@@ -3107,7 +3158,7 @@ function getRiskFromPnlAndFund(pnl,fund){
   if(utilization>=40)return{level:"Medium",icon:"🟡",cls:"warning",pct:utilization};
   return{level:"Low",icon:"🟢",cls:"positive",pct:utilization};
 }
-function totalFundUnique(data){const m={};data.forEach(r=>{const key=(r["Trader Name"]||"Unknown")+'|'+(r.dateLabel||'');m[key]=Math.max(m[key]||0,getRowFund(r));});return Object.values(m).reduce((a,b)=>a+b,0)}
+function totalFundUnique(data){return sumUniqueFund(data);}
 function buildIndividualTables(){
   if(!preparedData.length||!individualPerformanceTable)return;
 
@@ -3309,7 +3360,7 @@ function buildAllTradersDateWiseTable(data){
   </table>`;
 }
 function dateBadge(d){return d?`<span class="date-badge">${formatDateDMY(d)}</span>`:''}
-function buildCapitalUtilizationTable(data){const byTrader={};data.forEach(r=>{const t=r["Trader Name"]||"Unknown";if(!r.parsedDate)return;const key=t+'|'+r.dateLabel;if(!byTrader[t])byTrader[t]={};byTrader[t][key]={trader:t,date:r.parsedDate,dateLabel:r.dateLabel,fund:Math.max(byTrader[t][key]?.fund||0,getRowFund(r))};});let out=[];Object.values(byTrader).forEach(obj=>{const arr=Object.values(obj).filter(x=>x.fund).sort((a,b)=>a.date-b.date);if(!arr.length)return;let changes=[arr[0]];for(let i=1;i<arr.length;i++){if(Math.abs(arr[i].fund-changes[changes.length-1].fund)>0.01)changes.push(arr[i]);}if(changes.length===1){out.push({name:changes[0].trader,date1:changes[0].date,fund:changes[0].fund,date2:null,withdraw:null,holding:changes[0].fund});}else{for(let i=0;i<changes.length-1;i++){const cur=changes[i],next=changes[i+1];out.push({name:i===0?cur.trader:"",date1:cur.date,fund:cur.fund,date2:next.date,withdraw:cur.fund-next.fund,holding:i===changes.length-2?next.fund:null});}}});if(!out.length){capitalUtilizationTable.innerHTML="<p class='muted'>No capital change data available</p>";return;}capitalUtilizationTable.innerHTML=`<table><thead><tr><th>Name</th><th>Date</th><th class="amount">Fund</th><th>Date</th><th class="amount">Withdraw / Addition</th><th class="amount">Holding</th></tr></thead><tbody>${out.map(r=>`<tr><td>${r.name}</td><td>${formatDateDMY(r.date1)}</td><td class="amount">${formatINR(r.fund)}</td><td>${r.date2?formatDateDMY(r.date2):""}</td><td class="amount ${r.withdraw===null?'':(r.withdraw>0?'negative':'positive')}">${r.withdraw===null?'':formatINR(Math.abs(r.withdraw))}</td><td class="amount warning"><b>${r.holding===null?'':formatINR(r.holding)}</b></td></tr>`).join('')}</tbody></table>`}
+function buildCapitalUtilizationTable(data){const byTrader={};data.forEach(r=>{const t=r["Trader Name"]||"Unknown";if(!r.parsedDate)return;const key=t+'|'+r.dateLabel;if(!byTrader[t])byTrader[t]={};if(!byTrader[t][key])byTrader[t][key]={trader:t,date:r.parsedDate,dateLabel:r.dateLabel,accounts:{}};const fk=fundDematKey(r),fv=getRowFund(r);if(fv)byTrader[t][key].accounts[fk]=fv;});Object.values(byTrader).forEach(obj=>{Object.values(obj).forEach(x=>{x.fund=Object.values(x.accounts).reduce((a,b)=>a+b,0);});});let out=[];Object.values(byTrader).forEach(obj=>{const arr=Object.values(obj).filter(x=>x.fund).sort((a,b)=>a.date-b.date);if(!arr.length)return;let changes=[arr[0]];for(let i=1;i<arr.length;i++){if(Math.abs(arr[i].fund-changes[changes.length-1].fund)>0.01)changes.push(arr[i]);}if(changes.length===1){out.push({name:changes[0].trader,date1:changes[0].date,fund:changes[0].fund,date2:null,withdraw:null,holding:changes[0].fund});}else{for(let i=0;i<changes.length-1;i++){const cur=changes[i],next=changes[i+1];out.push({name:i===0?cur.trader:"",date1:cur.date,fund:cur.fund,date2:next.date,withdraw:cur.fund-next.fund,holding:i===changes.length-2?next.fund:null});}}});if(!out.length){capitalUtilizationTable.innerHTML="<p class='muted'>No capital change data available</p>";return;}capitalUtilizationTable.innerHTML=`<table><thead><tr><th>Name</th><th>Date</th><th class="amount">Fund</th><th>Date</th><th class="amount">Withdraw / Addition</th><th class="amount">Holding</th></tr></thead><tbody>${out.map(r=>`<tr><td>${r.name}</td><td>${formatDateDMY(r.date1)}</td><td class="amount">${formatINR(r.fund)}</td><td>${r.date2?formatDateDMY(r.date2):""}</td><td class="amount ${r.withdraw===null?'':(r.withdraw>0?'negative':'positive')}">${r.withdraw===null?'':formatINR(Math.abs(r.withdraw))}</td><td class="amount warning"><b>${r.holding===null?'':formatINR(r.holding)}</b></td></tr>`).join('')}</tbody></table>`}
 function getFundTransferAlerts(){
   if(!preparedData.length)return [];
 
@@ -3344,10 +3395,14 @@ function getFundTransferAlerts(){
 
   const alerts=[];
   Object.entries(byTrader).forEach(([trader,traderRows])=>{
-    const daily={};
+    const dailyAccounts={};
     traderRows.forEach(r=>{
-      daily[r.dateLabel]=Math.max(daily[r.dateLabel]||0,getRowFund(r));
+      const dl=r.dateLabel, fk=fundDematKey(r), fv=getRowFund(r);
+      if(!dailyAccounts[dl]) dailyAccounts[dl]={};
+      if(fv) dailyAccounts[dl][fk]=fv;
     });
+    const daily={};
+    Object.keys(dailyAccounts).forEach(dl=>{ daily[dl]=Object.values(dailyAccounts[dl]).reduce((a,b)=>a+b,0); });
     const dates=Object.keys(daily).sort();
     for(let i=1;i<dates.length;i++){
       const prev=dates[i-1], cur=dates[i];
@@ -3426,10 +3481,11 @@ function drawTotalChargesChart(data){
   const byTrader={};
   data.forEach(r=>{
     const t=r["Trader Name"]||"Unknown";
-    if(!byTrader[t])byTrader[t]={pnl:0,fund:0};
+    if(!byTrader[t])byTrader[t]={pnl:0,fund:0,_rows:[]};
     byTrader[t].pnl+=r.totalNet||0;
-    byTrader[t].fund=Math.max(byTrader[t].fund||0,getRowFund(r));
+    byTrader[t]._rows.push(r);
   });
+  Object.values(byTrader).forEach(v=>{ v.fund=sumUniqueFund(v._rows); });
   const rows=Object.entries(byTrader)
     .map(([trader,v])=>({trader,roi:v.fund?v.pnl/v.fund*100:0,pnl:v.pnl,fund:v.fund}))
     .filter(r=>r.fund>0)
@@ -4433,11 +4489,11 @@ document.addEventListener('keydown', function(e){
     var byTrader={};
     pdata.forEach(function(r){
       var t=r['Trader Name']||'Unknown';
-      if(!byTrader[t]) byTrader[t]={pnl:0,fund:0};
+      if(!byTrader[t]) byTrader[t]={pnl:0,fund:0,_rows:[]};
       byTrader[t].pnl+=safeNum(r.totalNet);
-      var f=(typeof getRowFund==='function')?safeNum(getRowFund(r)):safeNum(r.capital||r.fund||r['Capital']);
-      byTrader[t].fund=Math.max(byTrader[t].fund,f);
+      byTrader[t]._rows.push(r);
     });
+    Object.values(byTrader).forEach(function(v){ v.fund=(typeof sumUniqueFund==='function')?sumUniqueFund(v._rows):0; });
     var rows=Object.entries(byTrader).map(function(x){return {name:x[0],roi:x[1].fund?x[1].pnl/x[1].fund*100:0,pnl:x[1].pnl,fund:x[1].fund};}).filter(x=>x.fund>0).sort((a,b)=>b.roi-a.roi).slice(0,15);
     var bench=(nRet!=null?nRet:0);
     Plotly.newPlot('traderVsMarketRoiChart',[
@@ -10474,12 +10530,13 @@ body.bell-hidden #fundAlertBell{
     var byDate={};
     (rows||[]).forEach(function(r){
       var d=r.dateLabel||iso(r.Date||r.date||r.parsedDate); if(!d)return;
-      if(!byDate[d]) byDate[d]={pnl:0,fund:0,gross:0};
+      if(!byDate[d]) byDate[d]={pnl:0,fund:0,gross:0,_accounts:{}};
       byDate[d].pnl+=N(r.totalNet); byDate[d].gross+=N(r.totalGross);
       var f=0; try{ if(typeof getRowFund==='function') f=N(getRowFund(r)); }catch(e){}
       if(!f) f=N(r.Fund||r.fund||r.Capital||r.capital||r['Capital']);
-      byDate[d].fund=Math.max(byDate[d].fund,f);
+      if(f){ var fk=(typeof fundDematKey==='function')?fundDematKey(r):'x'; byDate[d]._accounts[fk]=f; }
     });
+    Object.keys(byDate).forEach(function(d){ var x=byDate[d]; x.fund=Object.values(x._accounts).reduce(function(a,b){return a+b;},0); });
     var out={}; Object.keys(byDate).forEach(function(d){ var x=byDate[d]; out[d]=x.fund?(x.pnl/x.fund*100):0; });
     return out;
   }
@@ -10740,7 +10797,8 @@ body.bell-hidden #fundAlertBell{
 
   // 8) Trader ROI Ranking - traders with zero P&L / zero ROI hidden
   window.drawTotalChargesChart=function(data){
-    var by={}; (data||[]).forEach(function(r){ var t=kTrader(r); if(!t||t==='Unknown') return; if(!by[t]) by[t]={pnl:0,fund:0}; by[t].pnl+=rowPnl(r); by[t].fund=Math.max(by[t].fund,fund(r)); });
+    var by={}; (data||[]).forEach(function(r){ var t=kTrader(r); if(!t||t==='Unknown') return; if(!by[t]) by[t]={pnl:0,fund:0,_rows:[]}; by[t].pnl+=rowPnl(r); by[t]._rows.push(r); });
+    Object.values(by).forEach(function(v){ v.fund=(typeof sumUniqueFund==='function')?sumUniqueFund(v._rows):0; });
     var rows=Object.keys(by).map(function(t){var v=by[t], roi=v.fund?v.pnl/v.fund*100:0; return {trader:t,pnl:v.pnl,fund:v.fund,roi:roi};})
       .filter(function(r){return r.fund>0 && isNonZero(r.pnl) && Math.abs(r.roi)>=0.0001;})
       .sort(function(a,b){return b.roi-a.roi;}).slice(0,20);
@@ -11289,7 +11347,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     return Array.isArray(window.preparedData)?window.preparedData:[];
   }
   function sum(rows,ks){ var t=0; (rows||[]).forEach(function(r){ t+=n(v(r,ks)); }); return t; }
-  function fund(rows){ var mx=0; (rows||[]).forEach(function(r){ var f=n(v(r,['Fund','fund','Total Fund','totalFund','Capital'])); try{ if(!f && typeof getRowFund==='function') f=n(getRowFund(r)); }catch(e){} if(f>mx)mx=f; }); return mx; }
+  function fund(rows){ return (typeof sumUniqueFund==='function')?sumUniqueFund(rows):0; }
   function seg(rows,name){ var P=name.toUpperCase(), T=name==='Cash'?'Cash':P;
     var gross=sum(rows,[T+' Gross',P+' Gross',T+' Gross P&L',P+' Gross P&L',name+' Gross',name+'Gross']);
     if(!gross && name==='FNO') gross=sum(rows,['FNO Gross','G P&L','Gross P&L','totalGross','gross']);
@@ -11445,7 +11503,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     var net=sum(rows,netKeys); if(!net && (gross!==0 || gov!==0)) net=gross-gov;
     return {gross:gross,gov:gov,net:net,brk:brk,brkg:brkg,trx:trx,sebi:sebi,ipf:ipf,stamp:stamp,stt:stt,clr:clr,gst:gst};
   }
-  function fund(rows){ var m=0; (rows||[]).forEach(function(r){ var f=num(val(r,['Fund','fund','Total Fund','totalFund','Capital','Limit'])); if(!f){try{ if(typeof getRowFund==='function') f=num(getRowFund(r)); }catch(e){}} if(f>m)m=f; }); return m; }
+  function fund(rows){ return (typeof sumUniqueFund==='function')?sumUniqueFund(rows):0; }
   function market(d){ var out={n:null,b:null}; try{ if(d && typeof marketPctPairForDate==='function'){ var x=marketPctPairForDate(iso(d)); if(x){out.n=x.nifty; out.b=x.bank;} } }catch(e){} return out; }
   function calc(label,rows,total){ var f=segment(rows,'FNO'), c=segment(rows,'Cash'), m=segment(rows,'MCX'), fd=fund(rows), net=f.net+c.net+m.net, roi=fd?net/fd*100:0, d=parseDate(label), mk=total?{n:null,b:null}:market(d); return {label:label,date:d||new Date(9999,0,1),roi:roi,nifty:mk.n,bank:mk.b,fund:fd,fnoGross:f.gross,fnoGov:f.gov,fnoNet:f.net,cashGross:c.gross,cashGov:c.gov,cashNet:c.net,mcxGross:m.gross,mcxGov:m.gov,mcxNet:m.net, f:f,c:c,m:m}; }
   function header(){ var cols=[['date','Date'],['roi','ROI'],['nifty','Nifty'],['bank','Bank'],['fund','Fund'],['fnoGross','FNO Gross'],['fnoGov','FNO Gov'],['fnoNet','FNO Net'],['cashGross','Cash Gross'],['cashGov','Cash Gov'],['cashNet','Cash Net'],['mcxGross','MCX Gross'],['mcxGov','MCX Gov'],['mcxNet','MCX Net']]; return '<tr>'+cols.map(function(c){ var ar=sortState.col===c[0]?(sortState.dir>0?'↑':'↓'):'↕'; return '<th class="amount ai-sortable" data-ai-sort="'+c[0]+'">'+c[1]+' <span style="color:#ffd400">'+ar+'</span></th>'; }).join('').replace('class="amount ai-sortable" data-ai-sort="date"','class="ai-sortable" data-ai-sort="date"')+'</tr>'; }
@@ -11501,25 +11559,28 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     return keys.length?keys[keys.length-1]:'';
   }
   function dematKey(r){
+    var bucket=(typeof fundBucketForRow==='function')?fundBucketForRow(r):'EQUITY';
     return [
       r && (r['Company Name']||r.company||''),
       r && (r['Trader Name']||r.trader||'Unknown'),
       r && (r['Demat Account']||r.demat||r['Demant Account']||''),
       r && (r['Portfolio Name']||''),
-      r && (r['Researcher Name']||'')
+      r && (r['Researcher Name']||''),
+      bucket
     ].join('|');
   }
   function sumUniqueDematFund(rows, forceDate){
     rows=rows||[];
-    var dk = forceDate!==undefined ? forceDate : latestDateKey(rows);
     var map={};
     rows.forEach(function(r){
-      if(dk && dateKey(r)!==dk) return;
+      if(forceDate!==undefined && forceDate && dateKey(r)!==forceDate) return;
       var f=rowFund(r); if(!f) return;
       var k=dematKey(r);
-      map[k]=Math.max(map[k]||0, f);
+      var d=r.parsedDate?new Date(r.parsedDate):null;
+      var cur=map[k];
+      if(!cur || (d && (!cur.date || d>cur.date))){ map[k]={fund:f,date:d}; }
     });
-    return Object.keys(map).reduce(function(a,k){return a+map[k];},0);
+    return Object.keys(map).reduce(function(a,k){return a+map[k].fund;},0);
   }
 
   // IMPORTANT: Earlier dashboard was taking max fund by Trader+Date, so 2 demat accounts were not added.
@@ -13039,16 +13100,7 @@ setInterval(function(){
     try{ return '₹'+Math.round(Number(v)||0).toLocaleString('en-IN'); }catch(e){ return '₹0'; }
   }
   function periodFund(rows){
-    var tr=selectedTrader();
-    if(tr!=='All'){
-      return (rows||[]).reduce(function(m,r){ return Math.max(m,rowFund(r)); },0);
-    }
-    var m={};
-    (rows||[]).forEach(function(r){
-      var t=(r && (r['Trader Name']||r.trader||r.Trader)) || 'Unknown';
-      m[t]=Math.max(m[t]||0,rowFund(r));
-    });
-    return Object.keys(m).reduce(function(s,k){ return s+(m[k]||0); },0);
+    return (typeof sumUniqueFund==='function')?sumUniqueFund(rows||[]):0;
   }
   function parseAmtFromCell(cell){ return n(cell?cell.textContent:''); }
   function cls(v){ return v>=0?'positive':'negative'; }
@@ -13225,7 +13277,10 @@ setInterval(function(){
       var key=dem+'|'+port+'|'+res+'|'+tr;
       if(!by[key]){ by[key]={demat:dem,portfolio:port,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0,brokerage:0,govCharges:0,totalCharges:0,details:{}}; (window.chargeFields||[]).forEach(function(f){by[key].details[f]=0;}); }
       var x=by[key];
-      x.fund=Math.max(x.fund, typeof getRowFund==='function'?getRowFund(r):num(r.Fund||r['Fund']));
+      { var fv2=(typeof getRowFund==='function')?getRowFund(r):num(r.Fund||r['Fund']);
+        var fd2=r.parsedDate?new Date(r.parsedDate):null;
+        if(fv2 && (!x._fundDate || (fd2 && fd2>x._fundDate))){ x.fund=fv2; x._fundDate=fd2; }
+      }
       x.pnl+=num(r.totalNet||r['Profit / Loss']||r['P&L']);
       x.charges+=num(r.totalCharges);
       x.brokerage+=num(r['Brokerage']);
@@ -13266,8 +13321,9 @@ setInterval(function(){
     }
     var el=E('fintechLokeshComparisonTable'); if(!el) return;
     function bucket(name,fn){
-      var arr=(data||[]).filter(fn), fund=0,pnl=0,charges=0;
-      arr.forEach(function(r){fund=Math.max(fund, typeof getRowFund==='function'?getRowFund(r):num(r.Fund)); pnl+=num(r.totalNet); charges+=num(r.totalCharges);});
+      var arr=(data||[]).filter(fn), pnl=0,charges=0;
+      arr.forEach(function(r){pnl+=num(r.totalNet); charges+=num(r.totalCharges);});
+      var fund=(typeof sumUniqueFund==='function')?sumUniqueFund(arr):0;
       return {name:name,amount:pnl,charges:charges,fund:fund,ret:fund?pnl/fund*100:0,chargePct:fund?charges/fund*100:0,count:arr.length};
     }
     var rows=[
@@ -13507,7 +13563,9 @@ setInterval(function(){
       var k=[dem,port,res,tr].join('||');
       if(!map[k]) map[k]={demat:dem,portfolio:port,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0,brokerage:0,govCharges:0,totalCharges:0,details:{'Clearing':0,'BSE Trx':0,'NSE Trx':0,'Sebi':0,'STT':0,'Stamp Duty':0,'IPF':0,'GST':0}};
       var x=map[k];
-      x.fund=Math.max(x.fund,num(r['Fund']||r.fund));
+      { var fv3=num(r['Fund']||r.fund), fd3=r.parsedDate?new Date(r.parsedDate):null;
+        if(fv3 && (!x._fundDate || (fd3 && fd3>x._fundDate))){ x.fund=fv3; x._fundDate=fd3; }
+      }
       x.pnl+=num(r.totalNet);
       x.charges+=num(r.totalCharges);
       if(num(r.totalNet)>0)x.win++; if(num(r.totalNet)<0)x.loss++;
@@ -14049,7 +14107,11 @@ setInterval(function(){
     var m={}; getData().forEach(function(r){
       var dem=dematOf(r), port=r.portfolio||r['Portfolio Name']||'Not Available', res=r.researcher||r['Researcher Name']||'Not Available', tr=r.trader||r['Trader Name']||'Unknown';
       var k=[dem,port,res,tr].join('||'); if(!m[k]) m[k]={demat:dem,portfolio:port,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0,brokerage:0,gov:0,total:0,d:{Clearing:0,BSE:0,NSE:0,Sebi:0,STT:0,Stamp:0,IPF:0,GST:0}};
-      var x=m[k], dd=det(r); x.fund=Math.max(x.fund,num(r.Fund||r.fund)); x.pnl+=num(r.totalNet); x.charges+=num(r.totalCharges); if(num(r.totalNet)>0)x.win++; if(num(r.totalNet)<0)x.loss++; x.dividend+=num(r.dividendReceived||r['Dividend Received']); x.brokerage+=num(r.Brokerage||r['Brokerage']);
+      var x=m[k], dd=det(r);
+      { var fv4=num(r.Fund||r.fund), fd4=r.parsedDate?new Date(r.parsedDate):null;
+        if(fv4 && (!x._fundDate || (fd4 && fd4>x._fundDate))){ x.fund=fv4; x._fundDate=fd4; }
+      }
+      x.pnl+=num(r.totalNet); x.charges+=num(r.totalCharges); if(num(r.totalNet)>0)x.win++; if(num(r.totalNet)<0)x.loss++; x.dividend+=num(r.dividendReceived||r['Dividend Received']); x.brokerage+=num(r.Brokerage||r['Brokerage']);
       Object.keys(dd).forEach(function(f){x.d[f]+=dd[f]; x.gov+=dd[f];}); x.total=x.brokerage+x.gov; if(!x.charges) x.charges=x.total;
     });
     return Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){return (a.demat+a.portfolio+a.researcher+a.trader).localeCompare(b.demat+b.portfolio+b.researcher+b.trader);});
@@ -14853,14 +14915,23 @@ body.ai-show-brk-details.ai-show-gov-details #allTradersDateWiseTable td{
       var parent=g[p];
       parent.demats[dem]=true;
       var f=fundOf(r), n=netOf(r), c=chargesOf(r), d=dividendOf(r);
-      parent.fund=Math.max(parent.fund,f);
       parent.pnl+=n; parent.charges+=c; parent.dividend+=d;
       if(n>0) parent.win++; if(n<0) parent.loss++;
       var key=dem+'||'+res+'||'+tr;
-      if(!parent.children[key]) parent.children[key]={portfolio:p,demat:dem,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0};
+      if(!parent.children[key]) parent.children[key]={portfolio:p,demat:dem,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0,_fundDate:null};
       var ch=parent.children[key];
-      ch.fund=Math.max(ch.fund,f); ch.pnl+=n; ch.charges+=c; ch.dividend+=d;
+      var fd5=r.parsedDate?new Date(r.parsedDate):null;
+      if(f && (!ch._fundDate || (fd5 && fd5>ch._fundDate))){ ch.fund=f; ch._fundDate=fd5; }
+      ch.pnl+=n; ch.charges+=c; ch.dividend+=d;
       if(n>0) ch.win++; if(n<0) ch.loss++;
+    });
+    // Parent (Portfolio) Fund = SUM of its children's Fund - NOT the max of all
+    // rows in the portfolio. Each child already isolates one genuinely separate
+    // account (Demat+Researcher+Trader), so summing children gives the correct
+    // total capital under that portfolio manager, instead of silently reporting
+    // just the single largest trader's fund as if it were the whole portfolio's.
+    Object.values(g).forEach(function(p2){
+      p2.fund=Object.values(p2.children).reduce(function(a,c){return a+(c.fund||0);},0);
     });
     return Object.keys(g).map(function(k){
       var x=g[k];
@@ -15364,7 +15435,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     return Array.isArray(window.preparedData)?window.preparedData:[];
   }
   function sum(rows,ks){ var t=0; (rows||[]).forEach(function(r){ t+=n(v(r,ks)); }); return t; }
-  function fund(rows){ var mx=0; (rows||[]).forEach(function(r){ var f=n(v(r,['Fund','fund','Total Fund','totalFund','Capital'])); try{ if(!f && typeof getRowFund==='function') f=n(getRowFund(r)); }catch(e){} if(f>mx)mx=f; }); return mx; }
+  function fund(rows){ return (typeof sumUniqueFund==='function')?sumUniqueFund(rows):0; }
   function seg(rows,name){ var P=name.toUpperCase(), T=name==='Cash'?'Cash':P;
     var gross=sum(rows,[T+' Gross',P+' Gross',T+' Gross P&L',P+' Gross P&L',name+' Gross',name+'Gross']);
     if(!gross && name==='FNO') gross=sum(rows,['FNO Gross','G P&L','Gross P&L','totalGross','gross']);
@@ -15520,7 +15591,7 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
     var net=sum(rows,netKeys); if(!net && (gross!==0 || gov!==0)) net=gross-gov;
     return {gross:gross,gov:gov,net:net,brk:brk,brkg:brkg,trx:trx,sebi:sebi,ipf:ipf,stamp:stamp,stt:stt,clr:clr,gst:gst};
   }
-  function fund(rows){ var m=0; (rows||[]).forEach(function(r){ var f=num(val(r,['Fund','fund','Total Fund','totalFund','Capital','Limit'])); if(!f){try{ if(typeof getRowFund==='function') f=num(getRowFund(r)); }catch(e){}} if(f>m)m=f; }); return m; }
+  function fund(rows){ return (typeof sumUniqueFund==='function')?sumUniqueFund(rows):0; }
   function market(d){ var out={n:null,b:null}; try{ if(d && typeof marketPctPairForDate==='function'){ var x=marketPctPairForDate(iso(d)); if(x){out.n=x.nifty; out.b=x.bank;} } }catch(e){} return out; }
   function calc(label,rows,total){ var f=segment(rows,'FNO'), c=segment(rows,'Cash'), m=segment(rows,'MCX'), fd=fund(rows), net=f.net+c.net+m.net, roi=fd?net/fd*100:0, d=parseDate(label), mk=total?{n:null,b:null}:market(d); return {label:label,date:d||new Date(9999,0,1),roi:roi,nifty:mk.n,bank:mk.b,fund:fd,fnoGross:f.gross,fnoGov:f.gov,fnoNet:f.net,cashGross:c.gross,cashGov:c.gov,cashNet:c.net,mcxGross:m.gross,mcxGov:m.gov,mcxNet:m.net, f:f,c:c,m:m}; }
   function header(){ var cols=[['date','Date'],['roi','ROI'],['nifty','Nifty'],['bank','Bank'],['fund','Fund'],['fnoGross','FNO Gross'],['fnoGov','FNO Gov'],['fnoNet','FNO Net'],['cashGross','Cash Gross'],['cashGov','Cash Gov'],['cashNet','Cash Net'],['mcxGross','MCX Gross'],['mcxGov','MCX Gov'],['mcxNet','MCX Net']]; return '<tr>'+cols.map(function(c){ var ar=sortState.col===c[0]?(sortState.dir>0?'↑':'↓'):'↕'; return '<th class="amount ai-sortable" data-ai-sort="'+c[0]+'">'+c[1]+' <span style="color:#ffd400">'+ar+'</span></th>'; }).join('').replace('class="amount ai-sortable" data-ai-sort="date"','class="ai-sortable" data-ai-sort="date"')+'</tr>'; }
@@ -15713,9 +15784,13 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
       var key=dem+'||'+res+'||'+tr;
       if(!parent.children[key]) parent.children[key]={portfolio:p,demat:dem,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0};
       var ch=parent.children[key];
-      // IMPORTANT: daily rows repeat same fund, so each Demat/Researcher/Trader child keeps MAX fund only.
-      // Parent portfolio fund is then SUM of these child funds, so SMC 41Cr + Jainam 48Cr = 89Cr.
-      ch.fund=Math.max(ch.fund,f);
+      // Each Demat/Researcher/Trader child isolates one genuinely separate
+      // account. Parent portfolio fund = SUM of these child funds (see below),
+      // so e.g. SMC 41Cr + Jainam 48Cr = 89Cr. Within a child, we take its
+      // latest-dated Fund value (not just any max) since fund can also decrease.
+      if(!ch._fundDate) ch._fundDate=null;
+      var fd6=r.parsedDate?new Date(r.parsedDate):null;
+      if(f && (!ch._fundDate || (fd6 && fd6>ch._fundDate))){ ch.fund=f; ch._fundDate=fd6; }
       ch.pnl+=n; ch.charges+=c; ch.dividend+=d; if(n>0) ch.win++; if(n<0) ch.loss++;
     });
     return Object.keys(groups).map(function(k){
@@ -16912,7 +16987,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     return manualFilteredRows();
   }
   function sum(rows,keys){ return (rows||[]).reduce(function(a,r){ return a+num(val(r,keys)); },0); }
-  function maxFund(rows){ var m=0; (rows||[]).forEach(function(r){ var f=num(val(r,['Fund','fund','Total Fund','totalFund','Capital','Limit'])); if(!f){try{ if(typeof getRowFund==='function') f=getRowFund(r)||0; }catch(e){}} if(f>m)m=f; }); return m; }
+  function maxFund(rows){ return (typeof sumUniqueFund==='function')?sumUniqueFund(rows):0; }
   function seg(rows,p){
     var P=p.toUpperCase(), T=p==='Cash'?'Cash':P;
     var gross=sum(rows,[T+' Gross',P+' Gross',p+'Gross',p.toLowerCase()+'Gross',T+' Gross P&L',T+' P&L']);
@@ -16995,7 +17070,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     });
   }
   function sum(rows,keys){return (rows||[]).reduce(function(a,r){return a+num(val(r,keys));},0);}
-  function fund(rows){ var m=0; (rows||[]).forEach(function(r){ var f=num(val(r,['Fund','fund','Total Fund','totalFund','Capital','Limit'])); if(!f){try{ if(typeof getRowFund==='function') f=num(getRowFund(r)); }catch(e){}} if(f>m)m=f;}); return m;}
+  function fund(rows){ return (typeof sumUniqueFund==='function')?sumUniqueFund(rows):0; }
   function utilized(rows){return sum(rows,['Margin Utilized','Total Utilized','Utilized','Margin Used']);}
   function seg(rows,p){
     var P=p.toUpperCase(), T=(p==='Cash')?'Cash':P;
@@ -17514,8 +17589,10 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   }
   function aggregate(name,all,today,submission){
     let margin=0,utilized=0,ff=0,cf=0,mf=0,fg=0,fc=0,cg=0,cc=0,mg=0,mc=0;
+    const _marginAccts={};
     today.forEach(r=>{
-      margin=Math.max(margin,num(val(r,['Fund','fund','Total Margin','Margin'])));
+      const _mv=num(val(r,['Fund','fund','Total Margin','Margin']));
+      if(_mv){ const _mk=(typeof fundDematKey==='function')?fundDematKey(r):'x'; _marginAccts[_mk]=_mv; }
       utilized+=num(val(r,['Margin Utilized','Total Utilized','Utilized','Total Margin Utilized']));
       fg+=num(val(r,['FNO Gross','F&O Gross','FNO_Gross']));
       fc+=num(val(r,['FNO Total Charges','FNO Gorv Chg','F&O Charges','FNO Charges']));
@@ -17524,6 +17601,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
       mg+=num(val(r,['MCX Gross','MCX_Gross']));
       mc+=num(val(r,['MCX Total Charges','MCX Gorv Chg','MCX Charges']));
     });
+    margin=Object.values(_marginAccts).reduce((a,b)=>a+b,0);
     if(submission){
       ff=num(submission.fno_total_fund);cf=num(submission.cash_total_fund);mf=num(submission.mcx_total_fund);
       margin=ff+cf+mf||num(submission.total_margin);utilized=num(submission.margin_utilized);
@@ -17614,7 +17692,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     localStorage.setItem('MINIX_PUSH_ENABLED','YES');modal('<h2>✅ Notifications Enabled</h2><p>આ device પર રોજ 4:00 PM અને જરૂરી reminder notification આવશે.</p><div class="minix-push-actions"><button onclick="minixTestNotification()">Send Test</button><button class="close" onclick="minixClosePushModal()">Close</button></div>');
   }catch(e){modal('<h2>🔔 Notification Setup</h2><p>'+String(e.message||e)+'</p><p>Mobile/Laptop browser settingsમાં આ website માટે Notifications Allow કરો.</p><div class="minix-push-actions"><button onclick="minixEnableNotifications()">Try Again</button><button class="close" onclick="minixClosePushModal()">Close</button></div>')}};
   window.minixTestNotification=async function(){try{if(Notification.permission!=='granted')return minixEnableNotifications();const reg=await registration();await reg.showNotification('🧪 Minix Test Notification',{body:'Notification setup successful. રોજ 4:00 PMએ Daily Report આવશે.',tag:'minix-test',data:{url:'./dashboard.html'}})}catch(e){alert(e.message||e)}};
-  function report(){let rows=Array.isArray(window.preparedData)?window.preparedData:(Array.isArray(window.rawData)?window.rawData:[]);if(!rows.length)return null;const dates=rows.map(r=>r.dateLabel||r.Date||'').filter(Boolean).sort();const latest=dates[dates.length-1],d=rows.filter(r=>(r.dateLabel||r.Date||'')===latest),fund={};let utilized=0,fg=0,fc=0,cg=0,cc=0,mg=0,mc=0;d.forEach(r=>{const t=r['Trader Name']||'Unknown',f=num(r.Fund||r.fund);fund[t]=Math.max(fund[t]||0,f);utilized+=num(r['Margin Utilized']||r['Total Utilized']||r.Utilized);fg+=num(r['FNO Gross']);fc+=num(r['FNO Gorv Chg']||r['FNO Total Charges']);cg+=num(r['Cash Gross']);cc+=num(r['Cash Gorv Chg']||r['Cash Total Charges']);mg+=num(r['MCX Gross']);mc+=num(r['MCX Gorv Chg']||r['MCX Total Charges'])});const totalMargin=Object.values(fund).reduce((a,b)=>a+b,0),gross=fg+cg+mg,charges=fc+cc+mc;return{date:latest,totalMargin,utilized,fg,fc,cg,cc,mg,mc,gross,charges,net:gross-charges}}
+  function report(){let rows=Array.isArray(window.preparedData)?window.preparedData:(Array.isArray(window.rawData)?window.rawData:[]);if(!rows.length)return null;const dates=rows.map(r=>r.dateLabel||r.Date||'').filter(Boolean).sort();const latest=dates[dates.length-1],d=rows.filter(r=>(r.dateLabel||r.Date||'')===latest),fund={};let utilized=0,fg=0,fc=0,cg=0,cc=0,mg=0,mc=0;d.forEach(r=>{const f=num(r.Fund||r.fund);if(f){const fk=(typeof fundDematKey==='function')?fundDematKey(r):((r['Trader Name']||'Unknown'));fund[fk]=f;}utilized+=num(r['Margin Utilized']||r['Total Utilized']||r.Utilized);fg+=num(r['FNO Gross']);fc+=num(r['FNO Gorv Chg']||r['FNO Total Charges']);cg+=num(r['Cash Gross']);cc+=num(r['Cash Gorv Chg']||r['Cash Total Charges']);mg+=num(r['MCX Gross']);mc+=num(r['MCX Gorv Chg']||r['MCX Total Charges'])});const totalMargin=Object.values(fund).reduce((a,b)=>a+b,0),gross=fg+cg+mg,charges=fc+cc+mc;return{date:latest,totalMargin,utilized,fg,fc,cg,cc,mg,mc,gross,charges,net:gross-charges}}
   window.minixShowTodayReportLegacy=function(){const r=report();if(!r)return modal('<h2>📊 Today’s Report</h2><p>No report data available.</p><div class="minix-push-actions"><button class="close" onclick="minixClosePushModal()">Close</button></div>');const items=[['Total Margin',r.totalMargin],['Margin Utilized',r.utilized],['F&O Gross',r.fg],['F&O Charges',r.fc],['Cash Gross',r.cg],['Cash Charges',r.cc],['MCX Gross',r.mg],['MCX Charges',r.mc],['Total Gross',r.gross],['Total Charges',r.charges],['Total Net P&L',r.net]];modal('<h2>📊 Minix Daily Report – '+r.date+'</h2><div class="minix-report-grid">'+items.map(x=>'<div class="minix-report-item"><span>'+x[0]+'</span><b style="color:'+(x[1]<0?'#f87171':'#34d399')+'">'+money(x[1])+'</b></div>').join('')+'</div><div class="minix-push-actions"><button onclick="minixTestNotification()">Test Notification</button><button class="close" onclick="minixClosePushModal()">Close</button></div>')};
   function promptIfNeeded(){const u=user();if(!u)return;ensureBar();if(Notification.permission!=='granted'&&localStorage.getItem('MINIX_PUSH_PROMPTED')!==new Date().toISOString().slice(0,10)){localStorage.setItem('MINIX_PUSH_PROMPTED',new Date().toISOString().slice(0,10));modal('<h2>🔔 Daily Report Notification ચાલુ કરો</h2><p>Mobile અને Laptop પર રોજ 4:00 PM report મેળવવા માટે એક વખત <b>Enable Notifications</b> દબાવો અને browserમાં <b>Allow</b> કરો.</p><div class="minix-push-actions"><button onclick="minixEnableNotifications()">Enable Notifications</button><button class="close" onclick="minixClosePushModal()">Later</button></div>')}}
   function fourPm(){const n=new Date(),day=n.toISOString().slice(0,10);if((n.getHours()>16||(n.getHours()===16&&n.getMinutes()>=0))&&localStorage.getItem('MINIX_4PM_POPUP')!==day){localStorage.setItem('MINIX_4PM_POPUP',day);minixShowTodayReport()}}
@@ -19335,20 +19413,43 @@ body:not(.auth-locked){
   // demat account's own most recent entry within the given rows and sums those -
   // so a demat account without an entry on the very last day still counts using
   // its latest available entry in that period.
+  function fundRowDateKey(r){
+    // Robust "which date is this row" helper: prefers the row's own dateLabel
+    // (already a sortable string), falls back to parsing parsedDate/Date if
+    // dateLabel is missing. Used instead of relying on parsedDate alone, so a
+    // row whose parsedDate failed to populate doesn't get permanently stuck
+    // behind an earlier row that did parse - it still counts as the newer entry.
+    if(r && r.dateLabel) return String(r.dateLabel);
+    if(r && r.parsedDate){ try{ return new Date(r.parsedDate).toISOString().slice(0,10); }catch(e){} }
+    if(r){ try{ if(typeof parseDate==='function'){ var pd=parseDate(r.Date||r.date); if(pd) return pd.toISOString().slice(0,10); } }catch(e){} }
+    return '';
+  }
   function fundFor(rows){
     try{
-      var map={};
+      // Step 1: sum values that share the EXACT same account-key on the EXACT
+      // same date. This is what fixes cases like Pooja Chaudhary, where two
+      // genuinely separate concurrent lines have no distinguishing field at
+      // all (same company/trader/demat/portfolio/researcher/bucket) - without
+      // this, whichever row happened to be processed first for that date won
+      // and the other was silently dropped instead of added.
+      var byKeyDay={};
       (rows||[]).forEach(function(r){
         var f=numFromFund(r.Fund??r.fund??r['Fund']??r['Capital']??r.capital);
         if(!f) return;
         var key=dematKeyFor(r);
-        var d=r.parsedDate?new Date(r.parsedDate):null;
-        var cur=map[key];
-        if(!cur || (d && (!cur.date || d>cur.date))){
-          map[key]={fund:f, date:d};
-        }
+        var day=fundRowDateKey(r);
+        if(!byKeyDay[key]) byKeyDay[key]={};
+        byKeyDay[key][day]=(byKeyDay[key][day]||0)+f;
       });
-      return Object.keys(map).reduce(function(a,k){return a+map[k].fund;},0);
+      // Step 2: for each account-key, take its most recent date's (summed) total.
+      var total=0;
+      Object.keys(byKeyDay).forEach(function(key){
+        var days=Object.keys(byKeyDay[key]).filter(Boolean).sort();
+        if(!days.length) return;
+        var lastDay=days[days.length-1];
+        total+=byKeyDay[key][lastDay];
+      });
+      return total;
     }catch(e){
       try{ if(typeof window.getLatestTraderFund==='function') return window.getLatestTraderFund(rows)||0; }catch(e2){}
       return 0;
@@ -19358,7 +19459,8 @@ body:not(.auth-locked){
   // dematKeyFor/fundBucketFor), so Latest Fund and Avg Fund stay internally
   // consistent with each other and don't triple-count relabeled pools like
   // Neeraj's, while still correctly separating genuinely parallel books like
-  // Lokesh's FNO+MCX.
+  // Lokesh's FNO+MCX - and, like fundFor, sums same-key/same-day rows first so
+  // indistinguishable concurrent lines like Pooja Chaudhary's aren't dropped.
   function avgFundForRows(rows){
     try{
       var groups={};
@@ -19366,10 +19468,10 @@ body:not(.auth-locked){
         var f=numFromFund(r.Fund??r.fund??r['Fund']??r['Capital']??r.capital);
         if(!f) return;
         var key=dematKeyFor(r);
-        var day=r.dateLabel||(r.parsedDate?new Date(r.parsedDate).toISOString().slice(0,10):null);
+        var day=fundRowDateKey(r);
         if(!day) return;
         if(!groups[key]) groups[key]={};
-        groups[key][day]=Math.max(groups[key][day]||0, f);
+        groups[key][day]=(groups[key][day]||0)+f;
       });
       return Object.keys(groups).reduce(function(total,key){
         var days=Object.keys(groups[key]);

@@ -13255,11 +13255,20 @@ setInterval(function(){
   }
 
   window.getFullSummaryFilteredData=function(){
-    var fy=E('fullFyFilter')?.value||'All';
-    var co=E('fullCompanyFilter')?.value||'All';
+    // FIX: fullFyFilter / fullCompanyFilter / fullMonthFilter are multi-select (tick) dropdowns.
+    // Reading el.value only ever returns the FIRST checked option, so with several months
+    // ticked (e.g. Apr+May+Jun+Jul) this used to silently collapse the result back to April only.
+    // window.__aiMultiHas (set up by the tick-dropdown patch) checks the FULL selected set instead.
+    var hasVal = (typeof window.__aiMultiHas==='function') ? window.__aiMultiHas : function(id,val){
+      var v=E(id)?.value||'All'; return v==='All'||v===String(val||'');
+    };
     var de=E('fullDematFilter')?.value||'All';
-    var mo=E('fullMonthFilter')?.value||'All';
-    return currentRows().filter(function(r){return (fy==='All'||r['Financial Year']===fy) && (co==='All'||r.company===co) && (de==='All'||rowDemat(r)===de) && (mo==='All'||r.monthLabel===mo);});
+    return currentRows().filter(function(r){
+      return hasVal('fullFyFilter', r['Financial Year']) &&
+        hasVal('fullCompanyFilter', r.company) &&
+        (de==='All'||rowDemat(r)===de) &&
+        hasVal('fullMonthFilter', r.monthLabel);
+    });
   };
 
   window.getChartTrendData=function(ignoreDate){
@@ -17218,22 +17227,39 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     for(var i=0;i<keys.length;i++){ if(same(val(r,[keys[i]]),want)) return true; }
     return false;
   }
+  // FIX: indFyFilter/indCompanyFilter/indResearcherFilter/indPortfolioFilter/indTraderFilter/
+  // indStrategyFilter/indMonthFilter/indWeekFilter are all multi-select (tick) dropdowns.
+  // selVal() only ever returns the FIRST checked option, so with e.g. 4 months ticked this
+  // function used to silently filter down to just the first month. multiVals()/isAllArr()/
+  // fieldMatchMulti() below check the FULL ticked set instead.
+  function multiVals(id){
+    var e=E(id); if(!e) return ['All'];
+    try{ var a=JSON.parse(e.dataset.multiValues||'[]'); if(a && a.length) return a; }catch(err){}
+    return [String(e.value||'All').trim()||'All'];
+  }
+  function isAllArr(arr){ return !arr || !arr.length || arr.indexOf('All')>=0; }
+  function fieldMatchMulti(r,keys,wantArr){
+    if(isAllArr(wantArr)) return true;
+    var rv=val(r,keys);
+    for(var i=0;i<wantArr.length;i++){ if(same(rv,wantArr[i])) return true; }
+    return false;
+  }
   function selectedRowsByIndividualSlicers(){
-    var fy=selVal('indFyFilter'), co=selVal('indCompanyFilter'), dem=selVal('indDematFilter'), res=selVal('indResearcherFilter'), port=selVal('indPortfolioFilter'), tr=selVal('indTraderFilter'), st=selVal('indStrategyFilter'), mo=selVal('indMonthFilter'), wk=selVal('indWeekFilter'), dt=selVal('indDateFilter');
+    var fy=multiVals('indFyFilter'), co=multiVals('indCompanyFilter'), dem=selVal('indDematFilter'), res=multiVals('indResearcherFilter'), port=multiVals('indPortfolioFilter'), tr=multiVals('indTraderFilter'), st=multiVals('indStrategyFilter'), mo=multiVals('indMonthFilter'), wk=multiVals('indWeekFilter'), dt=selVal('indDateFilter');
     var wantDate=parseDate(dt), wantIso=wantDate?iso(wantDate):'';
     return rawRows().filter(function(r){
       var d=rowDate(r), rIso=iso(d);
-      var okFy=isAll(fy)||same(fyOf(d),fy)||fieldMatch(r,['Financial Year','financialYear','fy','FY','Year'],fy);
-      var okMonth=isAll(mo)||same(monthOf(d),mo)||same(monthAltOf(d),mo)||fieldMatch(r,['Month Name','monthName','monthLabel','Month','month'],mo);
+      var okFy=isAllArr(fy)||fy.some(function(f){return same(fyOf(d),f);})||fieldMatchMulti(r,['Financial Year','financialYear','fy','FY','Year'],fy);
+      var okMonth=isAllArr(mo)||mo.some(function(m){return same(monthOf(d),m)||same(monthAltOf(d),m);})||fieldMatchMulti(r,['Month Name','monthName','monthLabel','Month','month'],mo);
       var okDate=!wantIso || rIso===wantIso;
       return okFy && okMonth && okDate &&
-        fieldMatch(r,['Company Name','company','Company','COMPANY'],co) &&
+        fieldMatchMulti(r,['Company Name','company','Company','COMPANY'],co) &&
         fieldMatch(r,['Demat Account','Demat account','demat','Demat','Broker','Broker Account','Account','Demat A/c'],dem) &&
-        fieldMatch(r,['Researcher Name','researcher','Researcher','PM Name','Portfolio Manager'],res) &&
-        fieldMatch(r,['Portfolio Name','portfolio','Portfolio','PortfolioName'],port) &&
-        fieldMatch(r,['Trader Name','trader','Trader','TraderName'],tr) &&
-        fieldMatch(r,['Strategy','strategy','Strategy Name'],st) &&
-        fieldMatch(r,['Week Name','weekName','week','Week'],wk);
+        fieldMatchMulti(r,['Researcher Name','researcher','Researcher','PM Name','Portfolio Manager'],res) &&
+        fieldMatchMulti(r,['Portfolio Name','portfolio','Portfolio','PortfolioName'],port) &&
+        fieldMatchMulti(r,['Trader Name','trader','Trader','TraderName'],tr) &&
+        fieldMatchMulti(r,['Strategy','strategy','Strategy Name'],st) &&
+        fieldMatchMulti(r,['Week Name','weekName','week','Week'],wk);
     });
   }
   window.aiAllTradersSelectedRowsFinal=function(){return selectedRowsByIndividualSlicers();};
@@ -17272,7 +17298,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   var lastState='';
   function watch(){
     installWrapper(); bind();
-    var state=['indFyFilter','indCompanyFilter','indDematFilter','indResearcherFilter','indPortfolioFilter','indTraderFilter','indStrategyFilter','indMonthFilter','indWeekFilter','indDateFilter'].map(selVal).join('|');
+    var state=['indFyFilter','indCompanyFilter','indResearcherFilter','indPortfolioFilter','indTraderFilter','indStrategyFilter','indMonthFilter','indWeekFilter'].map(function(id){return multiVals(id).join(',');}).join('|')+'|'+selVal('indDematFilter')+'|'+selVal('indDateFilter');
     var visible=!!(E('individualSection') && E('individualSection').style.display!=='none');
     if(visible && state!==lastState){ lastState=state; forceRender(); }
   }
@@ -19952,5 +19978,576 @@ body:not(.auth-locked){
 })();
 </script>
 
+
+<!-- === MINIX EXECUTIVE INTERNATIONAL UI 2026 === -->
+<style id="minix-executive-international-ui">
+:root{
+  --mx-bg:#07101f;
+  --mx-surface:#0d1728;
+  --mx-surface-2:#111e33;
+  --mx-border:#263a55;
+  --mx-text:#f4f8ff;
+  --mx-muted:#9fb0c7;
+  --mx-blue:#4da3ff;
+  --mx-cyan:#45d5e6;
+  --mx-green:#35d07f;
+  --mx-red:#ff6b6b;
+  --mx-amber:#f6c453;
+  --mx-shadow:0 14px 34px rgba(0,0,0,.26);
+}
+html{background:var(--mx-bg)!important}
+body{
+  background:
+    radial-gradient(circle at 12% 0%,rgba(48,103,178,.16),transparent 28%),
+    radial-gradient(circle at 88% 8%,rgba(35,197,213,.08),transparent 24%),
+    linear-gradient(180deg,#07101f 0%,#091322 55%,#07101f 100%)!important;
+  color:var(--mx-text)!important;
+  letter-spacing:.01em;
+}
+.container{max-width:1880px!important;padding:18px 22px 34px!important}
+.header{
+  padding:17px 18px!important;
+  margin-bottom:14px!important;
+  background:linear-gradient(135deg,rgba(16,31,52,.96),rgba(8,19,34,.94))!important;
+  border:1px solid var(--mx-border)!important;
+  border-radius:18px!important;
+  box-shadow:var(--mx-shadow)!important;
+}
+.header h1,h1{font-size:26px!important;font-weight:900!important;letter-spacing:-.02em!important;color:#fff!important}
+.subtitle{color:#a9bad0!important;font-size:13px!important}
+#minixLoggedUserBox{background:#0a1424!important;border:1px solid #355070!important;border-radius:12px!important}
+#minixLoggedUserText{color:#fff!important}
+
+/* Top navigation */
+.tab-buttons{
+  padding:7px!important;
+  background:rgba(9,20,36,.92)!important;
+  border:1px solid var(--mx-border)!important;
+  border-radius:14px!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.18)!important;
+  gap:7px!important;
+}
+.dashboard-tab,.clear-filter-btn{
+  min-height:40px!important;
+  border-radius:10px!important;
+  border:1px solid #314864!important;
+  background:#12213a!important;
+  color:#dfeaff!important;
+  font-weight:800!important;
+  box-shadow:none!important;
+  transition:transform .18s ease,background .18s ease,border-color .18s ease!important;
+}
+.dashboard-tab:hover,.clear-filter-btn:hover{transform:translateY(-1px)!important;border-color:#5d83ad!important}
+.active-tab{
+  background:linear-gradient(135deg,#2167c7,#248aa5)!important;
+  border-color:#61b9ff!important;
+  color:#fff!important;
+  box-shadow:0 7px 18px rgba(36,116,193,.28)!important;
+}
+.clear-filter-btn{background:#3a1d27!important;border-color:#6f3345!important;color:#ffdfe7!important}
+
+/* Section titles */
+.section-title{
+  color:#f8fbff!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+  padding-left:10px!important;
+  border-left:3px solid var(--mx-blue)!important;
+  margin-top:16px!important;
+}
+
+/* Filters */
+.filters,.market-filter-grid,.section-box,.upload-box{
+  background:linear-gradient(180deg,rgba(16,30,50,.97),rgba(10,21,38,.97))!important;
+  border:1px solid var(--mx-border)!important;
+  border-radius:14px!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.18)!important;
+}
+.filters label,.market-filter-grid label,label{color:#afc0d6!important;font-weight:700!important}
+select,input[type="date"],input[type="text"],input[type="number"],input[type="password"],textarea{
+  background:#091525!important;
+  color:#f7fbff!important;
+  border:1px solid #38516f!important;
+  border-radius:9px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+select:focus,input:focus,textarea:focus{border-color:#5fb6ff!important;box-shadow:0 0 0 3px rgba(77,163,255,.12)!important}
+select option{background:#0b1627!important;color:#fff!important}
+
+/* KPI cards */
+.kpi-grid,.kpi-grid-5,.kpi-grid-6,.kpi-grid-8,.segment-grid,.charges-grid,.weekly-grid{gap:9px!important}
+.kpi-card,.weekly-card,.daily-index-card,.market-mood-card{
+  position:relative!important;
+  overflow:hidden!important;
+  background:linear-gradient(145deg,#101d31,#0b1627)!important;
+  border:1px solid #2a405b!important;
+  border-radius:13px!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.20)!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+.kpi-card::before,.weekly-card::before{
+  content:"";
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:3px;
+  background:#4da3ff;
+  opacity:.9;
+}
+.kpi-card:hover,.weekly-card:hover{transform:translateY(-2px)!important;border-color:#45698f!important;box-shadow:0 14px 32px rgba(0,0,0,.26)!important}
+.kpi-card:has(.positive)::before{background:var(--mx-green)!important}
+.kpi-card:has(.negative)::before{background:var(--mx-red)!important}
+.kpi-card:has(.warning)::before{background:var(--mx-amber)!important}
+.kpi-card:has(.neutral)::before{background:var(--mx-blue)!important}
+.kpi-title{
+  color:#a9bbd1!important;
+  font-weight:800!important;
+  letter-spacing:.015em!important;
+}
+.kpi-value,.weekly-total{
+  color:#f8fbff!important;
+  font-weight:900!important;
+  font-variant-numeric:tabular-nums!important;
+  letter-spacing:-.015em!important;
+}
+.positive{color:var(--mx-green)!important}
+.negative{color:var(--mx-red)!important}
+.warning{color:var(--mx-amber)!important}
+.neutral{color:#70b8ff!important}
+.muted{color:var(--mx-muted)!important}
+
+/* Tables */
+.table-card,.chart-card{
+  background:linear-gradient(180deg,#0e1a2c,#0a1423)!important;
+  border:1px solid var(--mx-border)!important;
+  border-radius:14px!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.20)!important;
+}
+.table-card h3{color:#f8fbff!important;font-weight:900!important}
+table{color:#eaf1fb!important}
+thead th,th{
+  background:#10213a!important;
+  color:#9ed0ff!important;
+  border-bottom:1px solid #355273!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+}
+td{color:#e8eef7!important;border-bottom:1px solid rgba(60,82,108,.55)!important}
+tbody tr:nth-child(even) td{background:rgba(255,255,255,.012)!important}
+tbody tr:hover td{background:#132b48!important}
+td.amount,th.amount{font-variant-numeric:tabular-nums!important}
+.rank-badge,.date-badge,.market-pill,.trader-profile-pill{
+  background:#10213a!important;
+  color:#dceaff!important;
+  border-color:#35577a!important;
+  border-radius:8px!important;
+}
+
+/* Profiles */
+.trader-profile-card,#summaryTraderProfileCard{
+  background:linear-gradient(135deg,#101e32,#0b1627)!important;
+  border:1px solid #315171!important;
+  border-radius:14px!important;
+  box-shadow:var(--mx-shadow)!important;
+}
+.trader-profile-img,.profile-person-img,.summary-profile-img{border-color:#55b6ff!important;box-shadow:0 8px 24px rgba(60,162,231,.18)!important}
+.profile-name,.trader-profile-name,.summary-profile-title{color:#fff!important}
+.profile-role{color:#86c7ff!important}
+
+/* Alerts / modals */
+.message{background:#102748!important;border-color:#2e73bd!important;color:#dcecff!important;border-radius:12px!important}
+.error,.auth-error{background:#3b1720!important;border-color:#a9465b!important;color:#ffdce3!important}
+.modal{background:#0c1829!important;border-color:#34516f!important;border-radius:16px!important}
+.modal-head{background:#0c1829!important}
+.alert-item{background:#0a1526!important;border-color:#304968!important}
+.bell-btn,.bell-toggle-btn{box-shadow:0 12px 30px rgba(0,0,0,.35)!important}
+
+/* Executive login */
+.auth-overlay{
+  background:
+    radial-gradient(circle at 50% -5%,rgba(60,126,222,.30),transparent 34%),
+    linear-gradient(160deg,#06101d,#09182b 58%,#06101d)!important;
+}
+.auth-card{
+  max-width:445px!important;
+  background:linear-gradient(160deg,rgba(17,32,54,.98),rgba(8,18,32,.98))!important;
+  border:1px solid #3b5878!important;
+  border-radius:20px!important;
+  padding:30px!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.52),0 0 0 1px rgba(255,255,255,.02) inset!important;
+}
+.auth-title{font-size:26px!important;color:#fff!important;letter-spacing:-.02em!important}
+.auth-subtitle{color:#a8bad0!important;font-size:13px!important}
+.auth-card label{color:#c7d4e6!important;font-weight:800!important}
+.auth-card input{height:48px!important;background:#071321!important;color:#fff!important;border:1px solid #3c5978!important;border-radius:10px!important;padding-left:13px!important}
+.auth-card button{height:46px!important;border-radius:10px!important;background:linear-gradient(135deg,#246ad0,#2387a5)!important;color:#fff!important;box-shadow:0 8px 20px rgba(34,109,194,.24)!important}
+.auth-card button:hover{filter:brightness(1.08)!important}
+.auth-footer{color:#70849e!important}
+.mx-pass-wrap{position:relative;width:100%}
+.mx-pass-wrap #minixPass{padding-right:50px!important}
+.mx-pass-toggle{
+  position:absolute!important;
+  right:7px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:36px!important;
+  height:34px!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:#15263d!important;
+  color:#d9e9fb!important;
+  box-shadow:none!important;
+  cursor:pointer!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:16px!important;
+}
+
+/* Important Total cards slightly stronger */
+#totalGross,#totalNet,#overallRoi,#chargesTotalCard{font-size:1.08em!important}
+#summarySection .segment-grid .kpi-card:has(#totalNet),
+#summarySection .segment-grid .kpi-card:has(#overallRoi){
+  border-color:#397d75!important;
+  background:linear-gradient(145deg,#102a2b,#0b1d24)!important;
+}
+#summarySection .charges-grid .kpi-card:has(#chargesTotalCard){
+  border-color:#7a6530!important;
+  background:linear-gradient(145deg,#2a2412,#151a20)!important;
+}
+
+/* Keep key text readable even when older patches set tiny fonts */
+#summarySection .section-title,#individualSection .section-title,#fullSummarySection .section-title{font-size:16px!important}
+#summarySection .kpi-title,#individualSection .kpi-title,#fullSummarySection .kpi-title{font-size:11px!important}
+#summarySection .kpi-value,#individualSection .kpi-value,#fullSummarySection .kpi-value{font-size:16px!important}
+
+@media(max-width:900px){
+  .container{padding:10px!important}
+  .header{padding:14px!important;border-radius:14px!important}
+  .header h1,h1{font-size:21px!important}
+  .tab-buttons{position:relative!important;bottom:auto!important;border-radius:12px!important}
+  .dashboard-tab,.clear-filter-btn{font-size:12px!important}
+  .kpi-card,.weekly-card{border-radius:11px!important}
+  .auth-card{padding:22px!important;border-radius:16px!important}
+}
+</style>
+<script id="minix-executive-login-eye">
+(function(){
+  function addPasswordToggle(){
+    var input=document.getElementById('minixPass');
+    if(!input || input.dataset.mxEyeReady==='1') return;
+    input.dataset.mxEyeReady='1';
+    var wrap=document.createElement('div');
+    wrap.className='mx-pass-wrap';
+    input.parentNode.insertBefore(wrap,input);
+    wrap.appendChild(input);
+    var btn=document.createElement('button');
+    btn.type='button';
+    btn.className='mx-pass-toggle';
+    btn.setAttribute('aria-label','Show password');
+    btn.title='Show password';
+    btn.textContent='👁';
+    btn.onclick=function(e){
+      e.preventDefault();
+      var hidden=input.type==='password';
+      input.type=hidden?'text':'password';
+      btn.textContent=hidden?'🙈':'👁';
+      btn.title=hidden?'Hide password':'Show password';
+      btn.setAttribute('aria-label',btn.title);
+      input.focus();
+    };
+    wrap.appendChild(btn);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',addPasswordToggle);
+  else addPasswordToggle();
+})();
+</script>
+<!-- === END MINIX EXECUTIVE INTERNATIONAL UI 2026 === -->
+
+<!-- === MINIX BOARDROOM EXECUTIVE LAYER V2 === -->
+<style id="minix-boardroom-v2-css">
+:root{
+  --mx-navy:#07111f;--mx-panel:#0d1a2b;--mx-panel2:#102237;--mx-line:#263a52;
+  --mx-text:#eef5ff;--mx-muted:#8fa5bc;--mx-blue:#5aa7ff;--mx-cyan:#63d7e8;
+  --mx-green:#45d19a;--mx-red:#ff6b7a;--mx-amber:#f3c969;
+}
+.mx-exec-shell{margin:0 0 14px 0;padding:14px;border:1px solid var(--mx-line);border-radius:16px;background:linear-gradient(145deg,rgba(13,26,43,.98),rgba(7,17,31,.98));box-shadow:0 14px 35px rgba(0,0,0,.22)}
+.mx-exec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.mx-exec-title{font-size:18px;font-weight:900;color:#fff;letter-spacing:.2px}.mx-exec-sub{font-size:11px;color:var(--mx-muted);margin-top:3px}.mx-exec-period{font-size:11px;color:#c5d7ea;background:#0a1625;border:1px solid var(--mx-line);border-radius:999px;padding:7px 10px;font-weight:800}
+.mx-exec-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.mx-exec-card{position:relative;overflow:hidden;min-height:92px;padding:11px 12px;border:1px solid var(--mx-line);border-radius:13px;background:linear-gradient(145deg,#102238,#0b1727)}
+.mx-exec-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mx-blue)}
+.mx-exec-card.green:before{background:var(--mx-green)}.mx-exec-card.red:before{background:var(--mx-red)}.mx-exec-card.amber:before{background:var(--mx-amber)}.mx-exec-card.cyan:before{background:var(--mx-cyan)}
+.mx-exec-label{font-size:10px;line-height:1.2;color:var(--mx-muted);font-weight:800;text-transform:uppercase;letter-spacing:.55px;margin-bottom:8px}.mx-exec-value{font-size:20px;line-height:1.05;color:var(--mx-text);font-weight:950;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mx-exec-note{margin-top:7px;font-size:10px;color:#a8bbcf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mx-market-grid{display:grid;grid-template-columns:1.35fr repeat(4,1fr);gap:8px}.mx-market-lead{padding:12px;border-radius:13px;border:1px solid #315b86;background:linear-gradient(145deg,#102d4c,#0a192b)}.mx-market-lead .big{font-size:24px;font-weight:950;color:#fff;margin-top:4px}.mx-market-mini{padding:11px;border-radius:13px;border:1px solid var(--mx-line);background:#0a1727}.mx-market-mini .v{font-size:18px;font-weight:950;margin-top:6px;font-variant-numeric:tabular-nums}.mx-up{color:var(--mx-green)!important}.mx-down{color:var(--mx-red)!important}.mx-flat{color:var(--mx-blue)!important}
+.mx-insights-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.mx-insight{min-height:88px;padding:11px 12px;border-radius:13px;border:1px solid var(--mx-line);background:#0a1727}.mx-insight-kicker{font-size:10px;color:var(--mx-cyan);font-weight:900;text-transform:uppercase;letter-spacing:.6px}.mx-insight-text{margin-top:7px;font-size:12px;line-height:1.45;color:#dce9f7;font-weight:700}.mx-insight-text b{color:#fff}
+#mxPresentationBtn,#mxPresentationExit{display:none!important}
+@media(max-width:1250px){.mx-exec-grid{grid-template-columns:repeat(3,1fr)}.mx-market-grid{grid-template-columns:repeat(2,1fr)}.mx-market-lead{grid-column:1/-1}.mx-insights-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.mx-exec-grid,.mx-market-grid,.mx-insights-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mx-market-lead{grid-column:1/-1}.mx-exec-value{font-size:17px}.mx-exec-shell{padding:10px;border-radius:13px}}
+@media(max-width:430px){.mx-exec-grid,.mx-market-grid,.mx-insights-grid{grid-template-columns:1fr}}
+@media print{
+  .tab-buttons,#minixHeaderActions,#fundAlertBell,#bellToggleBtn,#minixPushBar,#message,.protect-watermark,#summarySection>.filters,#summarySection>.mx-slicer-title{display:none!important}
+  body{background:#fff!important;color:#111!important}.container{max-width:none!important;padding:0!important}.mx-exec-shell,.kpi-card,.table-card,.chart-card{box-shadow:none!important;break-inside:avoid}
+}
+</style>
+<script id="minix-boardroom-v2-js">
+(function(){
+  function el(id){return document.getElementById(id)}
+  function txt(id,fallback){var x=el(id);return x&&String(x.textContent||'').trim()?String(x.textContent).trim():(fallback||'-')}
+  function numText(v){
+    var s=String(v==null?'':v).replace(/,/g,'').replace(/₹/g,'').replace(/%/g,'').trim();
+    var neg=/^\(.*\)$/.test(s); s=s.replace(/[()]/g,'').replace(/[^0-9.\-]/g,'');
+    var n=parseFloat(s); return isFinite(n)?(neg?-Math.abs(n):n):0;
+  }
+  function num(id){return numText(txt(id,'0'))}
+  function pct(id){return numText(txt(id,'0'))}
+  function pctFmt(v){return (isFinite(v)?(v>=0?'+':'')+v.toFixed(2)+'%':'-')}
+  function moneyFmt(v){
+    try{if(typeof formatINR==='function')return formatINR(v)}catch(e){}
+    return '₹'+Math.round(Number(v)||0).toLocaleString('en-IN');
+  }
+  function cls(v){return v>0?'mx-up':v<0?'mx-down':'mx-flat'}
+  function selectedPeriod(){
+    var parts=[];
+    [['fyFilter','FY'],['monthFilter','Month'],['weekFilter','Week']].forEach(function(a){var x=el(a[0]),v=x&&x.value;if(v&&v!=='All')parts.push(a[1]+': '+v)});
+    var f=el('fromDateFilter')&&el('fromDateFilter').value,t=el('toDateFilter')&&el('toDateFilter').value;
+    if(f||t)parts.push('Date: '+(f||'Start')+' to '+(t||'Latest'));
+    return parts.length?parts.join('  •  '):'All available trading data';
+  }
+  function ensureUI(){
+    var summary=el('summarySection'); if(!summary)return;
+    var slicerTitle=summary.querySelector(':scope > .section-title'); if(slicerTitle)slicerTitle.classList.add('mx-slicer-title');
+    if(!el('mxExecutiveSnapshot')){
+      var wrap=document.createElement('div');wrap.id='mxExecutiveSnapshot';wrap.className='mx-exec-shell';
+      wrap.innerHTML='<div class="mx-exec-head"><div><div class="mx-exec-title">Executive Trading Snapshot</div><div class="mx-exec-sub">Boardroom view • live from the same dashboard calculations</div></div><div id="mxExecPeriod" class="mx-exec-period">All available trading data</div></div><div class="mx-exec-grid">'+
+        '<div class="mx-exec-card"><div class="mx-exec-label">Gross P&amp;L</div><div id="mxGross" class="mx-exec-value">₹0</div><div class="mx-exec-note">Before charges</div></div>'+
+        '<div class="mx-exec-card amber"><div class="mx-exec-label">Total Charges</div><div id="mxCharges" class="mx-exec-value">₹0</div><div class="mx-exec-note">All statutory &amp; broker costs</div></div>'+
+        '<div class="mx-exec-card green"><div class="mx-exec-label">Net P&amp;L</div><div id="mxNet" class="mx-exec-value">₹0</div><div class="mx-exec-note">After trading charges</div></div>'+
+        '<div class="mx-exec-card cyan"><div class="mx-exec-label">Overall ROI</div><div id="mxRoi" class="mx-exec-value">0.00%</div><div class="mx-exec-note">Selected period return</div></div>'+
+        '<div class="mx-exec-card"><div class="mx-exec-label">Trading Days</div><div id="mxDays" class="mx-exec-value">0</div><div class="mx-exec-note">Positive + negative days</div></div>'+
+        '<div class="mx-exec-card"><div class="mx-exec-label">Win Ratio</div><div id="mxWin" class="mx-exec-value">0.0%</div><div class="mx-exec-note">Winning trading days</div></div>'+
+      '</div>';
+      summary.insertBefore(wrap,summary.firstChild);
+    }
+    if(!el('mxMarketCompare')){
+      var m=document.createElement('div');m.id='mxMarketCompare';m.className='mx-exec-shell';
+      m.innerHTML='<div class="mx-exec-head"><div><div class="mx-exec-title">Minix vs Market</div><div class="mx-exec-sub">Performance comparison for the selected dashboard period</div></div><div class="mx-exec-period">Benchmark view</div></div><div class="mx-market-grid">'+
+      '<div class="mx-market-lead"><div class="mx-exec-label">MINIX ROI</div><div id="mxCmpMinix" class="big">0.00%</div><div class="mx-exec-note">Internal performance benchmark</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">NIFTY 50</div><div id="mxCmpNifty" class="v mx-flat">-</div><div class="mx-exec-note">Selected-period move</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">BANK NIFTY</div><div id="mxCmpBank" class="v mx-flat">-</div><div class="mx-exec-note">Selected-period move</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">ALPHA vs NIFTY</div><div id="mxAlphaNifty" class="v mx-flat">-</div><div class="mx-exec-note">ROI minus Nifty return</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">ALPHA vs BANK</div><div id="mxAlphaBank" class="v mx-flat">-</div><div class="mx-exec-note">ROI minus Bank Nifty</div></div>'+
+      '</div>';
+      var snap=el('mxExecutiveSnapshot');snap.parentNode.insertBefore(m,snap.nextSibling);
+    }
+    if(!el('mxExecutiveInsights')){
+      var i=document.createElement('div');i.id='mxExecutiveInsights';i.className='mx-exec-shell';
+      i.innerHTML='<div class="mx-exec-head"><div><div class="mx-exec-title">Executive Insights</div><div class="mx-exec-sub">Automatically generated from the visible KPI values</div></div></div><div class="mx-insights-grid">'+
+      '<div class="mx-insight"><div class="mx-insight-kicker">Segment Leader</div><div id="mxInsightSegment" class="mx-insight-text">Waiting for data…</div></div>'+
+      '<div class="mx-insight"><div class="mx-insight-kicker">Market Position</div><div id="mxInsightMarket" class="mx-insight-text">Waiting for benchmark…</div></div>'+
+      '<div class="mx-insight"><div class="mx-insight-kicker">Cost Efficiency</div><div id="mxInsightCost" class="mx-insight-text">Waiting for data…</div></div>'+
+      '<div class="mx-insight"><div class="mx-insight-kicker">Trading Consistency</div><div id="mxInsightWin" class="mx-insight-text">Waiting for data…</div></div>'+
+      '</div>';
+      var market=el('mxMarketCompare');market.parentNode.insertBefore(i,market.nextSibling);
+    }
+
+  }
+  function marketPair(data){
+    var p={nifty:null,bank:null};
+    try{if(typeof marketPctPairForSelectedContext==='function')p=marketPctPairForSelectedContext('',data,false)||p}catch(e){}
+    if((p.nifty==null||p.bank==null)&&Array.isArray(data)&&data.length&&typeof marketPctForIndexPeriod==='function'){
+      var ds=data.map(function(r){return r&&r.dateLabel}).filter(Boolean).sort();
+      if(ds.length){try{p={nifty:marketPctForIndexPeriod('Nifty 50',ds[0],ds[ds.length-1],false),bank:marketPctForIndexPeriod('Nifty Bank',ds[0],ds[ds.length-1],false)}}catch(e){}}
+    }
+    return p;
+  }
+  function setClass(id,v){var x=el(id);if(!x)return;x.classList.remove('mx-up','mx-down','mx-flat');x.classList.add(cls(v))}
+  function update(){
+    ensureUI(); removePresentationControls(); if(!el('mxExecutiveSnapshot'))return;
+    var net=num('totalNet'),gross=num('totalGross'),charges=num('chargesTotalCard')||num('totalCharges'),roi=pct('overallRoi'),win=pct('accuracy'),days=num('totalTradingDaysOverall')||num('winRatio');
+    el('mxNet').textContent=txt('totalNet',moneyFmt(net));el('mxRoi').textContent=txt('overallRoi',roi.toFixed(2)+'%');el('mxWin').textContent=txt('accuracy',win.toFixed(1)+'%');el('mxDays').textContent=txt('totalTradingDaysOverall',String(days));el('mxCharges').textContent=txt('chargesTotalCard',moneyFmt(charges));el('mxGross').textContent=txt('totalGross',moneyFmt(gross));el('mxExecPeriod').textContent=selectedPeriod();
+    [['mxNet',net],['mxRoi',roi],['mxWin',win-50],['mxGross',gross]].forEach(function(a){setClass(a[0],a[1])});
+    var data=[];try{if(typeof getFilteredData==='function')data=getFilteredData()||[]}catch(e){}
+    var p=marketPair(data),n=p&&p.nifty,b=p&&p.bank,an=(n==null?null:roi-n),ab=(b==null?null:roi-b);
+    el('mxCmpMinix').textContent=(roi>=0?'+':'')+roi.toFixed(2)+'%';setClass('mxCmpMinix',roi);
+    el('mxCmpNifty').textContent=n==null?'-':pctFmt(n);setClass('mxCmpNifty',Number(n)||0);
+    el('mxCmpBank').textContent=b==null?'-':pctFmt(b);setClass('mxCmpBank',Number(b)||0);
+    el('mxAlphaNifty').textContent=an==null?'-':pctFmt(an);setClass('mxAlphaNifty',Number(an)||0);
+    el('mxAlphaBank').textContent=ab==null?'-':pctFmt(ab);setClass('mxAlphaBank',Number(ab)||0);
+    var segs=[['Cash',num('cashTotalNet')],['FNO',num('fnoTotalNet')],['MCX',num('mcxTotalNet')]].sort(function(a,b){return b[1]-a[1]});
+    var leader=segs[0];el('mxInsightSegment').innerHTML='<b>'+leader[0]+'</b> is the strongest segment at <b>'+moneyFmt(leader[1])+'</b> net P&amp;L for the selected period.';
+    if(an!=null){el('mxInsightMarket').innerHTML=an>=0?'MINIX is <b>outperforming Nifty 50 by '+Math.abs(an).toFixed(2)+' percentage points</b>.':'MINIX is <b>behind Nifty 50 by '+Math.abs(an).toFixed(2)+' percentage points</b>.'}else{el('mxInsightMarket').innerHTML='Select an FY, month or date range to show a direct <b>market benchmark comparison</b>.'}
+    var costPct=Math.abs(gross)>0?Math.abs(charges/gross*100):0;el('mxInsightCost').innerHTML='Total charges are <b>'+moneyFmt(charges)+'</b>, equal to <b>'+costPct.toFixed(2)+'%</b> of absolute gross P&amp;L.';
+    var pos=num('positiveDays'),neg=num('negativeDays');el('mxInsightWin').innerHTML='Win ratio is <b>'+win.toFixed(1)+'%</b> with <b>'+pos+' positive</b> and <b>'+neg+' negative</b> trading days.';
+  }
+  function removePresentationControls(){
+    var pb=el('mxPresentationBtn'); if(pb) pb.remove();
+    var pe=el('mxPresentationExit'); if(pe) pe.remove();
+    document.body.classList.remove('mx-presentation-mode');
+    try{localStorage.removeItem('MINIX_PRESENTATION_MODE')}catch(e){}
+  }
+  function boot(){ensureUI();removePresentationControls();update();
+    var old=window.updateDashboard;if(typeof old==='function'&&!old.__mxExecV2){var w=function(){var r=old.apply(this,arguments);setTimeout(update,60);return r};w.__mxExecV2=true;window.updateDashboard=w}
+    document.addEventListener('change',function(e){if(e.target&&/Filter$/.test(e.target.id||''))setTimeout(update,80)},true);
+    setTimeout(update,500);setTimeout(update,1500);setInterval(update,5000);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+<!-- === END MINIX BOARDROOM EXECUTIVE LAYER V2 === -->
+
 </body>
 </html>
+
+<!-- === V8 VERIFIED TARGET: ONE SCROLLBAR FOR TRADER-WISE CHARGES === -->
+<style id="minix-v8-one-scrollbar-css">
+/* Exact DOM used by this dashboard:
+   .table-card > #fullTraderChargesTable > .charges-portfolio-wrap > table
+   Only .charges-portfolio-wrap is allowed to scroll vertically. */
+
+#fullSummarySection .table-card:has(> #fullTraderChargesTable),
+#fullSummarySection .table-card:has(#fullTraderChargesTable){
+  overflow:hidden !important;
+  overflow-x:hidden !important;
+  overflow-y:hidden !important;
+  max-height:none !important;
+  scrollbar-width:none !important;
+  scrollbar-gutter:auto !important;
+}
+#fullSummarySection .table-card:has(#fullTraderChargesTable)::-webkit-scrollbar{
+  width:0 !important;
+  height:0 !important;
+  display:none !important;
+}
+
+#fullTraderChargesTable{
+  overflow:visible !important;
+  overflow-x:visible !important;
+  overflow-y:visible !important;
+  max-height:none !important;
+  height:auto !important;
+  scrollbar-width:none !important;
+  scrollbar-gutter:auto !important;
+}
+#fullTraderChargesTable::-webkit-scrollbar{
+  width:0 !important;
+  height:0 !important;
+  display:none !important;
+}
+
+/* Remove scroll behaviour from any intermediate wrappers that may be injected. */
+#fullTraderChargesTable > .gpt-table-scroll,
+#fullTraderChargesTable > .final-user-patch-table-wrap,
+#fullTraderChargesTable > .portfolio-collapse-wrap{
+  overflow:visible !important;
+  overflow-x:visible !important;
+  overflow-y:visible !important;
+  max-height:none !important;
+  height:auto !important;
+  scrollbar-width:none !important;
+  scrollbar-gutter:auto !important;
+}
+#fullTraderChargesTable > .gpt-table-scroll::-webkit-scrollbar,
+#fullTraderChargesTable > .final-user-patch-table-wrap::-webkit-scrollbar,
+#fullTraderChargesTable > .portfolio-collapse-wrap::-webkit-scrollbar{
+  width:0 !important;
+  height:0 !important;
+  display:none !important;
+}
+
+/* THE ONLY VERTICAL SCROLLBAR */
+#fullTraderChargesTable > .charges-portfolio-wrap,
+#fullTraderChargesTable .charges-portfolio-wrap{
+  width:100% !important;
+  max-width:100% !important;
+  max-height:58vh !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  scrollbar-gutter:stable !important;
+  scrollbar-width:thin !important;
+  scrollbar-color:#64748b #020617 !important;
+}
+#fullTraderChargesTable .charges-portfolio-wrap::-webkit-scrollbar{
+  width:10px !important;
+  height:0 !important;
+  background:#020617 !important;
+}
+#fullTraderChargesTable .charges-portfolio-wrap::-webkit-scrollbar:horizontal{
+  height:0 !important;
+  display:none !important;
+}
+#fullTraderChargesTable .charges-portfolio-wrap::-webkit-scrollbar-track{
+  background:#020617 !important;
+  border-radius:999px !important;
+}
+#fullTraderChargesTable .charges-portfolio-wrap::-webkit-scrollbar-thumb{
+  background:#64748b !important;
+  border-radius:999px !important;
+  border:2px solid #020617 !important;
+}
+#fullTraderChargesTable .charges-portfolio-wrap::-webkit-scrollbar-thumb:hover{
+  background:#7b8798 !important;
+}
+</style>
+<script id="minix-v8-one-scrollbar-js">
+(function(){
+  var timer=null;
+  function hardFix(){
+    var host=document.getElementById('fullTraderChargesTable');
+    if(!host) return;
+    var card=host.closest('.table-card');
+    var wrap=host.querySelector(':scope > .charges-portfolio-wrap') || host.querySelector('.charges-portfolio-wrap');
+
+    /* Remove old runtime scrollbar classes from the whole chain. */
+    [card,host].forEach(function(el){
+      if(!el) return;
+      el.classList.remove('mx-vscroll-owner','gpt-table-scroll');
+      el.classList.add('mx-v8-no-scroll');
+      el.style.setProperty('overflow-y', el===host?'visible':'hidden', 'important');
+      el.style.setProperty('overflow-x', el===host?'visible':'hidden', 'important');
+      el.style.setProperty('max-height','none','important');
+      el.style.setProperty('height','auto','important');
+      el.style.setProperty('scrollbar-width','none','important');
+      el.style.setProperty('scrollbar-gutter','auto','important');
+    });
+
+    /* Any injected wrappers except the real charges wrapper cannot scroll. */
+    host.querySelectorAll('.gpt-table-scroll,.final-user-patch-table-wrap,.portfolio-collapse-wrap').forEach(function(el){
+      if(el===wrap) return;
+      el.classList.remove('mx-vscroll-owner');
+      el.style.setProperty('overflow-y','visible','important');
+      el.style.setProperty('overflow-x','visible','important');
+      el.style.setProperty('max-height','none','important');
+      el.style.setProperty('height','auto','important');
+      el.style.setProperty('scrollbar-width','none','important');
+      el.style.setProperty('scrollbar-gutter','auto','important');
+    });
+
+    if(wrap){
+      wrap.classList.remove('mx-vscroll-off','gpt-table-scroll');
+      wrap.classList.add('mx-v8-scroll-owner');
+      wrap.style.setProperty('overflow-y','auto','important');
+      wrap.style.setProperty('overflow-x','hidden','important');
+      wrap.style.setProperty('max-height','58vh','important');
+      wrap.style.setProperty('height','auto','important');
+      wrap.style.setProperty('scrollbar-width','thin','important');
+      wrap.style.setProperty('scrollbar-gutter','stable','important');
+    }
+  }
+  function schedule(){ clearTimeout(timer); timer=setTimeout(hardFix,20); }
+  function boot(){
+    hardFix();
+    var root=document.getElementById('fullTraderChargesTable');
+    if(root){ new MutationObserver(schedule).observe(root,{childList:true,subtree:true}); }
+    document.addEventListener('click',schedule,true);
+    document.addEventListener('change',schedule,true);
+    window.addEventListener('resize',schedule);
+    setTimeout(hardFix,250); setTimeout(hardFix,800); setTimeout(hardFix,1800);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+<!-- === END V8 VERIFIED TARGET === -->
+

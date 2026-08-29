@@ -20281,7 +20281,7 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
 .mx-exec-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mx-blue)}
 .mx-exec-card.green:before{background:var(--mx-green)}.mx-exec-card.red:before{background:var(--mx-red)}.mx-exec-card.amber:before{background:var(--mx-amber)}.mx-exec-card.cyan:before{background:var(--mx-cyan)}
 .mx-exec-label{font-size:10px;line-height:1.2;color:var(--mx-muted);font-weight:800;text-transform:uppercase;letter-spacing:.55px;margin-bottom:8px}.mx-exec-value{font-size:20px;line-height:1.05;color:var(--mx-text);font-weight:950;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mx-exec-note{margin-top:7px;font-size:10px;color:#a8bbcf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mx-market-grid{display:grid;grid-template-columns:1.35fr repeat(4,1fr);gap:8px}.mx-market-lead{padding:12px;border-radius:13px;border:1px solid #315b86;background:linear-gradient(145deg,#102d4c,#0a192b)}.mx-market-lead .big{font-size:24px;font-weight:950;color:#fff;margin-top:4px}.mx-market-mini{padding:11px;border-radius:13px;border:1px solid var(--mx-line);background:#0a1727}.mx-market-mini .v{font-size:18px;font-weight:950;margin-top:6px;font-variant-numeric:tabular-nums}.mx-up{color:var(--mx-green)!important}.mx-down{color:var(--mx-red)!important}.mx-flat{color:var(--mx-blue)!important}
+.mx-market-grid{display:grid;grid-template-columns:1.35fr repeat(4,1fr);gap:8px}.mx-market-lead{padding:12px;border-radius:13px;border:1px solid #315b86;background:linear-gradient(145deg,#102d4c,#0a192b)}.mx-market-lead .big{font-size:24px;font-weight:950;color:#fff;margin-top:4px}.mx-market-mini{padding:11px;border-radius:13px;border:1px solid var(--mx-line);background:#0a1727}.mx-market-mini .v{font-size:18px;font-weight:950;margin-top:6px;font-variant-numeric:tabular-nums}.mx-up{color:var(--mx-green)!important}.mx-down{color:var(--mx-red)!important}.mx-flat{color:var(--mx-blue)!important}.mx-exec-subnote{margin-top:5px;font-size:9.5px;line-height:1.35;color:#7d94ac;white-space:normal}
 .mx-insights-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.mx-insight{min-height:88px;padding:11px 12px;border-radius:13px;border:1px solid var(--mx-line);background:#0a1727}.mx-insight-kicker{font-size:10px;color:var(--mx-cyan);font-weight:900;text-transform:uppercase;letter-spacing:.6px}.mx-insight-text{margin-top:7px;font-size:12px;line-height:1.45;color:#dce9f7;font-weight:700}.mx-insight-text b{color:#fff}
 #mxPresentationBtn,#mxPresentationExit{display:none!important}
 @media(max-width:1250px){.mx-exec-grid{grid-template-columns:repeat(3,1fr)}.mx-market-grid{grid-template-columns:repeat(2,1fr)}.mx-market-lead{grid-column:1/-1}.mx-insights-grid{grid-template-columns:repeat(2,1fr)}}
@@ -20335,10 +20335,10 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
       var m=document.createElement('div');m.id='mxMarketCompare';m.className='mx-exec-shell';
       m.innerHTML='<div class="mx-exec-head"><div><div class="mx-exec-title">Minix vs Market</div><div class="mx-exec-sub">Performance comparison for the selected dashboard period</div></div><div class="mx-exec-period">Benchmark view</div></div><div class="mx-market-grid">'+
       '<div class="mx-market-lead"><div class="mx-exec-label">MINIX ROI</div><div id="mxCmpMinix" class="big">0.00%</div><div class="mx-exec-note">Internal performance benchmark</div></div>'+
-      '<div class="mx-market-mini"><div class="mx-exec-label">NIFTY 50</div><div id="mxCmpNifty" class="v mx-flat">-</div><div class="mx-exec-note">Selected-period move</div></div>'+
-      '<div class="mx-market-mini"><div class="mx-exec-label">BANK NIFTY</div><div id="mxCmpBank" class="v mx-flat">-</div><div class="mx-exec-note">Selected-period move</div></div>'+
-      '<div class="mx-market-mini"><div class="mx-exec-label">ALPHA vs NIFTY</div><div id="mxAlphaNifty" class="v mx-flat">-</div><div class="mx-exec-note">ROI minus Nifty return</div></div>'+
-      '<div class="mx-market-mini"><div class="mx-exec-label">ALPHA vs BANK</div><div id="mxAlphaBank" class="v mx-flat">-</div><div class="mx-exec-note">ROI minus Bank Nifty</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">NIFTY 50</div><div id="mxCmpNifty" class="v mx-flat">-</div><div class="mx-exec-note">Selected-period move</div><div id="mxCmpNiftyDetail" class="mx-exec-subnote">-</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">BANK NIFTY</div><div id="mxCmpBank" class="v mx-flat">-</div><div class="mx-exec-note">Selected-period move</div><div id="mxCmpBankDetail" class="mx-exec-subnote">-</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">ALPHA vs NIFTY</div><div id="mxAlphaNifty" class="v mx-flat">-</div><div class="mx-exec-note">ROI minus Nifty return</div><div id="mxAlphaNiftyDetail" class="mx-exec-subnote">-</div></div>'+
+      '<div class="mx-market-mini"><div class="mx-exec-label">ALPHA vs BANK</div><div id="mxAlphaBank" class="v mx-flat">-</div><div class="mx-exec-note">ROI minus Bank Nifty</div><div id="mxAlphaBankDetail" class="mx-exec-subnote">-</div></div>'+
       '</div>';
       var snap=el('mxExecutiveSnapshot');snap.parentNode.insertBefore(m,snap.nextSibling);
     }
@@ -20364,6 +20364,58 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
     return p;
   }
   function setClass(id,v){var x=el(id);if(!x)return;x.classList.remove('mx-up','mx-down','mx-flat');x.classList.add(cls(v))}
+  function fmtIso(iso){
+    if(!iso) return '?';
+    var p=String(iso).split('-'); if(p.length!==3) return iso;
+    var d=new Date(Number(p[0]),Number(p[1])-1,Number(p[2]));
+    return isNaN(d)?iso:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function idxNum(n){return Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}
+  function mxIndexDetail(indexName){
+    try{
+      if(typeof indexPreparedData==='undefined'||!indexPreparedData||!indexPreparedData.length) return null;
+      var ctx=(typeof marketSelectedContext==='function')?marketSelectedContext(''):null;
+      if(ctx&&ctx.mode==='date'){
+        var last=(typeof marketLastRowOnOrBefore==='function')?marketLastRowOnOrBefore(indexName,ctx.value):null;
+        if(!last) return null;
+        var baseRow=(indexPreparedData||[]).filter(function(r){return r.index===indexName&&r.iso<last.iso&&Number(r.close)}).sort(function(a,b){return a.date-b.date}).pop();
+        if(!baseRow) return null;
+        return {baseClose:baseRow.close,baseIso:baseRow.iso,lastClose:last.close,lastIso:last.iso};
+      }
+      if(ctx&&ctx.mode==='month'){
+        var rowsM=indexPreparedData.filter(function(r){return r.index===indexName&&r.month===ctx.value}).sort(function(a,b){return a.date-b.date});
+        if(!rowsM.length) return null;
+        var lastM=rowsM[rowsM.length-1];
+        var baseRowM=(indexPreparedData||[]).filter(function(r){return r.index===indexName&&r.iso<rowsM[0].iso&&Number(r.close)}).sort(function(a,b){return a.date-b.date}).pop();
+        if(!baseRowM) return null;
+        return {baseClose:baseRowM.close,baseIso:baseRowM.iso,lastClose:lastM.close,lastIso:lastM.iso};
+      }
+      if(ctx&&ctx.mode==='fy'){
+        var p=(typeof marketFyStartEnd==='function')?marketFyStartEnd(ctx.value):null; if(!p) return null;
+        var firstF=(typeof marketFirstRowOnOrAfter==='function')?marketFirstRowOnOrAfter(indexName,p.startIso):null;
+        var lastF=(typeof marketLastRowOnOrBefore==='function')?marketLastRowOnOrBefore(indexName,p.endIso):null;
+        if(!firstF||!lastF) return null;
+        var baseRowF=(indexPreparedData||[]).filter(function(r){return r.index===indexName&&r.iso<firstF.iso&&Number(r.close)}).sort(function(a,b){return a.date-b.date}).pop();
+        if(!baseRowF) return null;
+        return {baseClose:baseRowF.close,baseIso:baseRowF.iso,lastClose:lastF.close,lastIso:lastF.iso};
+      }
+      var data=[]; try{if(typeof getFilteredData==='function')data=getFilteredData()||[]}catch(e){}
+      var ds=(data||[]).map(function(r){return r&&r.dateLabel}).filter(Boolean).sort();
+      if(!ds.length) return null;
+      var startIso=ds[0],endIso=ds[ds.length-1];
+      var rows2=indexPreparedData.filter(function(r){return r.index===indexName&&r.iso>=startIso&&r.iso<=endIso}).sort(function(a,b){return a.date-b.date});
+      if(!rows2.length) return null;
+      var f2=rows2[0],l2=rows2[rows2.length-1];
+      var baseRow2=(indexPreparedData||[]).filter(function(r){return r.index===indexName&&r.date<f2.date&&Number(r.close)}).sort(function(a,b){return a.date-b.date}).pop();
+      var base2=baseRow2?baseRow2.close:f2.close, baseIso2=baseRow2?baseRow2.iso:f2.iso;
+      if(!base2) return null;
+      return {baseClose:base2,baseIso:baseIso2,lastClose:l2.close,lastIso:l2.iso};
+    }catch(e){return null}
+  }
+  function mxDetailText(det){
+    if(!det) return 'No index data for this period';
+    return fmtIso(det.baseIso)+': '+idxNum(det.baseClose)+'  →  '+fmtIso(det.lastIso)+': '+idxNum(det.lastClose);
+  }
   function update(){
     ensureUI(); removePresentationControls(); if(!el('mxExecutiveSnapshot'))return;
     var net=num('totalNet'),gross=num('totalGross'),charges=num('chargesTotalCard')||num('totalCharges'),roi=pct('overallRoi'),win=pct('accuracy'),days=num('totalTradingDaysOverall')||num('winRatio');
@@ -20376,6 +20428,11 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
     el('mxCmpBank').textContent=b==null?'-':pctFmt(b);setClass('mxCmpBank',Number(b)||0);
     el('mxAlphaNifty').textContent=an==null?'-':pctFmt(an);setClass('mxAlphaNifty',Number(an)||0);
     el('mxAlphaBank').textContent=ab==null?'-':pctFmt(ab);setClass('mxAlphaBank',Number(ab)||0);
+    var niftyDet=n==null?null:mxIndexDetail('Nifty 50'), bankDet=b==null?null:mxIndexDetail('Nifty Bank');
+    if(el('mxCmpNiftyDetail'))el('mxCmpNiftyDetail').textContent=mxDetailText(niftyDet);
+    if(el('mxCmpBankDetail'))el('mxCmpBankDetail').textContent=mxDetailText(bankDet);
+    if(el('mxAlphaNiftyDetail'))el('mxAlphaNiftyDetail').textContent=an==null?'-':('MINIX '+pctFmt(roi)+'  −  NIFTY '+pctFmt(n)+'  =  '+pctFmt(an));
+    if(el('mxAlphaBankDetail'))el('mxAlphaBankDetail').textContent=ab==null?'-':('MINIX '+pctFmt(roi)+'  −  BANK NIFTY '+pctFmt(b)+'  =  '+pctFmt(ab));
     var segs=[['Cash',num('cashTotalNet')],['FNO',num('fnoTotalNet')],['MCX',num('mcxTotalNet')]].sort(function(a,b){return b[1]-a[1]});
     var leader=segs[0];el('mxInsightSegment').innerHTML='<b>'+leader[0]+'</b> is the strongest segment at <b>'+moneyFmt(leader[1])+'</b> net P&amp;L for the selected period.';
     if(an!=null){el('mxInsightMarket').innerHTML=an>=0?'MINIX is <b>outperforming Nifty 50 by '+Math.abs(an).toFixed(2)+' percentage points</b>.':'MINIX is <b>behind Nifty 50 by '+Math.abs(an).toFixed(2)+' percentage points</b>.'}else{el('mxInsightMarket').innerHTML='Select an FY, month or date range to show a direct <b>market benchmark comparison</b>.'}

@@ -15788,23 +15788,30 @@ body.ai-mis-show-mcx #aiSegmentMISTable .ai-mcx-compact{display:none!important;}
       var dem=dematOf(r);
       if(!groups[p]) groups[p]={portfolio:p,demats:{},pnl:0,charges:0,win:0,loss:0,dividend:0,children:{}};
       var parent=groups[p]; parent.demats[dem]=true;
-      var n=netOf(r), c=chargesOf(r), d=dividendOf(r), f=fundOf(r);
+      var n=netOf(r), c=chargesOf(r), d=dividendOf(r);
       parent.pnl+=n; parent.charges+=c; parent.dividend+=d; if(n>0) parent.win++; if(n<0) parent.loss++;
       var key=dem+'||'+res+'||'+tr;
-      if(!parent.children[key]) parent.children[key]={portfolio:p,demat:dem,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0};
+      if(!parent.children[key]) parent.children[key]={portfolio:p,demat:dem,researcher:res,trader:tr,fund:0,pnl:0,charges:0,win:0,loss:0,dividend:0,_rows:[]};
       var ch=parent.children[key];
-      // Each Demat/Researcher/Trader child isolates one genuinely separate
-      // account. Parent portfolio fund = SUM of these child funds (see below),
-      // so e.g. SMC 41Cr + Jainam 48Cr = 89Cr. Within a child, we take its
-      // latest-dated Fund value (not just any max) since fund can also decrease.
-      if(!ch._fundDate) ch._fundDate=null;
-      var fd6=r.parsedDate?new Date(r.parsedDate):null;
-      if(f && (!ch._fundDate || (fd6 && fd6>ch._fundDate))){ ch.fund=f; ch._fundDate=fd6; }
+      // FIX (Sep 2026): a Demat/Researcher/Trader child can itself run TWO
+      // simultaneous books on the SAME demat - e.g. Lokesh Bhati's SMC/Jainam
+      // accounts each post an FNO row AND an MCX row on the same date. The old
+      // "keep whichever row has the strictly-latest date" logic silently
+      // dropped one of the two books whenever both books' last entries landed
+      // on the SAME day (the normal case), locking the child's Fund to just
+      // one book's value (e.g. MCX's ~1Cr) instead of the true combined total
+      // (FNO+MCX, ~67Cr). Delegating to sumUniqueFund() - already used
+      // elsewhere in this dashboard (see "FIX (Aug 2026): Fund/Avg Fund bug")
+      // - buckets FNO/Cash vs MCX separately and sums their latest values, so
+      // both concurrent books count. Parent portfolio fund stays SUM of these
+      // (now correct) child funds, e.g. SMC 25Cr + Jainam 67Cr = 92Cr.
+      ch._rows.push(r);
       ch.pnl+=n; ch.charges+=c; ch.dividend+=d; if(n>0) ch.win++; if(n<0) ch.loss++;
     });
     return Object.keys(groups).map(function(k){
       var g=groups[k];
       g.childRows=Object.keys(g.children).map(function(c){return g.children[c];}).sort(function(a,b){return (a.demat+a.researcher+a.trader).localeCompare(b.demat+b.researcher+b.trader);});
+      g.childRows.forEach(function(r){ r.fund=(typeof sumUniqueFund==='function')?sumUniqueFund(r._rows):num(r.fund); });
       g.fund=g.childRows.reduce(function(s,r){return s+num(r.fund);},0);
       return g;
     });
@@ -19481,30 +19488,31 @@ body:not(.auth-locked){
       return 0;
     }
   }
-  // Uses the same account+bucket grouping as fundFor above (see the note near
-  // dematKeyFor/fundBucketFor), so Latest Fund and Avg Fund stay internally
-  // consistent with each other and don't triple-count relabeled pools like
-  // Neeraj's, while still correctly separating genuinely parallel books like
-  // Lokesh's FNO+MCX - and, like fundFor, sums same-key/same-day rows first so
-  // indistinguishable concurrent lines like Pooja Chaudhary's aren't dropped.
+  // FIX (Sep 2026): "Avg Fund" must equal average capital deployed across all
+  // trading days in the period - i.e. sum Fund across EVERY row (every demat,
+  // every strategy bucket) that shares a date, then average those daily
+  // totals over the number of unique trading days. The previous version
+  // averaged each account+bucket key over ITS OWN trading days first and only
+  // then summed the per-key averages together - which distorts the result
+  // whenever different keys (e.g. an FNO book vs its MCX sibling, or two
+  // demats with slightly different trading calendars) don't share the exact
+  // same set of dates. Grouping by date only, with no key at all, matches the
+  // verified "Margin Given" reference calculation (own workbook, exact match
+  // to the rupee for Apr/May/Jun/Jul) instead of inflating the total.
   function avgFundForRows(rows){
     try{
-      var groups={};
+      var byDay={};
       (rows||[]).forEach(function(r){
         var f=numFromFund(r.Fund??r.fund??r['Fund']??r['Capital']??r.capital);
         if(!f) return;
-        var key=dematKeyFor(r);
         var day=fundRowDateKey(r);
         if(!day) return;
-        if(!groups[key]) groups[key]={};
-        groups[key][day]=(groups[key][day]||0)+f;
+        byDay[day]=(byDay[day]||0)+f;
       });
-      return Object.keys(groups).reduce(function(total,key){
-        var days=Object.keys(groups[key]);
-        if(!days.length) return total;
-        var sum=days.reduce(function(a,d){return a+groups[key][d];},0);
-        return total+(sum/days.length);
-      },0);
+      var days=Object.keys(byDay);
+      if(!days.length) return 0;
+      var sum=days.reduce(function(a,d){return a+byDay[d];},0);
+      return sum/days.length;
     }catch(e){ return 0; }
   }
   function roiCell(roi){
@@ -19635,13 +19643,22 @@ body:not(.auth-locked){
     traderOverall.forEach(function(r){
       if(!byCompany[r.company]) byCompany[r.company]={company:r.company,fund:0,avgFund:0,netPnl:0,traders:0};
       byCompany[r.company].fund+=r.fund;
-      byCompany[r.company].avgFund+=r.avgFund;
       byCompany[r.company].netPnl+=r.netPnl;
       byCompany[r.company].traders+=1;
     });
     Object.keys(byCompany).forEach(function(k){
-      var idx=niftyBankForRows(data.filter(function(r){return (r.company||r['Company Name']||'Not Available')===k;}));
+      var companyRowsData=data.filter(function(r){return (r.company||r['Company Name']||'Not Available')===k;});
+      var idx=niftyBankForRows(companyRowsData);
       byCompany[k].nifty=idx.nifty; byCompany[k].bank=idx.bank;
+      // FIX (Sep 2026): Company Avg Fund must be this company's own true
+      // day-wise average (every row across every trader summed per date, then
+      // averaged over unique dates) - NOT the sum of each trader's own
+      // independent average. Summing per-trader averages overstates the total
+      // whenever traders have different active date ranges (a trader active
+      // only in a recent, higher-capital stretch gets averaged only over
+      // those days) - verified against this company's own data: the old
+      // rollup gave ~Rs.132Cr for a 25-trader company vs a true ~Rs.83Cr.
+      byCompany[k].avgFund=avgFundForRows(companyRowsData);
     });
     var companyRows=Object.keys(byCompany).map(function(k){
       var c=byCompany[k];

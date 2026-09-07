@@ -13203,8 +13203,10 @@ setInterval(function(){
     addSelectAfter('indCompanyFilter','indDematFilter','Demat Account');
     addSelectAfter('chartCompanyFilter','chartDematFilter','Demat Account');
     addSelectAfter('fullCompanyFilter','fullDematFilter','Demat Account');
+    addSelectAfter('fullMonthFilter','fullTraderFilter','Traders');
+    addSelectAfter('fullTraderFilter','fullPortfolioFilter','Portfolio Name');
     var full=E('fullSummarySection')?.querySelector('.filters');
-    if(full) full.style.gridTemplateColumns='repeat(4,minmax(180px,1fr))';
+    if(full) full.style.gridTemplateColumns='repeat(6,minmax(180px,1fr))';
   }
   function fill(id,values,onChange){
     var s=E(id); if(!s) return;
@@ -13215,6 +13217,12 @@ setInterval(function(){
   }
   function currentRows(){ return (typeof preparedData!=='undefined' && Array.isArray(preparedData))?preparedData:[]; }
   function uniqueDemats(){ return Array.from(new Set(currentRows().map(rowDemat).filter(Boolean))).sort(); }
+  function rowTrader(r){ return (r && (r['Trader Name']||r.trader)) || ''; }
+  window.getRowTraderName=rowTrader;
+  function uniqueTraders(){ return Array.from(new Set(currentRows().map(rowTrader).filter(Boolean))).sort(); }
+  function rowPortfolio(r){ return (r && (r['Portfolio Name']||r.portfolio)) || ''; }
+  window.getRowPortfolioName=rowPortfolio;
+  function uniquePortfolios(){ return Array.from(new Set(currentRows().map(rowPortfolio).filter(Boolean))).sort(); }
   function rebuildDematFilters(){
     ensureDematSlicers();
     var upd=function(){ try{ if(typeof onFilterChangedWithAlert==='function') onFilterChangedWithAlert(); else if(typeof updateDashboard==='function') updateDashboard(); }catch(e){} };
@@ -13222,6 +13230,8 @@ setInterval(function(){
     fill('indDematFilter',uniqueDemats(),upd);
     fill('chartDematFilter',uniqueDemats(),upd);
     fill('fullDematFilter',uniqueDemats(),function(){ try{ buildFullDashboardSummaryWithTraders(); }catch(e){} });
+    fill('fullTraderFilter',uniqueTraders(),function(){ try{ buildFullDashboardSummaryWithTraders(); }catch(e){} });
+    fill('fullPortfolioFilter',uniquePortfolios(),function(){ try{ buildFullDashboardSummaryWithTraders(); }catch(e){} });
   }
 
   if(typeof prepareData==='function'){
@@ -13263,11 +13273,15 @@ setInterval(function(){
       var v=E(id)?.value||'All'; return v==='All'||v===String(val||'');
     };
     var de=E('fullDematFilter')?.value||'All';
+    var tr=E('fullTraderFilter')?.value||'All';
+    var po=E('fullPortfolioFilter')?.value||'All';
     return currentRows().filter(function(r){
       return hasVal('fullFyFilter', r['Financial Year']) &&
         hasVal('fullCompanyFilter', r.company) &&
         (de==='All'||rowDemat(r)===de) &&
-        hasVal('fullMonthFilter', r.monthLabel);
+        hasVal('fullMonthFilter', r.monthLabel) &&
+        (tr==='All'||rowTrader(r)===tr) &&
+        (po==='All'||rowPortfolio(r)===po);
     });
   };
 
@@ -18108,15 +18122,30 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
   }
 
   /*
+   * FIX (Sep 2026): switched from "average each fund pool over its own
+   * active days, then sum every pool's average" to "sum every pool's fund
+   * for each calendar date, then average that daily total across the whole
+   * period". The old approach added a pool's full average into the grand
+   * total even for traders active just a handful of days out of the full
+   * period - e.g. Manoj Pandey (1 day out of 108), Rohan Naidu (13 days),
+   * Himanshu Chauhan (26 days), Gaurav Prakash (32 days) - as if each had
+   * been running the whole time. That inflated FY2026-27 Total Fund to
+   * Rs.177 Cr when only Rs.138.75 Cr was genuinely deployed on any real
+   * day. Pool identification (Trader + Demat Account + Researcher Name,
+   * which still correctly keeps concurrent pools like Harsh Rathod's two
+   * researcher lines separate) and the same-day max dedup safety are both
+   * kept exactly as before - only the aggregation order changes.
+   *
    * Calculation:
    * 1. Zero values ignore.
-   * 2. Trader + Demat Account અલગ group.
-   * 3. એક dateમાં duplicate હોય તો maximum value.
-   * 4. દરેક accountના available datesની average.
-   * 5. છેલ્લે બધી averagesનો total.
+   * 2. Trader + Demat Account + Researcher અલગ pool ganay.
+   * 3. એક pool ने એક dateમાં duplicate entry હોય તો maximum value રાખવી.
+   * 4. દરેક dateમાં બધા pools નો ફંડ સરવાળો (day total).
+   * 5. છેલ્લે બધા day totals ની average - એ જ Total/Avg Fund.
    */
   function capitalAverageTotal(rows, segment, type) {
-    var groups = {};
+    var poolDayValue = {};
+    var dayTotals = {};
 
     (rows || []).forEach(function (row) {
       if (!strategyMatches(row, segment)) return;
@@ -18126,14 +18155,6 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
 
       var accountId =
         getTrader(row) + '|' + getAccount(row) + '|' + getResearcher(row);
-      // Researcher Name is deliberately part of this key: it can mark a
-      // genuinely separate, concurrent pool on the exact same demat/portfolio
-      // account rather than just a relabel over time - e.g. Harsh Rathod's
-      // Fintech account has Researcher "Harsh Rathod" (Rs 45L) and Researcher
-      // "Kunj Naik" (Rs 2.5Cr) both active on the same dates right through the
-      // latest data. Without Researcher in the key, this function's day-max
-      // step picks whichever of the two is bigger and silently drops the
-      // other, undercounting that trader's true total fund.
 
       var amount =
         type === 'utilized'
@@ -18143,36 +18164,28 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
       // ₹0 value ગણવી નહીં
       if (amount === 0) return;
 
-      if (!groups[accountId]) {
-        groups[accountId] = {};
-      }
+      var cellKey = accountId + '||' + day;
+      var prevForCell = poolDayValue[cellKey];
 
-      groups[accountId][day] = Math.max(
-        groups[accountId][day] || 0,
-        amount
-      );
+      if (prevForCell === undefined) {
+        dayTotals[day] = (dayTotals[day] || 0) + amount;
+        poolDayValue[cellKey] = amount;
+      } else if (amount > prevForCell) {
+        // Same pool, same day, a larger duplicate entry turned up - swap
+        // it into the day total instead of adding it a second time.
+        dayTotals[day] = (dayTotals[day] || 0) - prevForCell + amount;
+        poolDayValue[cellKey] = amount;
+      }
     });
 
-    return Object.keys(groups).reduce(
-      function (grandTotal, accountId) {
-        var dates = Object.keys(groups[accountId]);
+    var days = Object.keys(dayTotals);
+    if (!days.length) return 0;
 
-        if (!dates.length) return grandTotal;
+    var total = days.reduce(function (sum, day) {
+      return sum + dayTotals[day];
+    }, 0);
 
-        var accountTotal = dates.reduce(
-          function (total, day) {
-            return total + groups[accountId][day];
-          },
-          0
-        );
-
-        var accountAverage =
-          accountTotal / dates.length;
-
-        return grandTotal + accountAverage;
-      },
-      0
-    );
+    return total / days.length;
   }
 
   function cleanDecimal(value) {
@@ -18276,20 +18289,20 @@ function updateFundUtilizedKpis() {
   });
 
   /*
-   * FIX: previously this added the FNO card's fund to the MCX card's fund,
-   * which (a) always excluded Cash entirely - wiping out cash-only traders
-   * like Kanwal Prakash Singh and Dhrumil Modhiya, who'd show ₹0 total - and
-   * (b) would have double-counted any row labelled "FNO & Cash" if Cash had
-   * ever been added in too, since that label matches both the FNO and Cash
-   * segment checks above. Computing one combined "EQUITY" pass (everything
-   * that isn't MCX) fixes both: Cash-only traders are included, and nothing
-   * gets counted twice.
+   * FIX (Sep 2026): previously Total added the EQUITY-only average to the
+   * MCX-only average. Since capitalAverageTotal now averages over each
+   * segment's OWN day-count (see fix above), EQUITY days and MCX days are
+   * usually different counts - adding two averages taken over different
+   * numbers of days doesn't equal the true combined daily average either,
+   * it just makes a smaller version of the same distortion. Total is now
+   * its own single pass over every row regardless of strategy (segment =
+   * null matches everything, via strategyMatches' "if (!segment) return
+   * true" branch), summed per date then averaged over the full period -
+   * one calculation, not two added together.
    */
-  var overallFund =
-    capitalAverageTotal(rows, 'EQUITY', 'fund') + values.mcx.fund;
+  var overallFund = capitalAverageTotal(rows, null, 'fund');
 
-  var overallUtilized =
-    capitalAverageTotal(rows, 'EQUITY', 'utilized') + values.mcx.utilized;
+  var overallUtilized = capitalAverageTotal(rows, null, 'utilized');
 
   setKpi(
     'overallTotalFund',

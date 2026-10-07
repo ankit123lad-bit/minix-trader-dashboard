@@ -16828,6 +16828,7 @@ body.ai-show-gov-details #allTradersDateWiseTable th,body.ai-show-gov-details #a
   D.addEventListener('click',function(){setTimeout(refreshBtns,60);},true);
 })();
 </script>
+<script id="minix-v9-datewise-base">window.__MX9_DATEWISE_BASE__=window.buildAllTradersDateWiseTable;</script>
 <!-- === END AI FINAL PATCH: Date-wise table DATE | ROI% | N% | B% fixed order === -->
 
 <!-- === FINAL OVERRIDE: Make ROI% | N% | B% visible after Date === -->
@@ -20543,6 +20544,551 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
 })();
 </script>
 <!-- === END MINIX BOARDROOM EXECUTIVE LAYER V2 === -->
+
+<!-- === MINIX FINAL V9: TAB-ISOLATED SLICERS + CSV-EXACT FULL SUMMARY + DIVIDEND KPI === -->
+<style id="minix-v9-style">
+.mx-exec-grid{grid-template-columns:repeat(7,minmax(0,1fr))!important}
+@media(max-width:1250px){.mx-exec-grid{grid-template-columns:repeat(4,1fr)!important}}
+.mx-exec-card.violet:before{background:#a78bfa}
+.mx9-table{width:100%;border-collapse:collapse;font-size:12px}
+.mx9-table th{position:sticky;top:0;background:#0b1728;color:#93c5fd;text-transform:uppercase;font-size:11px;padding:7px 8px;text-align:left;border-bottom:1px solid #334155;white-space:nowrap;cursor:pointer}
+.mx9-table td{padding:6px 8px;border-bottom:1px solid #1e293b;white-space:nowrap}
+.mx9-table .amount{text-align:right}
+.mx9-table tr.mx9-group td{background:#111c33;font-weight:800}
+.mx9-table tr.mx9-group td:first-child{cursor:pointer}
+.mx9-table tr.mx9-child td:first-child{padding-left:28px}
+.mx9-table tr.mx9-hidden{display:none}
+.mx9-table tr.mx9-total td{background:#172554;font-weight:900;border-top:2px solid #60a5fa}
+.mx9-tg{display:inline-block;width:20px;height:20px;line-height:18px;text-align:center;border-radius:6px;background:#2563eb;color:#fff;margin-right:6px;font-weight:900}
+.mx9-scroll{overflow-x:auto;max-width:100%}
+.mx9-bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}
+.mx9-bar button{border:0;border-radius:8px;padding:6px 10px;background:#1e3a8a;color:#fff;font-weight:800;cursor:pointer;font-size:12px}
+#accuracyTable,#individualPerformanceTable,#riskUtilizationTable,#analyticsTable,#monthWiseChargesTable,#capitalUtilizationTable,#fullTraderPerformanceTable,#fullTraderChargesTable,#fundRoiCompanyTable,#fundRoiTraderTable{display:none!important}
+.mx9-note{font-size:11px;color:#94a3b8;margin:6px 0}
+</style>
+<script id="minix-v9-tab-isolation-engine">
+(function(){
+  'use strict';
+  if(window.__MX9__) return;
+  var D=document, MX9=window.__MX9__={};
+  var SECS=['summarySection','individualSection','fullSummarySection'];
+  function E(id){return D.getElementById(id);}
+  function isShown(el){ if(!el) return false; try{ return getComputedStyle(el).display!=='none'; }catch(e){ return el.style.display!=='none'; } }
+  var current=null;
+  function activeSection(){
+    if(current && E(current)) return current;
+    for(var i=0;i<SECS.length;i++){ if(isShown(E(SECS[i]))) return SECS[i]; } return 'summarySection';
+  }
+  function setCurrent(id){ if(SECS.indexOf(id)>=0) current=id; }
+  D.addEventListener('click',function(ev){
+    var b=ev.target&&ev.target.closest&&ev.target.closest('.dashboard-tab'); if(!b) return;
+    var m=String(b.getAttribute('onclick')||'').match(/showSection\('([^']+)'/); if(m) setCurrent(m[1]);
+  },true);
+  MX9.activeSection=activeSection;
+
+  /* ---------- one filter engine, per tab ---------- */
+  var FIELD={
+    fy:function(r){return r['Financial Year'];},
+    company:function(r){return r.company||r['Company Name'];},
+    demat:function(r){return r['Demat Account']||r.demat;},
+    researcher:function(r){return r.researcher||r['Researcher Name'];},
+    portfolio:function(r){return r.portfolio||r['Portfolio Name'];},
+    trader:function(r){return r['Trader Name'];},
+    strategy:function(r){return r.strategy||r['Strategy'];},
+    month:function(r){return r.monthLabel;},
+    week:function(r){return r.weekName;}
+  };
+  function fieldKey(id){ var k=String(id||'').replace(/^(ind|full)/,'').replace(/Filter$/,'').toLowerCase(); return FIELD[k]?k:null; }
+  function selected(el){
+    var a=null; try{ a=JSON.parse(el.dataset.multiValues||'null'); }catch(e){ a=null; }
+    if(!Array.isArray(a)||!a.length) a=[el.value];
+    a=a.map(function(v){return String(v==null?'':v).trim();}).filter(function(v){return v!=='';});
+    if(!a.length || a.indexOf('All')>=0) return null;
+    return a;
+  }
+  function iso(v){ try{ return (typeof dateInputToISO==='function')?dateInputToISO(v||''):String(v||''); }catch(e){ return ''; } }
+  function criteria(sec){
+    var root=E(sec), crit=[], c={crit:crit,from:'',to:'',one:''}; if(!root) return c;
+    var seen={};
+    root.querySelectorAll('select[id$="Filter"]').forEach(function(el){
+      var k=fieldKey(el.id); if(!k||seen[k]) return; seen[k]=1;
+      var v=selected(el); if(v) crit.push({k:k,set:v});
+    });
+    if(sec==='summarySection'){ c.from=iso(E('fromDateFilter')&&E('fromDateFilter').value); c.to=iso(E('toDateFilter')&&E('toDateFilter').value); }
+    if(sec==='individualSection'){ c.one=iso(E('indDateFilter')&&E('indDateFilter').value); }
+    return c;
+  }
+  function allRows(){ try{ if(Array.isArray(preparedData)) return preparedData; }catch(e){} return window.preparedData||[]; }
+  function rowsFor(sec){
+    var c=criteria(sec);
+    return allRows().filter(function(r){
+      for(var i=0;i<c.crit.length;i++){ var x=c.crit[i], v=FIELD[x.k](r); if(x.set.indexOf(String(v==null?'':v))<0) return false; }
+      var d=r.dateLabel||'';
+      if(c.one && d!==c.one) return false;
+      if(c.from && d<c.from) return false;
+      if(c.to && d>c.to) return false;
+      return true;
+    });
+  }
+  MX9.rowsFor=rowsFor; MX9.criteria=criteria;
+
+  /* Getters. Tab-specific getters always use their own tab.
+     The generic getFilteredData()/filterData('') is used by many older patches
+     for tables in EVERY tab, so it follows only the tab that is on screen. */
+  var origFilter=window.filterData;
+  var getters={
+    filterData:function(prefix){
+      if(prefix==='chart' && typeof origFilter==='function') return origFilter.apply(this,arguments);
+      if(prefix==='ind') return rowsFor('individualSection');
+      if(prefix==='full') return rowsFor('fullSummarySection');
+      return rowsFor(activeSection());
+    },
+    getFilteredData:function(){return rowsFor(activeSection());},
+    getMonthlyFilteredData:function(){return rowsFor(activeSection());},
+    getWeeklyFilteredData:function(){return rowsFor(activeSection());},
+    getIndividualFilteredData:function(){return rowsFor('individualSection');},
+    getFullSummaryFilteredData:function(){return rowsFor('fullSummarySection');},
+    aiAllTradersSelectedRowsFinal:function(){return rowsFor('individualSection');},
+    aiGetIndividualFilteredRowsForDateWise:function(){return rowsFor('individualSection');}
+  };
+  Object.keys(getters).forEach(function(k){ getters[k].__mx9=true; });
+  function assertGetters(){
+    var o=window.filterData; if(o && !o.__mx9) origFilter=o;
+    Object.keys(getters).forEach(function(k){ if(!window[k]||!window[k].__mx9){ try{ window[k]=getters[k]; }catch(e){} } });
+  }
+  /* the All Traders Date-wise table lives only in Individual Performance: always feed it those slicers */
+  function assertDateWise(){
+    var base=window.__MX9_DATEWISE_BASE__, f=window.buildAllTradersDateWiseTable;
+    if(typeof base!=='function' || (f && f.__mx9)) return;
+    var w=function(){ return base.call(this, rowsFor('individualSection')); };
+    w.__mx9=w.__individualSlicerLocked=w.__gptThrottled=w.__aiDateWiseNB=w.__datewiseFastWrapped=true;
+    window.buildAllTradersDateWiseTable=w;
+  }
+  assertGetters(); assertDateWise(); setInterval(function(){ assertGetters(); assertDateWise(); },400);
+
+  /* ---------- CSV-exact calculations ---------- */
+  function n(v){ if(typeof v==='number') return isFinite(v)?v:0; var x=parseFloat(String(v==null?'':v).replace(/[₹,\s]/g,'')); return isFinite(x)?x:0; }
+  function money(v){ try{ return formatINR(v); }catch(e){ return '₹'+Math.round(v||0).toLocaleString('en-IN'); } }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var SEG=['FNO','Cash','MCX'];
+  function rc(r,col){ return SEG.reduce(function(s,g){ return s+n(r[g+' '+col]); },0); }
+  function rowCalc(r){
+    if(r.__mx9c) return r.__mx9c;
+    var brk=n(r['Brokerage']!==undefined?r['Brokerage']:rc(r,'BRK'));
+    var brkGst=n(r['BRK On GST']!==undefined?r['BRK On GST']:rc(r,'BRK On GST'));
+    var govt=n(r['Clearing Charges'])+n(r['BSE Trx Chgs'])+n(r['NSE Trx Chgs'])+n(r['Sebi Chgs'])+n(r['STT'])+n(r['Stamp Duty'])+n(r['IPF Charges']);
+    var c={gross:n(r.totalGross),net:n(r.totalNet),charges:n(r.totalCharges),brk:brk,brkGst:brkGst,govt:govt,govtGst:n(r['GST']),div:n(r.dividendReceived),
+      clr:n(r['Clearing Charges']),trx:n(r['NSE Trx Chgs'])+n(r['BSE Trx Chgs']),sebi:n(r['Sebi Chgs']),stt:n(r['STT']),stamp:n(r['Stamp Duty']),ipf:n(r['IPF Charges'])};
+    try{ Object.defineProperty(r,'__mx9c',{value:c,enumerable:false,configurable:true}); }catch(e){}
+    return c;
+  }
+  function fundOf(r){ return n(r.Fund!==undefined?r.Fund:(r.fund!==undefined?r.fund:r['Capital'])); }
+  function bucket(r){ return String(r.strategy||r.Strategy||'').toUpperCase().replace(/[^A-Z]/g,'')==='MCX'?'MCX':'EQUITY'; }
+  function acctKey(r){ return [r.company||r['Company Name'],r['Trader Name'],r['Demat Account'],r['Portfolio Name']||r.portfolio,r['Researcher Name']||r.researcher,bucket(r)].join('|'); }
+  /* Latest Fund: each capital account's fund on ITS latest date in the selection, summed. */
+  function latestFund(rows){
+    var m={};
+    rows.forEach(function(r){ var f=fundOf(r); if(!f) return; var k=acctKey(r), d=r.dateLabel||''; if(!m[k]) m[k]={}; m[k][d]=(m[k][d]||0)+f; });
+    var t=0; Object.keys(m).forEach(function(k){ var ds=Object.keys(m[k]).sort(); if(ds.length) t+=m[k][ds[ds.length-1]]; }); return t;
+  }
+  /* Avg Fund: total fund of each trading date, averaged over trading dates. */
+  function avgFund(rows){
+    var by={}; rows.forEach(function(r){ var f=fundOf(r); if(!f||!r.dateLabel) return; by[r.dateLabel]=(by[r.dateLabel]||0)+f; });
+    var ds=Object.keys(by); return ds.length?ds.reduce(function(a,d){return a+by[d];},0)/ds.length:0;
+  }
+  /* Win / Loss: one count per trading DAY of the group, by that day's total Net P&L. */
+  function winLoss(rows){
+    var by={}; rows.forEach(function(r){ if(!r.dateLabel) return; by[r.dateLabel]=(by[r.dateLabel]||0)+rowCalc(r).net; });
+    var w=0,l=0; Object.keys(by).forEach(function(d){ var v=Math.round(by[d]*100)/100; if(v>0) w++; else if(v<0) l++; }); return {win:w,loss:l};
+  }
+  function agg(rows){
+    var a={rows:rows.length,gross:0,net:0,charges:0,brk:0,brkGst:0,govt:0,govtGst:0,div:0,clr:0,trx:0,sebi:0,stt:0,stamp:0,ipf:0};
+    rows.forEach(function(r){ var c=rowCalc(r); for(var k in c){ if(k in a) a[k]+=c[k]; } });
+    return a;
+  }
+  MX9.calc={rowCalc:rowCalc,latestFund:latestFund,avgFund:avgFund,winLoss:winLoss,agg:agg};
+  function groupBy(rows,keyFn){ var m={},order=[]; rows.forEach(function(r){ var k=keyFn(r); if(!m[k]){m[k]=[];order.push(k);} m[k].push(r); }); return {m:m,keys:order}; }
+  function pc(v){ return '<td class="amount '+(v>=0?'positive':'negative')+'">'+money(v)+'</td>'; }
+  function roiTd(v){ if(v==null||!isFinite(v)) return '<td class="amount muted">N/A</td>'; return '<td class="amount '+(v>=0?'positive':'negative')+'">'+v.toFixed(2)+'%</td>'; }
+  function idxTd(v){ if(v==null||!isFinite(v)) return '<td class="amount muted">-</td>'; return '<td class="amount '+(v>=0?'positive':'negative')+'">'+(v>=0?'+':'')+v.toFixed(2)+'%</td>'; }
+
+  /* index % change for the date span of the rows */
+  function indexRows(name){
+    var a=[]; try{ a=(typeof indexPreparedData!=='undefined'&&Array.isArray(indexPreparedData)&&indexPreparedData.length)?indexPreparedData:(window.indexPreparedData||[]); }catch(e){ a=window.indexPreparedData||[]; }
+    return a.filter(function(r){return r&&r.index===name&&r.iso&&Number(r.close);}).sort(function(x,y){return x.iso<y.iso?-1:x.iso>y.iso?1:0;});
+  }
+  function idxPct(name,rows){
+    var ds=rows.map(function(r){return r.dateLabel;}).filter(Boolean).sort(); if(!ds.length) return null;
+    var all=indexRows(name); if(!all.length) return null;
+    var inR=all.filter(function(r){return r.iso>=ds[0]&&r.iso<=ds[ds.length-1];}); if(!inR.length) return null;
+    var before=all.filter(function(r){return r.iso<ds[0];}); var base=before.length?before[before.length-1].close:inR[0].close;
+    return base?((inR[inR.length-1].close-base)/base*100):null;
+  }
+
+  /* ---------- own containers: rendered into fresh siblings so older patches/CSS cannot touch them ---------- */
+  var OWN={accuracyTable:'mx9Accuracy',individualPerformanceTable:'mx9IndPerf',riskUtilizationTable:'mx9Risk',analyticsTable:'mx9Analytics',monthWiseChargesTable:'mx9MonthCharges',capitalUtilizationTable:'mx9Capital',fullTraderPerformanceTable:'mx9Perf',fullTraderChargesTable:'mx9Charges',fundRoiCompanyTable:'mx9FundCompany',fundRoiTraderTable:'mx9FundTrader'};
+  function own(id){
+    var nid=OWN[id], el=E(nid); if(el) return el;
+    var old=E(id); if(!old) return null;
+    el=D.createElement('div'); el.id=nid; el.className='mx9-owned';
+    old.parentNode.insertBefore(el,old.nextSibling); return el;
+  }
+  function put(id,html){ var el=own(id); if(el) el.innerHTML=html; }
+  window.mx9Toggle=function(gid,btn){
+    var rows=D.querySelectorAll('tr[data-mx9p="'+gid+'"]'); var show=rows.length&&rows[0].classList.contains('mx9-hidden');
+    rows.forEach(function(r){ r.classList.toggle('mx9-hidden',!show); });
+    var t=btn&&btn.querySelector('.mx9-tg'); if(t) t.textContent=show?'−':'+';
+  };
+  window.mx9Expand=function(tableId,open){
+    var root=E(OWN[tableId]||tableId); if(!root) return;
+    root.querySelectorAll('tr[data-mx9p]').forEach(function(r){ r.classList.toggle('mx9-hidden',!open); });
+    root.querySelectorAll('.mx9-tg').forEach(function(t){ t.textContent=open?'−':'+'; });
+  };
+  var chargeDetail=false;
+  window.mx9ChargeDetail=function(){ chargeDetail=!chargeDetail; renderCharges(rowsFor('fullSummarySection')); };
+
+  var gidSeq=0;
+  function traderKey(r){ return [r['Demat Account']||'',r.researcher||r['Researcher Name']||'',r['Trader Name']||''].join('|'); }
+  function portfolioGroups(rows){
+    var g=groupBy(rows,function(r){return r.portfolio||r['Portfolio Name']||'Not Available';});
+    return g.keys.map(function(p){
+      var pr=g.m[p], tg=groupBy(pr,traderKey);
+      var kids=tg.keys.map(function(k){ var tr=tg.m[k], a=agg(tr), wl=winLoss(tr), f=latestFund(tr);
+        return {r0:tr[0],rows:tr,a:a,win:wl.win,loss:wl.loss,fund:f}; }).sort(function(x,y){return y.a.net-x.a.net;});
+      var a=agg(pr);
+      return {name:p,rows:pr,a:a,kids:kids,fund:latestFund(pr),win:kids.reduce(function(s,k){return s+k.win;},0),loss:kids.reduce(function(s,k){return s+k.loss;},0),
+        demats:Array.from(new Set(pr.map(function(r){return r['Demat Account'];}))).sort().join(', ')};
+    }).sort(function(x,y){return y.a.net-x.a.net;});
+  }
+  function bar(tableId,extra){
+    return '<div class="mx9-bar"><button type="button" onclick="mx9Expand(\''+tableId+'\',true)">➕ Expand all</button><button type="button" onclick="mx9Expand(\''+tableId+'\',false)">➖ Collapse all</button>'+(extra||'')+'</div>';
+  }
+
+  function renderPerformance(rows){
+    if(!rows.length){ put('fullTraderPerformanceTable','<p class="muted">No data available for the selected slicers</p>'); return; }
+    var groups=portfolioGroups(rows), body='', T={fund:0,net:0,charges:0,win:0,loss:0,div:0};
+    groups.forEach(function(g){
+      var gid='p'+(++gidSeq), roi=g.fund?g.a.net/g.fund*100:null;
+      T.fund+=g.fund; T.net+=g.a.net; T.charges+=g.a.charges; T.win+=g.win; T.loss+=g.loss; T.div+=g.a.div;
+      body+='<tr class="mx9-group" onclick="mx9Toggle(\''+gid+'\',this.cells[0])"><td><span class="mx9-tg">+</span>'+esc(g.name)+'<div class="muted" style="font-size:10px">'+g.kids.length+' rows | '+esc(g.demats)+'</div></td><td>Portfolio Total</td><td>-</td><td>-</td>'+
+        '<td class="amount">'+money(g.fund)+'</td>'+pc(g.a.net)+'<td class="amount warning">'+money(g.a.charges)+'</td>'+roiTd(roi)+'<td class="positive">'+g.win+'</td><td class="negative">'+g.loss+'</td>'+pc(g.a.div)+'</tr>';
+      g.kids.forEach(function(k){
+        var r=k.r0, kr=k.fund?k.a.net/k.fund*100:null;
+        body+='<tr class="mx9-child mx9-hidden" data-mx9p="'+gid+'"><td>'+esc(g.name)+'</td><td>'+esc(r['Demat Account'])+'</td><td>'+esc(r.researcher||r['Researcher Name'])+'</td><td>'+esc(r['Trader Name'])+'</td>'+
+          '<td class="amount">'+money(k.fund)+'</td>'+pc(k.a.net)+'<td class="amount warning">'+money(k.a.charges)+'</td>'+roiTd(kr)+'<td class="positive">'+k.win+'</td><td class="negative">'+k.loss+'</td>'+pc(k.a.div)+'</tr>';
+      });
+    });
+    body+='<tr class="mx9-total"><td colspan="4">Grand Total ('+rows.length+' CSV rows)</td><td class="amount">'+money(T.fund)+'</td>'+pc(T.net)+'<td class="amount warning">'+money(T.charges)+'</td>'+roiTd(T.fund?T.net/T.fund*100:null)+'<td class="positive">'+T.win+'</td><td class="negative">'+T.loss+'</td>'+pc(T.div)+'</tr>';
+    put('fullTraderPerformanceTable', bar('fullTraderPerformanceTable')+
+      '<div class="mx9-scroll"><table class="mx9-table"><thead><tr><th>Portfolio</th><th>Demat</th><th>Researcher</th><th>Trader</th><th class="amount">Fund (Latest)</th><th class="amount">P/L (Net)</th><th class="amount">Charges</th><th class="amount">ROI</th><th>Win</th><th>Loss</th><th class="amount">Dividend</th></tr></thead><tbody>'+body+'</tbody></table></div>'+
+      '<div class="mx9-note">Fund = each capital account\'s Fund on its latest date in the selection. P/L = Σ Net Amount (FNO+Cash+MCX). Charges = Σ Gorv Chg. ROI = P/L ÷ Fund. Win/Loss = trading days with that row\'s total day Net P&L &gt; 0 / &lt; 0.</div>');
+  }
+
+  function renderCharges(rows){
+    if(!rows.length){ put('fullTraderChargesTable','<p class="muted">No data available for the selected slicers</p>'); return; }
+    var groups=portfolioGroups(rows), T=agg(rows);
+    var detCols=[['brk','BRK'],['brkGst','BRK GST'],['clr','Clearing'],['trx','Trx'],['sebi','SEBI'],['stt','STT'],['stamp','Stamp'],['ipf','IPF'],['govtGst','GST']];
+    function cells(a){
+      var b=a.brk+a.brkGst, gov=a.charges-b, s='';
+      if(chargeDetail) detCols.forEach(function(c){ s+='<td class="amount">'+money(a[c[0]])+'</td>'; });
+      return s+'<td class="amount">'+money(b)+'</td><td class="amount">'+money(gov)+'</td><td class="amount warning"><b>'+money(a.charges)+'</b></td>';
+    }
+    var head='<th>Portfolio</th><th>Demat</th><th>Researcher</th><th>Trader</th>'+(chargeDetail?detCols.map(function(c){return '<th class="amount">'+c[1]+'</th>';}).join(''):'')+'<th class="amount">BRK (+GST)</th><th class="amount">Govt Charges</th><th class="amount">Total Charges</th>';
+    var body='';
+    groups.forEach(function(g){
+      var gid='c'+(++gidSeq);
+      body+='<tr class="mx9-group" onclick="mx9Toggle(\''+gid+'\',this.cells[0])"><td><span class="mx9-tg">+</span>'+esc(g.name)+'</td><td>'+esc(g.demats)+'</td><td>Portfolio Total</td><td>-</td>'+cells(g.a)+'</tr>';
+      g.kids.forEach(function(k){ var r=k.r0;
+        body+='<tr class="mx9-child mx9-hidden" data-mx9p="'+gid+'"><td>'+esc(g.name)+'</td><td>'+esc(r['Demat Account'])+'</td><td>'+esc(r.researcher||r['Researcher Name'])+'</td><td>'+esc(r['Trader Name'])+'</td>'+cells(k.a)+'</tr>'; });
+    });
+    body+='<tr class="mx9-total"><td colspan="4">Grand Total</td>'+cells(T)+'</tr>';
+    put('fullTraderChargesTable', bar('fullTraderChargesTable','<button type="button" onclick="mx9ChargeDetail()">'+(chargeDetail?'➖ Hide':'➕ Show')+' charge-wise details</button>')+
+      '<div class="mx9-scroll"><table class="mx9-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'+
+      '<div class="mx9-note">BRK (+GST) = Σ BRK + Σ BRK On GST. Govt Charges = Σ Gorv Chg − BRK (+GST), so Total Charges = Σ Gorv Chg exactly as in the CSV.</div>');
+  }
+
+  function fundRoiRow(label,sub,rows,extra,cls,attrs){
+    var net=agg(rows).net, lf=latestFund(rows), af=avgFund(rows);
+    return '<tr class="'+(cls||'')+'" '+(attrs||'')+'><td>'+label+(sub?'<div class="muted" style="font-size:10px">'+sub+'</div>':'')+'</td><td class="amount">'+money(lf)+'</td><td class="amount">'+money(af)+'</td>'+pc(net)+
+      roiTd(lf?net/lf*100:null)+roiTd(af?net/af*100:null)+idxTd(idxPct('Nifty 50',rows))+idxTd(idxPct('Nifty Bank',rows))+(extra||'')+'</tr>';
+  }
+  function monthKids(rows,gid){
+    var mg=groupBy(rows,function(r){return r.monthLabel||'Unknown';}), s='';
+    mg.keys.sort(function(a,b){ try{ return monthSortKey(a)-monthSortKey(b); }catch(e){ return a<b?-1:1; } }).forEach(function(m){
+      s+=fundRoiRow('↳ '+esc(m),'',mg.m[m],null,'mx9-child mx9-hidden','data-mx9p="'+gid+'"');
+    });
+    return s;
+  }
+  function renderFundRoi(rows){
+    if(!rows.length){ put('fundRoiCompanyTable','<p class="muted">No data available for the selected slicers</p>'); put('fundRoiTraderTable','<p class="muted">No data available</p>'); return; }
+    var head='<th>Company</th><th class="amount">Latest Fund</th><th class="amount">Avg Fund</th><th class="amount">Net P&amp;L</th><th class="amount">Latest ROI %</th><th class="amount">Avg ROI %</th><th class="amount">Nifty 50 %</th><th class="amount">Bank Nifty %</th>';
+    var cg=groupBy(rows,function(r){return r.company||r['Company Name']||'Not Available';}), cb='';
+    cg.keys.sort().forEach(function(c){
+      var gid='f'+(++gidSeq), cr=cg.m[c], nt=new Set(cr.map(function(r){return r['Trader Name'];})).size;
+      cb+=fundRoiRow('<span class="mx9-tg">+</span>'+esc(c),'',cr,'<td>'+nt+'</td>','mx9-group','onclick="mx9Toggle(\''+gid+'\',this.cells[0])"');
+      cb+=monthKids(cr,gid);
+    });
+    cb+=fundRoiRow('Grand Total','',rows,'<td>'+new Set(rows.map(function(r){return r['Trader Name'];})).size+'</td>','mx9-total');
+    put('fundRoiCompanyTable', bar('fundRoiCompanyTable')+'<div class="mx9-scroll"><table class="mx9-table"><thead><tr>'+head+'<th>No. of Traders</th></tr></thead><tbody>'+cb+'</tbody></table></div>'+
+      '<div class="mx9-note">Latest Fund = each capital account\'s Fund on its latest date in the selection. Avg Fund = average of the daily total Fund over the trading days in the selection. ROI = Net P&amp;L ÷ Fund.</div>');
+    var tg=groupBy(rows,function(r){return (r.company||r['Company Name'])+'||'+r['Trader Name'];}), tb='';
+    tg.keys.map(function(k){return {k:k,net:agg(tg.m[k]).net};}).sort(function(a,b){return b.net-a.net;}).forEach(function(o){
+      var tr=tg.m[o.k], gid='t'+(++gidSeq), months=new Set(tr.map(function(r){return r.monthLabel;})).size;
+      tb+=fundRoiRow('<span class="mx9-tg">+</span>'+esc(tr[0]['Trader Name']),esc(tr[0].company||tr[0]['Company Name'])+' • '+months+' month'+(months>1?'s':''),tr,null,'mx9-group','onclick="mx9Toggle(\''+gid+'\',this.cells[0])"');
+      tb+=monthKids(tr,gid);
+    });
+    tb+=fundRoiRow('Grand Total','',rows,null,'mx9-total');
+    put('fundRoiTraderTable', bar('fundRoiTraderTable')+'<div class="mx9-scroll"><table class="mx9-table"><thead><tr>'+head.replace('<th>Company</th>','<th>Trader</th>')+'</tr></thead><tbody>'+tb+'</tbody></table></div>');
+  }
+
+  function renderFull(){
+    var rows=rowsFor('fullSummarySection');
+    try{ renderPerformance(rows); }catch(e){ console.warn('MX9 perf',e); }
+    try{ renderCharges(rows); }catch(e){ console.warn('MX9 charges',e); }
+    try{ renderFundRoi(rows); }catch(e){ console.warn('MX9 fundroi',e); }
+    try{ if(typeof window.buildFullFyDematMonthSummaryTable==='function') window.buildFullFyDematMonthSummaryTable(); }catch(e){}
+  }
+  MX9.renderFull=renderFull;
+
+
+  /* ---------- Dashboard Summary KPI cards straight from the summary slicers ---------- */
+  function setM(id,v){ var el=E(id); if(!el) return; var t=money(v); if(el.textContent!==t) el.textContent=t; el.classList.remove('positive','negative'); el.classList.add(v>=0?'positive':'negative'); }
+  function setT(id,v){ var el=E(id); if(el && el.textContent!==String(v)) el.textContent=String(v); }
+  function dayCounts(rows,fn){ var by={}; rows.forEach(function(r){ if(!r.dateLabel) return; by[r.dateLabel]=(by[r.dateLabel]||0)+fn(r); }); var p=0,q=0; Object.keys(by).forEach(function(d){ var v=Math.round(by[d]*100)/100; if(v>0)p++; else if(v<0)q++; }); return [p,q]; }
+  function renderSummaryKpis(){
+    var rows=rowsFor('summarySection');
+    [['cash','cash'],['fno','fno'],['mcx','mcx']].forEach(function(p){
+      var g=0,x=0,nt=0; rows.forEach(function(r){ g+=n(r[p[1]+'Gross']); x+=n(r[p[1]+'Expense']); nt+=n(r[p[1]+'Net']); });
+      setM(p[0]+'TotalGross',g); setM(p[0]+'TotalExpenses',x); setM(p[0]+'TotalNet',nt);
+      var dc=dayCounts(rows,function(r){return n(r[p[1]+'Net']);}); setT(p[0]+'PositiveDays',dc[0]); setT(p[0]+'NegativeDays',dc[1]); setT(p[0]+'TradingDays',dc[0]+dc[1]);
+      setM(p[0]+'ChargesTotal',x);
+    });
+    var A=agg(rows); setM('totalGross',A.gross); setM('totalCharges',A.charges); setM('totalNet',A.net); setM('chargesTotalCard',A.charges);
+    var dc=dayCounts(rows,function(r){return rowCalc(r).net;});
+    setT('positiveDays',dc[0]); setT('negativeDays',dc[1]); setT('totalTradingDaysOverall',dc[0]+dc[1]);
+    setT('winRatio',dc[0]+dc[1]); setT('winningTrades',dc[0]); setT('losingTrades',dc[1]); setT('accuracy',((dc[0]+dc[1])?dc[0]/(dc[0]+dc[1])*100:0).toFixed(1)+'%');
+    var segIds={fno:['fnoBrokerage','fnoBrkOnGst','fnoClearing','fnoTrx','fnoSebi','fnoStt','fnoStamp','fnoIpf','fnoGst'],cash:['cashBrokerage','cashBrkOnGst','cashClearing','cashTrx','cashSebi','cashStt','cashStamp','cashIpf','cashGst'],mcx:['mcxBrokerage','mcxBrkOnGst','mcxClearing','mcxTrx','mcxSebi','mcxStt','mcxStamp','mcxIpf','mcxGst']};
+    var cols={fno:'FNO',cash:'Cash',mcx:'MCX'}, parts=['BRK','BRK On GST','Clearing Charges','Trx Chgs','Sebi Chgs','STT','Stamp Duty','IPF Charges','GST'];
+    var tot=[0,0,0,0,0,0,0,0,0];
+    Object.keys(segIds).forEach(function(sg){ parts.forEach(function(pt,i){ var v=rows.reduce(function(s,r){ var k=cols[sg]+' '+pt; var val=r[k]; if(val===undefined && pt==='BRK') val=r[cols[sg]+' Brokerage']; return s+n(val); },0); tot[i]+=v; setM(segIds[sg][i],v); }); });
+    ['brokerage','brkOnGst','clearing','nseTrx','sebi','stt','stamp','ipf','gst'].forEach(function(id,i){ setM(id,tot[i]); });
+  }
+  MX9.renderSummaryKpis=renderSummaryKpis;
+
+
+  /* ---------- Individual: Accuracy / Win Ratio (one count per trader per trading day) ---------- */
+  function renderAccuracy(){
+    var rows=rowsFor('individualSection');
+    if(!rows.length){ put('accuracyTable','<p class="muted">No data available</p>'); return; }
+    var g=groupBy(rows,function(r){return r['Trader Name']||'Unknown';}), list=g.keys.map(function(t){ var wl=winLoss(g.m[t]); var tot=wl.win+wl.loss; return {t:t,w:wl.win,l:wl.loss,tot:tot,acc:tot?wl.win/tot*100:0}; })
+      .sort(function(a,b){return b.acc-a.acc||b.tot-a.tot;});
+    var W=0,L=0, body=list.map(function(x){ W+=x.w; L+=x.l; return '<tr><td>'+esc(x.t)+'</td><td class="positive">'+x.w+'</td><td class="negative">'+x.l+'</td><td>'+x.tot+'</td><td class="'+(x.acc>=50?'positive':'negative')+'">'+x.acc.toFixed(1)+'%</td></tr>'; }).join('');
+    body+='<tr class="mx9-total"><td>Total</td><td class="positive">'+W+'</td><td class="negative">'+L+'</td><td>'+(W+L)+'</td><td>'+((W+L)?(W/(W+L)*100).toFixed(1):'0.0')+'%</td></tr>';
+    put('accuracyTable','<div class="mx9-scroll"><table class="mx9-table"><thead><tr><th>Trader</th><th>Win</th><th>Loss</th><th>Total</th><th>Accuracy</th></tr></thead><tbody>'+body+'</tbody></table></div><div class="mx9-note">Win/Loss = trading days on which the trader\'s total day Net P&amp;L was &gt; 0 / &lt; 0.</div>');
+  }
+  MX9.renderAccuracy=renderAccuracy;
+
+
+  /* ---------- Individual Performance tables (all from the Individual slicers only) ---------- */
+  function riskOf(pnl,fund){ try{ if(typeof getRiskFromPnlAndFund==='function') return getRiskFromPnlAndFund(pnl,fund); }catch(e){}
+    var u=fund>0?Math.abs(pnl)/fund*100:0; if(pnl<0||u>=70) return {level:'High',icon:'🔴',cls:'negative'}; if(u>=40) return {level:'Medium',icon:'🟡',cls:'warning'}; return {level:'Low',icon:'🟢',cls:'positive'}; }
+  function dayNet(rows){ var by={}; rows.forEach(function(r){ if(r.dateLabel) by[r.dateLabel]=(by[r.dateLabel]||0)+rowCalc(r).net; }); return by; }
+  function tbl(head,body,note){ return '<div class="mx9-scroll"><table class="mx9-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'+(note?'<div class="mx9-note">'+note+'</div>':''); }
+  function pct1(v){ return '<td class="amount '+(v>=0?'positive':'negative')+'">'+(isFinite(v)?v:0).toFixed(2)+'%</td>'; }
+  function renderIndividual(){
+    var rows=rowsFor('individualSection');
+    try{ if(typeof updateTraderProfile==='function') updateTraderProfile(rows); }catch(e){}
+    if(!rows.length){ ['individualPerformanceTable','riskUtilizationTable','analyticsTable','monthWiseChargesTable','capitalUtilizationTable'].forEach(function(id){ put(id,'<p class="muted">No data available for the selected slicers</p>'); }); renderAccuracy(); return; }
+    var crit=criteria('individualSection'), allDays=dayNet(rows);
+    var dayDate=crit.one || Object.keys(allDays).filter(function(d){return Math.abs(allDays[d])>0.004;}).sort().pop() || Object.keys(allDays).sort().pop() || '';
+    var nAll=idxPct('Nifty 50',rows), bAll=idxPct('Nifty Bank',rows);
+    var g=groupBy(rows,function(r){return r['Trader Name']||'Unknown';});
+    var list=g.keys.map(function(t){
+      var tr=g.m[t], by=dayNet(tr), mtd=0, prof=0, loss=0, w=0, l=0;
+      Object.keys(by).forEach(function(d){ var v=Math.round(by[d]*100)/100; mtd+=by[d]; if(v>0){prof+=by[d];w++;} else if(v<0){loss+=by[d];l++;} });
+      var f=latestFund(tr);
+      return {t:t,rows:tr,day:by[dayDate]||0,mtd:mtd,fund:f,roi:f?mtd/f*100:0,prof:prof,loss:loss,w:w,l:l,risk:riskOf(mtd,f)};
+    }).sort(function(a,b){return b.mtd-a.mtd;});
+    var T={day:0,mtd:0,fund:0,prof:0,loss:0,w:0,l:0};
+    var b1='',b2='',b3='';
+    list.forEach(function(x,i){
+      T.day+=x.day;T.mtd+=x.mtd;T.fund+=x.fund;T.prof+=x.prof;T.loss+=x.loss;T.w+=x.w;T.l+=x.l;
+      b1+='<tr><td><span class="rank-badge">'+(i+1)+'</span></td><td>'+esc(x.t)+'</td>'+pc(x.day)+pc(x.mtd)+idxTd(nAll)+idxTd(bAll)+pct1(x.roi)+'<td class="'+x.risk.cls+'">'+x.risk.icon+' '+x.risk.level+'</td></tr>';
+      b2+='<tr><td>'+esc(x.t)+'</td><td class="amount">'+money(x.fund)+'</td>'+pc(x.mtd)+'<td class="amount">'+money(x.fund+x.mtd)+'</td><td>'+(x.mtd>=0?'Fund + Profit':'Fund - Loss')+'</td><td class="'+x.risk.cls+'">'+x.risk.icon+' '+x.risk.level+'</td></tr>';
+      var pf=x.loss?x.prof/Math.abs(x.loss):(x.prof?Infinity:0);
+      b3+='<tr><td>'+esc(x.t)+'</td>'+pct1(x.roi)+pc(x.prof)+pc(x.loss)+'<td class="amount">'+(pf===Infinity?'∞':pf.toFixed(2))+'</td><td class="amount">'+((x.w+x.l)?(x.w/(x.w+x.l)*100).toFixed(1):'0.0')+'%</td></tr>';
+    });
+    var troi=T.fund?T.mtd/T.fund*100:0, tpf=T.loss?T.prof/Math.abs(T.loss):0;
+    b1+='<tr class="mx9-total"><td colspan="2">Total</td>'+pc(T.day)+pc(T.mtd)+idxTd(nAll)+idxTd(bAll)+pct1(troi)+'<td></td></tr>';
+    b2+='<tr class="mx9-total"><td>Total</td><td class="amount">'+money(T.fund)+'</td>'+pc(T.mtd)+'<td class="amount">'+money(T.fund+T.mtd)+'</td><td></td><td></td></tr>';
+    b3+='<tr class="mx9-total"><td>Total</td>'+pct1(troi)+pc(T.prof)+pc(T.loss)+'<td class="amount">'+tpf.toFixed(2)+'</td><td class="amount">'+((T.w+T.l)?(T.w/(T.w+T.l)*100).toFixed(1):'0.0')+'%</td></tr>';
+    put('individualPerformanceTable',tbl('<th>Rank</th><th>Trader</th><th class="amount">Day P/L</th><th class="amount">MTD P/L</th><th class="amount">Nifty %</th><th class="amount">Bank %</th><th class="amount">ROI</th><th>Risk</th>',b1,'Day P/L = '+(dayDate?esc(isoToDateInput?isoToDateInput(dayDate):dayDate):'-')+' (selected date, else latest trading day in selection). MTD P/L = Σ Net for the selected period. ROI = P/L ÷ latest Fund.'));
+    put('riskUtilizationTable',tbl('<th>Trader</th><th class="amount">Fund</th><th class="amount">P/L</th><th class="amount">Final</th><th>Calc</th><th>Alert</th>',b2));
+    put('analyticsTable',tbl('<th>Trader</th><th class="amount">ROI %</th><th class="amount">Profit</th><th class="amount">Loss</th><th class="amount">P.Factor</th><th class="amount">Win %</th>',b3,'Profit / Loss = sum of the trader\'s positive / negative trading days.'));
+    /* month-wise charges */
+    var MO=['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+    var P=[['Brokerage',function(r){return rowCalc(r).brk;}],['BRK On GST',function(r){return rowCalc(r).brkGst;}],['Clearing Charges',function(r){return rowCalc(r).clr;}],['BSE Trx Chgs',function(r){return n(r['BSE Trx Chgs']);}],['NSE Trx Chgs',function(r){return n(r['NSE Trx Chgs']);}],['Sebi Chgs',function(r){return rowCalc(r).sebi;}],['STT',function(r){return rowCalc(r).stt;}],['Stamp Duty',function(r){return rowCalc(r).stamp;}],['IPF Charges',function(r){return rowCalc(r).ipf;}],['GST',function(r){return rowCalc(r).govtGst;}]];
+    var M={}; P.forEach(function(p){ M[p[0]]={}; }); var GT={};
+    rows.forEach(function(r){ var m=String(r.monthLabel||'').slice(0,3); P.forEach(function(p){ var v=p[1](r); M[p[0]][m]=(M[p[0]][m]||0)+v; GT[m]=(GT[m]||0)+v; }); });
+    function mc(v){ return '<td class="amount">'+(Math.abs(v||0)>0.004?money(v):'-')+'</td>'; }
+    var mb=P.map(function(p){ var tot=0; return '<tr><td>'+p[0]+'</td>'+MO.map(function(m){ var v=M[p[0]][m]||0; tot+=v; return mc(v); }).join('')+mc(tot)+'</tr>'; }).join('');
+    var gt=0; mb+='<tr class="mx9-total"><td>Grand Total</td>'+MO.map(function(m){ gt+=GT[m]||0; return mc(GT[m]||0); }).join('')+mc(gt)+'</tr>';
+    put('monthWiseChargesTable',tbl('<th>Particular</th>'+MO.map(function(m){return '<th class="amount">'+m+'</th>';}).join('')+'<th class="amount">Total</th>',mb,'Each line = sum of that charge column (FNO + Cash + MCX) in the CSV.'));
+    /* capital utilization: fund changes per trader */
+    var out=[];
+    g.keys.slice().sort().forEach(function(t){
+      var byD={}; g.m[t].forEach(function(r){ var f=fundOf(r); if(!f||!r.dateLabel) return; var k=acctKey(r); if(!byD[r.dateLabel]) byD[r.dateLabel]={}; byD[r.dateLabel][k]=(byD[r.dateLabel][k]||0)+f; });
+      var arr=Object.keys(byD).sort().map(function(d){ return {d:d,f:Object.keys(byD[d]).reduce(function(a,k){return a+byD[d][k];},0)}; });
+      if(!arr.length) return;
+      var ch=[arr[0]]; for(var i=1;i<arr.length;i++){ if(Math.abs(arr[i].f-ch[ch.length-1].f)>0.01) ch.push(arr[i]); }
+      if(ch.length===1) out.push({name:t,d1:ch[0].d,f:ch[0].f,d2:'',w:null,h:ch[0].f});
+      else for(var j=0;j<ch.length-1;j++) out.push({name:j?'':t,d1:ch[j].d,f:ch[j].f,d2:ch[j+1].d,w:ch[j+1].f-ch[j].f,h:j===ch.length-2?ch[j+1].f:null});
+    });
+    function fd(iso){ try{ return formatDateDMY(new Date(iso+'T00:00:00')); }catch(e){ return iso; } }
+    put('capitalUtilizationTable', out.length?tbl('<th>Name</th><th>Date</th><th class="amount">Fund</th><th>Date</th><th class="amount">Withdraw / Addition</th><th class="amount">Holding</th>',
+      out.map(function(r){ return '<tr><td>'+esc(r.name)+'</td><td>'+fd(r.d1)+'</td><td class="amount"><b>'+money(r.f)+'</b></td><td>'+(r.d2?fd(r.d2):'')+'</td><td class="amount '+(r.w==null?'':(r.w<0?'negative':'positive'))+'">'+(r.w==null?'':money(r.w))+'</td><td class="amount">'+(r.h==null?'':money(r.h))+'</td></tr>'; }).join(''),
+      'Fund per date = sum of the trader\'s capital accounts on that date. Withdraw / Addition = next Fund − this Fund.'):'<p class="muted">No capital change data available</p>');
+    renderAccuracy();
+  }
+  MX9.renderIndividual=renderIndividual;
+
+  /* ---------- Executive Trading Snapshot: Dividend KPI ---------- */
+
+  function fixRoiCalc(){
+    var fe=E('overallTotalFund'), ce=E('mxCmpMinixCalc'); if(!fe||!ce) return;
+    var ft=fe.textContent||'', fv=parseFloat(ft.replace(/[^0-9.\-]/g,''))||0;
+    if(/cr/i.test(ft)) fv*=1e7; else if(/lakh|\bl\b/i.test(ft)) fv*=1e5;
+    if(!fv) return;
+    var netv=n((E('totalNet')||{}).textContent), roiT=((E('overallRoi')||{}).textContent||'').trim();
+    var txt='ROI Calculation: '+money(netv)+' ÷ '+money(fv)+' × 100 = '+roiT;
+    if(ce.textContent!==txt) ce.textContent=txt;
+    if(!ce.__mx9obs){ ce.__mx9obs=true; try{ new MutationObserver(function(){ if(ce.textContent.indexOf(' ÷ ₹')>0 && !/÷ ₹[0-9,]{6,}/.test(ce.textContent)) fixRoiCalc(); }).observe(ce,{childList:true,characterData:true,subtree:true}); }catch(e){} }
+  }
+  function renderDividend(){
+    var grid=D.querySelector('#mxExecutiveSnapshot .mx-exec-grid'); if(!grid) return;
+    var card=E('mxDividendCard');
+    if(!card){ card=D.createElement('div'); card.id='mxDividendCard'; card.className='mx-exec-card violet';
+      card.innerHTML='<div class="mx-exec-label">Dividend</div><div id="mxDividend" class="mx-exec-value">₹0</div><div class="mx-exec-note">Dividend received</div>'; }
+    if(grid.lastElementChild!==card) grid.appendChild(card);
+    [['totalGross','mxGross'],['chargesTotalCard','mxCharges'],['totalNet','mxNet'],['overallRoi','mxRoi'],['totalTradingDaysOverall','mxDays'],['accuracy','mxWin']].forEach(function(p){
+      var a=E(p[0]), b=E(p[1]); if(a&&b&&a.textContent.trim()&&b.textContent!==a.textContent) b.textContent=a.textContent; });
+    fixRoiCalc();
+    var rows=rowsFor('summarySection'), v=rows.reduce(function(s,r){return s+rowCalc(r).div;},0);
+    var x=E('mxDividend'); if(x){ x.textContent=money(v); x.className='mx-exec-value '+(v>0?'mx-up':v<0?'mx-down':'mx-flat'); }
+  }
+  MX9.renderDividend=renderDividend;
+
+
+  /* ---------- Researcher Name slicer on Dashboard Summary + Full Dashboard ---------- */
+  function ensureResearcher(sel,beforeId){
+    var vals=Array.from(new Set(allRows().map(function(r){return r.researcher||r['Researcher Name'];}).filter(Boolean))).sort();
+    var s=E(sel);
+    if(!s){
+      var anchor=E(beforeId); if(!anchor) return;
+      var box=anchor.closest('div'); while(box && box.parentNode && !box.parentNode.classList.contains('filters')) box=box.parentNode;
+      if(!box||!box.parentNode) return;
+      var wrap=D.createElement('div'); wrap.innerHTML='<label>Researcher Name</label><select id="'+sel+'"><option value="All">All</option></select>';
+      box.parentNode.insertBefore(wrap,box); s=E(sel);
+    }
+    if(s.options.length-1!==vals.length){
+      var cur=s.value||'All';
+      s.innerHTML='<option value="All">All</option>'+vals.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join('');
+      s.value=vals.indexOf(cur)>=0?cur:'All';
+    }
+  }
+
+  /* ---------- Tick (checkbox) dropdown for EVERY slicer in the 3 tabs ---------- */
+  function tickText(a){ if(!a||!a.length||a.indexOf('All')>=0) return 'All'; if(a.length===1) return a[0]; if(a.length<=3) return a.join(', '); return a.length+' selected'; }
+  function tickify(sel){
+    if(!sel || sel.tagName!=='SELECT' || sel.dataset.aiUniversalReady==='1' || sel.dataset.mx9Tick==='1') return;
+    if(D.querySelector('.ai-check-wrap[data-for="'+sel.id+'"]')) return;
+    sel.dataset.mx9Tick='1'; sel.classList.add('ai-hidden-select');
+    var wrap=D.createElement('div'); wrap.className='ai-check-wrap ai-universal-wrap'; wrap.dataset.for=sel.id;
+    var btn=D.createElement('button'); btn.type='button'; btn.className='ai-check-btn';
+    var menu=D.createElement('div'); menu.className='ai-check-menu';
+    wrap.appendChild(btn); wrap.appendChild(menu); sel.parentNode.insertBefore(wrap, sel.nextSibling);
+    function opts(){ return Array.from(sel.options).map(function(o){return o.value;}).filter(function(v){return v!=='';}); }
+    function cur(){ var o=opts(), a=selected(sel)||['All']; a=a.filter(function(v){return o.indexOf(v)>=0;}); return a.length?a:['All']; }
+    function rebuild(){
+      var o=opts(), c=cur(); sel.dataset.multiValues=JSON.stringify(c); if(sel.value!==c[0]) sel.value=c[0]; btn.textContent=tickText(c);
+      menu.innerHTML='<div class="ai-check-actions"><button type="button" data-act="all">All</button><button type="button" data-act="clear">Clear</button></div>';
+      o.forEach(function(v){ var lab=D.createElement('label'); lab.className='ai-check-row'; var cb=D.createElement('input'); cb.type='checkbox'; cb.value=v; cb.checked=c.indexOf(v)>=0;
+        lab.appendChild(cb); lab.appendChild(D.createTextNode(v)); menu.appendChild(lab); });
+    }
+    function apply(a){
+      var o=opts(); a=(a||[]).map(String).filter(function(v){return o.indexOf(v)>=0;});
+      if(a.indexOf('All')>=0 && a.length>1) a=a.filter(function(v){return v!=='All';});
+      if(!a.length) a=['All'];
+      sel.dataset.multiValues=JSON.stringify(a); sel.value=a[0]; rebuild();
+      sel.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    btn.onclick=function(e){ e.stopPropagation(); D.querySelectorAll('.ai-check-wrap.open').forEach(function(w){ if(w!==wrap) w.classList.remove('open'); }); wrap.classList.toggle('open'); };
+    menu.onclick=function(e){
+      e.stopPropagation();
+      if(e.target.closest('button[data-act]')){ apply(['All']); return; }
+      var cb=e.target.closest('input[type=checkbox]'); if(!cb) return;
+      if(cb.value==='All'){ apply(['All']); return; }
+      var a=cur().filter(function(v){return v!=='All';});
+      if(cb.checked){ if(a.indexOf(cb.value)<0) a.push(cb.value); } else a=a.filter(function(v){return v!==cb.value;});
+      apply(a);
+    };
+    new MutationObserver(rebuild).observe(sel,{childList:true});
+    sel.addEventListener('change',function(){ setTimeout(function(){ var c=cur(); if(btn.textContent!==tickText(c)) rebuild(); },0); });
+    rebuild();
+  }
+  function tickifyAll(){ SECS.forEach(function(s){ var r=E(s); if(r) r.querySelectorAll('.filters select[id$="Filter"]').forEach(tickify); }); }
+  MX9.tickifyAll=tickifyAll;
+  function ensureSlicers(){ try{ ensureResearcher('researcherFilter','portfolioFilter'); ensureResearcher('fullResearcherFilter','fullPortfolioFilter'); }catch(e){} try{ tickifyAll(); }catch(e){} }
+  MX9.ensureSlicers=ensureSlicers;
+
+  /* ---------- refresh orchestration ---------- */
+  var busy=false, timer=null;
+  function refreshVisible(){
+    if(busy) return; busy=true;
+    try{
+      assertGetters(); ensureSlicers();
+      var sec=activeSection();
+      try{ if(typeof window.updateDashboard==='function') window.updateDashboard(); }catch(e){ console.warn('MX9 update',e); }
+      if(sec==='individualSection'){
+        try{ assertDateWise(); if(typeof window.buildAllTradersDateWiseTable==='function') window.buildAllTradersDateWiseTable(rowsFor('individualSection')); }catch(e){}
+        try{ renderIndividual(); }catch(e){ console.warn('MX9 ind',e); }
+      }
+      if(sec==='fullSummarySection'){
+        try{ if(typeof window.buildFullDashboardSummaryWithTraders==='function') window.buildFullDashboardSummaryWithTraders(); }catch(e){}
+        renderFull();
+      }
+      if(sec==='summarySection'){ try{ renderSummaryKpis(); }catch(e){ console.warn('MX9 kpi',e); } }
+      renderDividend();
+      [150,500,1200,2500].forEach(function(ms){ setTimeout(function(){ var s2=activeSection(); if(s2!==sec) return;
+        if(s2==='summarySection'){ try{ renderSummaryKpis(); }catch(e){} }
+        if(s2==='fullSummarySection'){ try{ renderFull(); }catch(e){} }
+        if(s2==='individualSection'){ try{ renderIndividual(); }catch(e){} }
+        renderDividend(); },ms); });
+    }finally{ busy=false; }
+  }
+  function schedule(ms){ clearTimeout(timer); timer=setTimeout(refreshVisible, ms==null?150:ms); }
+  MX9.refresh=refreshVisible; MX9.schedule=schedule;
+
+  D.addEventListener('change',function(ev){
+    var t=ev.target; if(!t||!t.id) return;
+    if(/Filter$/.test(t.id) && t.closest && SECS.some(function(s){return t.closest('#'+s);})) schedule();
+  },true);
+  D.addEventListener('input',function(ev){ var t=ev.target; if(t&&/DateFilter$/.test(t.id||'')) schedule(400); },true);
+  D.addEventListener('click',function(ev){
+    var t=ev.target; if(!t||!t.closest) return;
+    if(t.closest('.ai-check-wrap, .ai-check-menu, .ai-universal-wrap, .clear-filter-btn')) schedule(300);
+  },true);
+  function wrapShow(){
+    var old=window.showSection; if(typeof old!=='function'||old.__mx9) return;
+    var w=function(id){ setCurrent(id); var r=old.apply(this,arguments); assertGetters(); refreshVisible(); setTimeout(function(){schedule(0);},600); return r; };
+    w.__mx9=true; window.showSection=w;
+  }
+  wrapShow(); setInterval(wrapShow,1000);
+  var lastN=-1;
+  setInterval(function(){ try{ tickifyAll(); }catch(e){} var k=allRows().length; if(k!==lastN){ lastN=k; ensureSlicers(); if(k) schedule(300); } renderDividend(); },1500);
+  ['fullTraderPerformanceTable','fullTraderChargesTable','fundRoiCompanyTable','fundRoiTraderTable'].forEach(own);
+})();
+</script>
 
 </body>
 </html>

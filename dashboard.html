@@ -2883,7 +2883,7 @@ function updateSegmentSummary(prefix,grossField,expenseField,netField,data,total
   setMoney(prefix+"TotalGross",gross);
   setMoney(prefix+"TotalExpenses",expense);
   setMoney(prefix+"TotalNet",net);
-  setPercent(prefix+"Roi",totalCapital?net/totalCapital*100:0);
+  setPercent(prefix+"Roi",(function(){var __f=0;try{__f=window.__mxCapAvg?window.__mxCapAvg(data,{cash:"Cash",fno:"FNO",mcx:"MCX"}[prefix]||null,"fund"):0;}catch(_e){}__f=__f||totalCapital;return __f?net/__f*100:0;})()); /* V10: same segment fund as later patch, no flicker */
   setText(prefix+"PositiveDays",pos);
   setText(prefix+"NegativeDays",neg);
   setText(prefix+"TradingDays",pos+neg);
@@ -3033,7 +3033,7 @@ function updateDashboard(){
   setMoney("totalGross",totalGross);
   setMoney("totalCharges",totalCharges);
   setMoney("totalNet",totalNet);
-  setPercent("overallRoi",totalCapital?totalNet/totalCapital*100:0);
+  setPercent("overallRoi",(function(){var __f=0;try{__f=window.__mxCapAvg?window.__mxCapAvg(data,null,"fund"):0;}catch(_e){}__f=__f||totalCapital;return __f?totalNet/__f*100:0;})()); /* V10: same avg-fund method everywhere */
   setText("positiveDays",pos);
   setText("negativeDays",neg);
   setText("totalTradingDaysOverall",totalTrades);
@@ -17374,7 +17374,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
     setMoney("totalGross", totalGross);
     setMoney("totalCharges", totalCharges);
     setMoney("totalNet", totalNet);
-    setPercent("overallRoi", totalCapital ? totalNet / totalCapital * 100 : 0);
+    setPercent("overallRoi", (function(){var __f=0;try{__f=window.__mxCapAvg?window.__mxCapAvg(data,null,"fund"):0;}catch(_e){}__f=__f||totalCapital;return __f?totalNet/__f*100:0;})()); /* V10 */
     setText("positiveDays", pos);
     setText("negativeDays", neg);
     setText("totalTradingDaysOverall", totalTrades);
@@ -18155,7 +18155,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
       if (!day) return;
 
       var accountId =
-        getTrader(row) + '|' + getAccount(row) + '|' + getResearcher(row);
+        getTrader(row) + '|' + getAccount(row) + '|' + getResearcher(row) + '|' + (row['Company Name']||row.company||'') + '|' + (row['Portfolio Name']||row.portfolio||'') + '|' + String(row['Strategy']||row.strategy||'').toUpperCase(); /* V10: one trader can hold several pools (FNO+MCX, multiple strategies) */
 
       var amount =
         type === 'utilized'
@@ -18188,6 +18188,7 @@ body.ai-show-gov-details #allTradersDateWiseTable .ai-gov-detail{display:table-c
 
     return total / days.length;
   }
+  try{ window.__mxCapAvg = capitalAverageTotal; }catch(_e){}
 
   function cleanDecimal(value) {
     return value
@@ -20526,7 +20527,7 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
     var segs=[['Cash',num('cashTotalNet')],['FNO',num('fnoTotalNet')],['MCX',num('mcxTotalNet')]].sort(function(a,b){return b[1]-a[1]});
     var leader=segs[0];el('mxInsightSegment').innerHTML='<b>'+leader[0]+'</b> is the strongest segment at <b>'+moneyFmt(leader[1])+'</b> net P&amp;L for the selected period.';
     if(an!=null){el('mxInsightMarket').innerHTML=an>=0?'MINIX is <b>outperforming Nifty 50 by '+Math.abs(an).toFixed(2)+' percentage points</b>.':'MINIX is <b>behind Nifty 50 by '+Math.abs(an).toFixed(2)+' percentage points</b>.'}else{el('mxInsightMarket').innerHTML='Select an FY, month or date range to show a direct <b>market benchmark comparison</b>.'}
-    var costPct=Math.abs(gross)>0?Math.abs(charges/gross*100):0;el('mxInsightCost').innerHTML='Total charges are <b>'+moneyFmt(charges)+'</b>, equal to <b>'+costPct.toFixed(2)+'%</b> of absolute gross P&amp;L.';
+    var __fd=0;try{__fd=(window.__mxCapAvg&&window.__MX9__&&window.__MX9__.rowsFor)?window.__mxCapAvg(window.__MX9__.rowsFor('summarySection'),null,'fund'):0;}catch(_e){} var costPct=__fd>0?Math.abs(charges/__fd*100):0;el('mxInsightCost').innerHTML='Total charges are <b>'+moneyFmt(charges)+'</b>'+(__fd>0?', equal to <b>'+costPct.toFixed(2)+'%</b> of average fund ('+moneyFmt(__fd)+').':'.');
     var pos=num('positiveDays'),neg=num('negativeDays');el('mxInsightWin').innerHTML='Win ratio is <b>'+win.toFixed(1)+'%</b> with <b>'+pos+' positive</b> and <b>'+neg+' negative</b> trading days.';
   }
   function removePresentationControls(){
@@ -20687,9 +20688,35 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
   function acctKey(r){ return [r.company||r['Company Name'],r['Trader Name'],r['Demat Account'],r['Portfolio Name']||r.portfolio,r['Researcher Name']||r.researcher,bucket(r)].join('|'); }
   /* Latest Fund: each capital account's fund on ITS latest date in the selection, summed. */
   function latestFund(rows){
+    /* V10: "Fund Transfer" rows (Fund 0) close the account, so its latest fund becomes 0.
+       "No Trade" rows (idle, fund still allocated) are matched to the MCX or equity pool of the same account. */
+    function bk(r){ return [r.company||r['Company Name'],r['Trader Name'],r['Demat Account'],r['Portfolio Name']||r.portfolio,r['Researcher Name']||r.researcher].join('|'); }
+    function st(r){ return String(r.strategy||r.Strategy||''); }
+    var base={};
+    rows.forEach(function(r){ var s=st(r), f=fundOf(r); if(!f||/^no\s*trade/i.test(s)||/^fund\s*transfer/i.test(s)) return; var b=bucket(r), k=bk(r), d=r.dateLabel||''; base[k]=base[k]||{}; if(!base[k][b]||d>=base[k][b].d) base[k][b]={d:d,f:f}; });
     var m={};
-    rows.forEach(function(r){ var f=fundOf(r); if(!f) return; var k=acctKey(r), d=r.dateLabel||''; if(!m[k]) m[k]={}; m[k][d]=(m[k][d]||0)+f; });
+    rows.forEach(function(r){ var s=st(r), f=fundOf(r), tr=/^fund\s*transfer/i.test(s), nt=/^no\s*trade/i.test(s), b;
+      if(!f && !tr) return;
+      if(tr){ var mm=s.match(/\(([^)]*)\)/); b=(mm&&mm[1].trim().toUpperCase()==='MCX')?'MCX':'EQUITY'; }
+      else if(nt){ var p=base[bk(r)]||{}; b=(p.MCX&&p.MCX.f===f&&!(p.EQUITY&&p.EQUITY.f===f))?'MCX':'EQUITY'; }
+      else b=bucket(r);
+      var k=bk(r)+'|'+b, d=r.dateLabel||''; if(!m[k]) m[k]={}; m[k][d]=(m[k][d]||0)+f; });
     var t=0; Object.keys(m).forEach(function(k){ var ds=Object.keys(m[k]).sort(); if(ds.length) t+=m[k][ds[ds.length-1]]; }); return t;
+  }
+  /* V10 helpers: Fund Transfer / No Trade tags */
+  function v10IsTr(r){ return /^fund\s*transfer/i.test(String(r.strategy||r.Strategy||'')); }
+  function v10IsNT(r){ return /^no\s*trade/i.test(String(r.strategy||r.Strategy||'')); }
+  function v10D(iso){ var p=String(iso||'').split('-'); if(p.length<3) return iso||''; return p[2]+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(p[1])-1]; }
+  function v10Tag(rows,lf,isMonth){
+    var trs=rows.filter(v10IsTr).sort(function(a,b){return a.dateLabel<b.dateLabel?-1:1;});
+    if(!lf && trs.length){ var x=trs[trs.length-1], m=String(x.strategy||x.Strategy||'').match(/\(([^)]*)\)/);
+      return '<span class="mx10-tag tr">'+(isMonth?'Transfer':'Transfer '+v10D(x.dateLabel)+(m?' · '+m[1]:''))+'</span>'; }
+    var last=''; rows.forEach(function(r){ if(r.dateLabel>last) last=r.dateLabel; });
+    var lr=rows.filter(function(r){return r.dateLabel===last;});
+    if(lf && lr.length && lr.every(v10IsNT)){ if(isMonth) return rows.every(v10IsNT)?'<span class="mx10-tag id">No Trade</span>':'<span class="mx10-tag id">Idle</span>';
+      var lt=''; rows.forEach(function(r){ if(!v10IsNT(r) && Math.abs(rowCalc(r).net)>0.004 && r.dateLabel>lt) lt=r.dateLabel; });
+      return '<span class="mx10-tag id">Idle'+(lt?' · last trade '+v10D(lt):'')+'</span>'; }
+    return '';
   }
   /* Avg Fund: total fund of each trading date, averaged over trading dates. */
   function avgFund(rows){
@@ -20709,7 +20736,7 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
   MX9.calc={rowCalc:rowCalc,latestFund:latestFund,avgFund:avgFund,winLoss:winLoss,agg:agg};
   function groupBy(rows,keyFn){ var m={},order=[]; rows.forEach(function(r){ var k=keyFn(r); if(!m[k]){m[k]=[];order.push(k);} m[k].push(r); }); return {m:m,keys:order}; }
   function pc(v){ return '<td class="amount '+(v>=0?'positive':'negative')+'">'+money(v)+'</td>'; }
-  function roiTd(v){ if(v==null||!isFinite(v)) return '<td class="amount muted">N/A</td>'; return '<td class="amount '+(v>=0?'positive':'negative')+'">'+v.toFixed(2)+'%</td>'; }
+  function roiTd(v){ if(v==null||!isFinite(v)) return '<td class="amount muted">—</td>'; return '<td class="amount '+(v>=0?'positive':'negative')+'">'+v.toFixed(2)+'%</td>'; }
   function idxTd(v){ if(v==null||!isFinite(v)) return '<td class="amount muted">-</td>'; return '<td class="amount '+(v>=0?'positive':'negative')+'">'+(v>=0?'+':'')+v.toFixed(2)+'%</td>'; }
 
   /* index % change for the date span of the rows */
@@ -20768,17 +20795,17 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
     if(!rows.length){ put('fullTraderPerformanceTable','<p class="muted">No data available for the selected slicers</p>'); return; }
     var groups=portfolioGroups(rows), body='', T={fund:0,net:0,charges:0,win:0,loss:0,div:0};
     groups.forEach(function(g){
-      var gid='p'+(++gidSeq), roi=g.fund?g.a.net/g.fund*100:null;
+      var gid='p'+(++gidSeq), __gaf=avgFund(g.rows), roi=g.fund?g.a.net/g.fund*100:(__gaf?g.a.net/__gaf*100:null);
       T.fund+=g.fund; T.net+=g.a.net; T.charges+=g.a.charges; T.win+=g.win; T.loss+=g.loss; T.div+=g.a.div;
       body+='<tr class="mx9-group" onclick="mx9Toggle(\''+gid+'\',this.cells[0])"><td><span class="mx9-tg">+</span>'+esc(g.name)+'<div class="muted" style="font-size:10px">'+g.kids.length+' rows | '+esc(g.demats)+'</div></td><td>Portfolio Total</td><td>-</td><td>-</td>'+
         '<td class="amount">'+money(g.fund)+'</td>'+pc(g.a.net)+'<td class="amount warning">'+money(g.a.charges)+'</td>'+roiTd(roi)+'<td class="positive">'+g.win+'</td><td class="negative">'+g.loss+'</td>'+pc(g.a.div)+'</tr>';
       g.kids.forEach(function(k){
-        var r=k.r0, kr=k.fund?k.a.net/k.fund*100:null;
+        var r=k.r0, __kaf=avgFund(k.rows), kr=k.fund?k.a.net/k.fund*100:(__kaf?k.a.net/__kaf*100:null);
         body+='<tr class="mx9-child mx9-hidden" data-mx9p="'+gid+'"><td>'+esc(g.name)+'</td><td>'+esc(r['Demat Account'])+'</td><td>'+esc(r.researcher||r['Researcher Name'])+'</td><td>'+esc(r['Trader Name'])+'</td>'+
-          '<td class="amount">'+money(k.fund)+'</td>'+pc(k.a.net)+'<td class="amount warning">'+money(k.a.charges)+'</td>'+roiTd(kr)+'<td class="positive">'+k.win+'</td><td class="negative">'+k.loss+'</td>'+pc(k.a.div)+'</tr>';
+          '<td class="amount">'+money(k.fund)+v10Tag(k.rows,k.fund,true)+'</td>'+pc(k.a.net)+'<td class="amount warning">'+money(k.a.charges)+'</td>'+roiTd(kr)+'<td class="positive">'+k.win+'</td><td class="negative">'+k.loss+'</td>'+pc(k.a.div)+'</tr>';
       });
     });
-    body+='<tr class="mx9-total"><td colspan="4">Grand Total ('+rows.length+' CSV rows)</td><td class="amount">'+money(T.fund)+'</td>'+pc(T.net)+'<td class="amount warning">'+money(T.charges)+'</td>'+roiTd(T.fund?T.net/T.fund*100:null)+'<td class="positive">'+T.win+'</td><td class="negative">'+T.loss+'</td>'+pc(T.div)+'</tr>';
+    body+='<tr class="mx9-total"><td colspan="4">Grand Total ('+rows.length+' CSV rows)</td><td class="amount">'+money(T.fund)+'</td>'+pc(T.net)+'<td class="amount warning">'+money(T.charges)+'</td>'+roiTd((function(){var a=window.__mxCapAvg?(window.__mxCapAvg(rows,null,'fund')||avgFund(rows)):avgFund(rows);return a?T.net/a*100:null;})())+'<td class="positive">'+T.win+'</td><td class="negative">'+T.loss+'</td>'+pc(T.div)+'</tr>';
     put('fullTraderPerformanceTable', bar('fullTraderPerformanceTable')+
       '<div class="mx9-scroll"><table class="mx9-table"><thead><tr><th>Portfolio</th><th>Demat</th><th>Researcher</th><th>Trader</th><th class="amount">Fund (Latest)</th><th class="amount">P/L (Net)</th><th class="amount">Charges</th><th class="amount">ROI</th><th>Win</th><th>Loss</th><th class="amount">Dividend</th></tr></thead><tbody>'+body+'</tbody></table></div>'+
       '<div class="mx9-note">Fund = each capital account\'s Fund on its latest date in the selection. P/L = Σ Net Amount (FNO+Cash+MCX). Charges = Σ Gorv Chg. ROI = P/L ÷ Fund. Win/Loss = trading days with that row\'s total day Net P&L &gt; 0 / &lt; 0.</div>');
@@ -20808,9 +20835,9 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
   }
 
   function fundRoiRow(label,sub,rows,extra,cls,attrs){
-    var net=agg(rows).net, lf=latestFund(rows), af=avgFund(rows);
-    return '<tr class="'+(cls||'')+'" '+(attrs||'')+'><td>'+label+(sub?'<div class="muted" style="font-size:10px">'+sub+'</div>':'')+'</td><td class="amount">'+money(lf)+'</td><td class="amount">'+money(af)+'</td>'+pc(net)+
-      roiTd(lf?net/lf*100:null)+roiTd(af?net/af*100:null)+idxTd(idxPct('Nifty 50',rows))+idxTd(idxPct('Nifty Bank',rows))+(extra||'')+'</tr>';
+    var tot=/mx9-total/.test(cls||''), net=agg(rows).net, lf=latestFund(rows), af=(tot&&window.__mxCapAvg)?(window.__mxCapAvg(rows,null,'fund')||avgFund(rows)):avgFund(rows), tg=tot?'':v10Tag(rows,lf,/mx9-child/.test(cls||''));
+    return '<tr class="'+(cls||'')+'" '+(attrs||'')+'><td>'+label+tg+(sub?'<div class="muted" style="font-size:10px">'+sub+'</div>':'')+'</td><td class="amount">'+money(lf)+'</td><td class="amount">'+money(af)+'</td>'+pc(net)+
+      roiTd((lf&&!tot)?net/lf*100:null)+roiTd(af?net/af*100:null)+idxTd(idxPct('Nifty 50',rows))+idxTd(idxPct('Nifty Bank',rows))+(extra||'')+'</tr>';
   }
   function monthKids(rows,gid){
     var mg=groupBy(rows,function(r){return r.monthLabel||'Unknown';}), s='';
@@ -20906,19 +20933,19 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
     var list=g.keys.map(function(t){
       var tr=g.m[t], by=dayNet(tr), mtd=0, prof=0, loss=0, w=0, l=0;
       Object.keys(by).forEach(function(d){ var v=Math.round(by[d]*100)/100; mtd+=by[d]; if(v>0){prof+=by[d];w++;} else if(v<0){loss+=by[d];l++;} });
-      var f=latestFund(tr);
-      return {t:t,rows:tr,day:by[dayDate]||0,mtd:mtd,fund:f,roi:f?mtd/f*100:0,prof:prof,loss:loss,w:w,l:l,risk:riskOf(mtd,f)};
+      var f=latestFund(tr), af=avgFund(tr);
+      return {t:t,rows:tr,day:by[dayDate]||0,mtd:mtd,fund:f,af:af,roi:af?mtd/af*100:0,prof:prof,loss:loss,w:w,l:l,risk:riskOf(mtd,af||f),tag:v10Tag(tr,f,true)};
     }).sort(function(a,b){return b.mtd-a.mtd;});
     var T={day:0,mtd:0,fund:0,prof:0,loss:0,w:0,l:0};
     var b1='',b2='',b3='';
     list.forEach(function(x,i){
       T.day+=x.day;T.mtd+=x.mtd;T.fund+=x.fund;T.prof+=x.prof;T.loss+=x.loss;T.w+=x.w;T.l+=x.l;
       b1+='<tr><td><span class="rank-badge">'+(i+1)+'</span></td><td>'+esc(x.t)+'</td>'+pc(x.day)+pc(x.mtd)+idxTd(nAll)+idxTd(bAll)+pct1(x.roi)+'<td class="'+x.risk.cls+'">'+x.risk.icon+' '+x.risk.level+'</td></tr>';
-      b2+='<tr><td>'+esc(x.t)+'</td><td class="amount">'+money(x.fund)+'</td>'+pc(x.mtd)+'<td class="amount">'+money(x.fund+x.mtd)+'</td><td>'+(x.mtd>=0?'Fund + Profit':'Fund - Loss')+'</td><td class="'+x.risk.cls+'">'+x.risk.icon+' '+x.risk.level+'</td></tr>';
+      b2+='<tr><td>'+esc(x.t)+'</td><td class="amount">'+money(x.fund)+x.tag+'</td>'+pc(x.mtd)+'<td class="amount">'+(x.fund?money(x.fund+x.mtd):'—')+'</td><td>'+(!x.fund?'Fund transfer':(x.mtd>=0?'Fund + Profit':'Fund - Loss'))+'</td><td class="'+x.risk.cls+'">'+x.risk.icon+' '+x.risk.level+'</td></tr>';
       var pf=x.loss?x.prof/Math.abs(x.loss):(x.prof?Infinity:0);
       b3+='<tr><td>'+esc(x.t)+'</td>'+pct1(x.roi)+pc(x.prof)+pc(x.loss)+'<td class="amount">'+(pf===Infinity?'∞':pf.toFixed(2))+'</td><td class="amount">'+((x.w+x.l)?(x.w/(x.w+x.l)*100).toFixed(1):'0.0')+'%</td></tr>';
     });
-    var troi=T.fund?T.mtd/T.fund*100:0, tpf=T.loss?T.prof/Math.abs(T.loss):0;
+    var __taf=window.__mxCapAvg?(window.__mxCapAvg(rows,null,'fund')||avgFund(rows)):avgFund(rows), troi=__taf?T.mtd/__taf*100:0, tpf=T.loss?T.prof/Math.abs(T.loss):0;
     b1+='<tr class="mx9-total"><td colspan="2">Total</td>'+pc(T.day)+pc(T.mtd)+idxTd(nAll)+idxTd(bAll)+pct1(troi)+'<td></td></tr>';
     b2+='<tr class="mx9-total"><td>Total</td><td class="amount">'+money(T.fund)+'</td>'+pc(T.mtd)+'<td class="amount">'+money(T.fund+T.mtd)+'</td><td></td><td></td></tr>';
     b3+='<tr class="mx9-total"><td>Total</td>'+pct1(troi)+pc(T.prof)+pc(T.loss)+'<td class="amount">'+tpf.toFixed(2)+'</td><td class="amount">'+((T.w+T.l)?(T.w/(T.w+T.l)*100).toFixed(1):'0.0')+'%</td></tr>';
@@ -20937,7 +20964,7 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
     /* capital utilization: fund changes per trader */
     var out=[];
     g.keys.slice().sort().forEach(function(t){
-      var byD={}; g.m[t].forEach(function(r){ var f=fundOf(r); if(!f||!r.dateLabel) return; var k=acctKey(r); if(!byD[r.dateLabel]) byD[r.dateLabel]={}; byD[r.dateLabel][k]=(byD[r.dateLabel][k]||0)+f; });
+      var byD={}; g.m[t].forEach(function(r){ var f=fundOf(r); if((!f&&!v10IsTr(r))||!r.dateLabel) return; var k=acctKey(r); if(!byD[r.dateLabel]) byD[r.dateLabel]={}; byD[r.dateLabel][k]=(byD[r.dateLabel][k]||0)+f; });
       var arr=Object.keys(byD).sort().map(function(d){ return {d:d,f:Object.keys(byD[d]).reduce(function(a,k){return a+byD[d][k];},0)}; });
       if(!arr.length) return;
       var ch=[arr[0]]; for(var i=1;i<arr.length;i++){ if(Math.abs(arr[i].f-ch[ch.length-1].f)>0.01) ch.push(arr[i]); }
@@ -20959,7 +20986,7 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
     var ft=fe.textContent||'', fv=parseFloat(ft.replace(/[^0-9.\-]/g,''))||0;
     if(/cr/i.test(ft)) fv*=1e7; else if(/lakh|\bl\b/i.test(ft)) fv*=1e5;
     if(!fv) return;
-    var netv=n((E('totalNet')||{}).textContent), roiT=((E('overallRoi')||{}).textContent||'').trim();
+    var __rr=rowsFor('summarySection'), netv=agg(__rr).net, __ff=0; try{ __ff=window.__mxCapAvg?window.__mxCapAvg(__rr,null,'fund'):avgFund(__rr); }catch(_e){} if(__ff) fv=__ff; var roiT=(fv?(netv/fv*100):0).toFixed(2)+'%'; /* V10: numerator and fund from the same filtered rows */
     var txt='ROI Calculation: '+money(netv)+' ÷ '+money(fv)+' × 100 = '+roiT;
     if(ce.textContent!==txt) ce.textContent=txt;
     if(!ce.__mx9obs){ ce.__mx9obs=true; try{ new MutationObserver(function(){ if(ce.textContent.indexOf(' ÷ ₹')>0 && !/÷ ₹[0-9,]{6,}/.test(ce.textContent)) fixRoiCalc(); }).observe(ce,{childList:true,characterData:true,subtree:true}); }catch(e){} }
@@ -21090,6 +21117,394 @@ td.amount,th.amount{font-variant-numeric:tabular-nums!important}
 })();
 </script>
 
+
+<!-- === MINIX V10 BOARDROOM (Oct 2026): login photo, data check, fund position, leaderboard, risk alerts, profile, heatmap, charges, company split, card style B === -->
+<style id="mx10-style">
+.mx10-shell{margin:14px 0;padding:18px 20px;border:1px solid #1e3a5f;border-radius:18px;background:#0b1424}
+.mx10-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.mx10-title{font-size:20px;font-weight:800;color:#f8fafc}
+.mx10-sub{font-size:12px;color:#94a3b8;margin-top:3px}
+.mx10-grid{display:grid;gap:10px}
+.mx10-g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.mx10-g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.mx10-card{background:#0f1b2e;border:1px solid #1e293b;border-left:4px solid #3b82f6;border-radius:12px;padding:12px 14px;min-width:0}
+.mx10-card.up{border-left-color:#22c55e}.mx10-card.down{border-left-color:#ef4444}.mx10-card.warn{border-left-color:#f59e0b}
+.mx10-lbl{font-size:11px;letter-spacing:.04em;color:#94a3b8;font-weight:700}
+.mx10-val{font-size:24px;font-weight:800;color:#f1f5f9;margin-top:4px}
+.mx10-note{font-size:11.5px;color:#94a3b8;margin-top:4px;line-height:1.45}
+.mx10-pos{color:#4ade80!important}.mx10-neg{color:#f87171!important}.mx10-amb{color:#fbbf24!important}
+.mx10-av{border-radius:50%;object-fit:cover;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#e2e8f0;background:#1e293b;overflow:hidden}
+.mx10-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(51,65,85,.5)}
+.mx10-row:last-child{border-bottom:0}
+.mx10-click{cursor:pointer}.mx10-click:hover{background:rgba(59,130,246,.08)}
+.mx10-rank{width:22px;text-align:center;font-weight:800;color:#64748b}
+.mx10-name{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mx10-meta{font-size:11px;color:#94a3b8;font-weight:500}
+.mx10-alert{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;margin-bottom:7px;font-size:12.5px;color:#e2e8f0}
+.mx10-alert.red{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35)}
+.mx10-alert.amb{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35)}
+.mx10-alert.blu{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35)}
+.mx10-alert.gry{background:rgba(148,163,184,.10);border:1px solid rgba(148,163,184,.35)}
+.mx10-tbl{width:100%;border-collapse:separate;border-spacing:3px;font-size:11.5px}
+.mx10-tbl th{color:#94a3b8;font-weight:700;text-align:center;padding:4px}
+.mx10-tbl td{text-align:center;padding:1px!important;background:transparent!important;border:0!important;white-space:nowrap}
+.mx10-tbl td>div{padding:5px 4px;border-radius:5px;color:#e2e8f0;font-weight:700}
+.mx10-tbl th{background:transparent!important;border:0!important}
+.mx10-tbl td.nm{text-align:left;font-weight:700;color:#e2e8f0;padding:4px 8px!important}
+.mx10-scroll{overflow-x:auto}
+.mx10-plain{width:100%;border-collapse:collapse;font-size:12.5px}
+.mx10-plain th{color:#94a3b8;font-weight:700;text-align:right;padding:6px;border-bottom:1px solid #1e293b}
+.mx10-plain th:first-child,.mx10-plain td:first-child{text-align:left}
+.mx10-plain td{padding:7px 6px;text-align:right;border-bottom:1px solid rgba(30,41,59,.7);color:#e2e8f0}
+.mx10-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mx10-badge{font-size:12px;font-weight:800;padding:7px 11px;border-radius:999px;border:1px solid #334155;background:#0b1220;color:#cbd5e1;white-space:nowrap}
+.mx10-badge.ok{border-color:#166534;color:#bbf7d0}.mx10-badge.bad{border-color:#991b1b;color:#fecaca}
+.mx10-btn{cursor:pointer}.mx10-btn:hover{border-color:#3b82f6}
+#mx10Modal{display:none;position:fixed;inset:0;z-index:1000010;background:rgba(2,6,23,.72);align-items:center;justify-content:center;padding:16px}
+#mx10Modal .box{width:min(760px,96vw);max-height:90vh;overflow:auto;background:#0b1424;border:1px solid #1e3a5f;border-radius:18px;padding:20px}
+.mx10-x{float:right;background:transparent;border:1px solid #334155;color:#cbd5e1;border-radius:10px;padding:5px 10px;cursor:pointer;font-weight:800}
+.mx10-hide{display:none!important}
+/* Card style B: coloured left strip — green profit, red loss */
+.mx-exec-card{border-left:4px solid #3b82f6!important}
+.mx-exec-card:has(.mx-up){border-left-color:#22c55e!important}
+.mx-exec-card:has(.mx-down){border-left-color:#ef4444!important}
+.mx-market-lead,.mx-market-mini{border-left:4px solid #3b82f6!important}
+.mx-market-lead:has(.mx-up),.mx-market-mini:has(.mx-up){border-left-color:#22c55e!important}
+.mx-market-lead:has(.mx-down),.mx-market-mini:has(.mx-down){border-left-color:#ef4444!important}
+.kpi-card:has(.kpi-value.positive){border-left:4px solid #22c55e!important}
+.kpi-card:has(.kpi-value.negative){border-left:4px solid #ef4444!important}
+#minixLoggedUserBox .mx10-av{border:3px solid #64748b}
+.mx10-tag{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.mx10-tag.tr{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.mx10-tag.id{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.4)}
+/* tags in tables: own line under the name so the narrow column never cuts them */
+.mx9-table td .mx10-tag{display:block;width:max-content;max-width:100%;white-space:normal;margin:4px 0 2px;line-height:1.3}
+.mx9-table tr:has(.mx10-tag.tr) > td:first-child{box-shadow:inset 4px 0 0 #ef4444}
+.mx9-table tr:has(.mx10-tag.id) > td:first-child{box-shadow:inset 4px 0 0 #f59e0b}
+.mx10-alerts{max-height:470px;overflow-y:auto;padding-right:4px}
+.mx10-listscroll{max-height:330px;overflow-y:auto;padding-right:4px}
+.mx10-acalc{margin-top:4px;font-size:11px;color:#cbd5e1;background:rgba(15,23,42,.55);border:1px dashed rgba(148,163,184,.3);border-radius:8px;padding:4px 8px;line-height:1.4}
+.mx10-rules{width:100%;border-collapse:collapse;font-size:11px;margin-top:2px}
+.mx10-rules td{padding:4px 6px;border-bottom:1px solid rgba(51,65,85,.6);color:#cbd5e1;vertical-align:top}
+.mx10-rules td:first-child{white-space:nowrap;font-weight:800;color:#e2e8f0}
+.mx10-calc{margin-top:10px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.35);font-size:11.5px;color:#94a3b8;font-weight:500;line-height:1.35}
+.mx10-calc-h{font-size:11px;font-weight:800;color:#7dd3fc;cursor:pointer;list-style:none;user-select:none}
+.mx10-calc-h::-webkit-details-marker{display:none}
+.mx10-calc-h::before{content:'▸ ';color:#64748b}
+.mx10-calc[open] .mx10-calc-h::before{content:'▾ '}
+.mx10-calc[open] .mx10-calc-h{margin-bottom:4px}
+.mx10-calc-h:hover{color:#bae6fd}
+@media print{.mx10-calc{display:block}}
+.mx10-cr{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+.mx10-cr span{min-width:0}
+.mx10-cr b{color:#e2e8f0;white-space:nowrap;font-weight:800}
+.mx10-cr.tot{border-top:1px solid rgba(148,163,184,.35);margin-top:3px;padding-top:4px;color:#e2e8f0}
+.mx10-cn{margin-top:4px;font-size:10.5px;color:#fbbf24}
+.mx-exec-card .mx10-calc{text-align:left}
+.mx10-alert .ttl{font-weight:800}
+/* Section 2: Overall ROI % cards hidden too */
+#summarySection .segment-grid > .kpi-card:has(#cashRoi),#summarySection .segment-grid > .kpi-card:has(#fnoRoi),
+#summarySection .segment-grid > .kpi-card:has(#mcxRoi),#summarySection .segment-grid > .kpi-card:has(#overallRoi){display:none!important}
+/* Section 2: hide only Total Fund / Utilized cards; other 7 cards fill the row */
+#summarySection .segment-grid > .kpi-card:has(#cashTotalFund),#summarySection .segment-grid > .kpi-card:has(#cashTotalUtilized),
+#summarySection .segment-grid > .kpi-card:has(#fnoTotalFund),#summarySection .segment-grid > .kpi-card:has(#fnoTotalUtilized),
+#summarySection .segment-grid > .kpi-card:has(#mcxTotalFund),#summarySection .segment-grid > .kpi-card:has(#mcxTotalUtilized),
+#summarySection .segment-grid > .kpi-card:has(#overallTotalFund),#summarySection .segment-grid > .kpi-card:has(#overallTotalUtilized){display:none!important}
+@media(min-width:1451px){html body #summarySection .kpi-grid.kpi-grid-8.segment-grid,html body #summarySection .segment-grid.segment-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
+@media print{#mx10Modal,.mx10-btn,#minixAdminEntryBtn,#minixRemoteAccessBtn,#minixAnyDeskChangeBtn{display:none!important}.mx10-shell{break-inside:avoid}}
+</style>
+<div id="mx10Modal" onclick="if(event.target===this)this.style.display='none'"><div class="box" id="mx10ModalBox"></div></div>
+<script>
+(function(){
+  'use strict';
+  var D=document;
+  function E(id){return D.getElementById(id);}
+  function n(v){ if(typeof v==='number') return isFinite(v)?v:0; var x=parseFloat(String(v==null?'':v).replace(/[₹,\s]/g,'')); return isFinite(x)?x:0; }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function inr(v){ v=Math.round(n(v)); var neg=v<0; v=Math.abs(v); return (neg?'-':'')+'₹'+v.toLocaleString('en-IN'); }
+  function short(v){ v=n(v); var a=Math.abs(v), s=v<0?'-':''; if(a>=1e7) return s+'₹'+(a/1e7).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+' Cr'; if(a>=1e5) return s+'₹'+(a/1e5).toFixed(2)+' L'; return s+'₹'+Math.round(a).toLocaleString('en-IN'); }
+  function pct(v,d){ return (v==null||!isFinite(v))?'—':(v>0?'+':'')+v.toFixed(d==null?2:d)+'%'; }
+  function cls(v){ return v>0?'mx10-pos':v<0?'mx10-neg':''; }
+  function MX(){ return window.__MX9__||null; }
+  function C(){ var m=MX(); return m&&m.calc; }
+  function rows(){ var m=MX(); try{ return m&&m.rowsFor?m.rowsFor('summarySection'):[]; }catch(e){ return []; } }
+  function trader(r){ return r['Trader Name']||r.trader||'Unknown'; }
+  function comp(r){ return r.company||r['Company Name']||''; }
+  function fundOf(r){ return n(r.Fund!==undefined?r.Fund:r.fund); }
+  function netOf(r){ var c=C(); return c?c.rowCalc(r).net:n(r.totalNet); }
+  function isNoTrade(r){ return String(r.strategy||r.Strategy||'').toLowerCase().replace(/\s+/g,'')==='notrade'; }
+  function avgFund(rs){ try{ if(window.__mxCapAvg) return window.__mxCapAvg(rs,null,'fund'); }catch(e){} var c=C(); return c?c.avgFund(rs):0; }
+  function avgUtil(rs){ try{ if(window.__mxCapAvg) return window.__mxCapAvg(rs,null,'utilized'); }catch(e){} return 0; }
+  function poolKey(r){ return [comp(r),trader(r),r['Demat Account'],r['Portfolio Name']||r.portfolio,r['Researcher Name']||r.researcher,String(r.strategy||r.Strategy||'').toUpperCase().replace(/[^A-Z]/g,'')==='MCX'?'MCX':'EQ',isNoTrade(r)?'NT':''].join('|'); }
+  function idleTxt(t,maxD){ var d=t.idleSince||(t.idle?t.lastTrade:''); if(d) return 'last trade '+fmtD(d)+' ('+daysBetween(d,maxD)+' days)'; return t.idle?'never traded':'another account active; no trades in this account'; }
+  function isTransfer(r){ return /^fund\s*transfer/i.test(String(r.strategy||r.Strategy||'')); }
+  function segOf(r){ var m=String(r.strategy||r.Strategy||'').match(/\(([^)]*)\)/); return m?m[1]:''; }
+  function daysBetween(a,b){ try{ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5); }catch(e){ return 0; } }
+  function fmtD(iso){ if(!iso) return '-'; var p=iso.split('-'); var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(p[1])-1]; return p[2]+' '+m+' '+p[0].slice(2); }
+  function photo(name){ var p=window.traderPhotos||{}; if(p[name]) return p[name]; var k=Object.keys(p).find(function(x){return x.toLowerCase().replace(/\s+/g,'')===String(name||'').toLowerCase().replace(/\s+/g,'');}); return k?p[k]:''; }
+  function initials(name){ return String(name||'?').split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase(); }
+  function avatar(name,size,ring,grey){ var src=photo(name), st='width:'+size+'px!important;height:'+size+'px!important;min-width:'+size+'px;max-width:none!important;max-height:none!important;min-height:'+size+'px!important;aspect-ratio:1/1;font-size:'+Math.round(size*.36)+'px;'+(ring?'border:'+(size>40?3:2)+'px solid '+ring+';':'')+(grey?'filter:grayscale(1);opacity:.65;':'');
+    return src?'<img class="mx10-av" src="'+src+'" alt="" style="'+st+'">':'<span class="mx10-av" style="'+st+'">'+esc(initials(name))+'</span>'; }
+
+  /* ---------- per-trader statistics ---------- */
+  function stats(rs){
+    var by={}, maxD='';
+    rs.forEach(function(r){ var d=r.dateLabel; if(!d) return; if(d>maxD) maxD=d; var t=trader(r); (by[t]=by[t]||[]).push(r); });
+    var list=Object.keys(by).map(function(t){
+      var tr=by[t], days={}, months={}, net=0, ch=0, gross=0, brk=0, last='', lastTrade='', port='', dem='', strat={}, c=C();
+      tr.forEach(function(r){ var x=c?c.rowCalc(r):{net:n(r.totalNet),charges:n(r.totalCharges),gross:n(r.totalGross),brk:0,brkGst:0};
+        net+=x.net; ch+=x.charges; gross+=x.gross; brk+=(x.brk||0)+(x.brkGst||0);
+        days[r.dateLabel]=(days[r.dateLabel]||0)+x.net; var mo=r.dateLabel.slice(0,7); (months[mo]=months[mo]||[]).push(r);
+        if(r.dateLabel>last) last=r.dateLabel; if(Math.abs(x.net)>0.004 && r.dateLabel>lastTrade) lastTrade=r.dateLabel;
+        port=r['Portfolio Name']||r.portfolio||port; dem=r['Demat Account']||dem; if(!isNoTrade(r)&&!isTransfer(r)) strat[r.strategy||r.Strategy]=1; });
+      var ds=Object.keys(days).sort(), w=0,l=0, cum=0, peak=0, peakD='', dd=0, best={d:'',v:-Infinity}, worst={d:'',v:Infinity}, streak=0;
+      ds.forEach(function(d){ var v=Math.round(days[d]*100)/100; if(v>0)w++; else if(v<0)l++; if(v!==0){ if(v>best.v)best={d:d,v:v}; if(v<worst.v)worst={d:d,v:v}; }
+        cum+=v; if(cum>peak){peak=cum;peakD=d;} if(peak-cum>dd)dd=peak-cum; });
+      var curDD=peak-cum, last10=ds.filter(function(d){return Math.round(days[d]*100)!==0;}).slice(-10), w10=last10.filter(function(d){return days[d]>0;}).length;
+      var sDays=[]; for(var i=ds.length-1;i>=0;i--){ var v=Math.round(days[ds[i]]*100)/100; if(v===0) continue; if(v<0){ streak++; sDays.push([ds[i],v]); } else break; }
+      var seq10=last10.map(function(d){return days[d]>0?'✓':'✗';}).join(' ');
+      var af=avgFund(tr), cur=0, curPools={};
+      tr.forEach(function(r){ if(r.dateLabel===last && last===maxD){ var f=fundOf(r); if(f){ var k=poolKey(r); curPools[k]=(curPools[k]||0)+f; } } });
+      Object.keys(curPools).forEach(function(k){cur+=curPools[k];});
+      var idleAmt=0, idleSince='', idleBig=0; Object.keys(curPools).forEach(function(k){ if(!/\|NT$/.test(k)) return; idleAmt+=curPools[k];
+        var base=k.replace(/\|NT$/,'|'), ld=''; tr.forEach(function(x){ if(poolKey(x)===base && Math.abs(netOf(x))>0.004 && x.dateLabel>ld) ld=x.dateLabel; });
+        if(curPools[k]>idleBig){ idleBig=curPools[k]; idleSince=(ld&&ld<maxD)?ld:''; } });
+      var transfers=tr.filter(isTransfer).map(function(r){ var prev=0, pd=''; tr.forEach(function(x){ if(!isTransfer(x)&&x.dateLabel<r.dateLabel&&fundOf(x)>0&&x.dateLabel>=pd){ if(x.dateLabel>pd){pd=x.dateLabel;prev=0;} prev=Math.max(prev,fundOf(x)); } }); return {d:r.dateLabel,seg:segOf(r),amt:prev}; }).sort(function(a,b){return a.d<b.d?1:-1;});
+      var lastRows=tr.filter(function(r){return r.dateLabel===last;}), lastNet=lastRows.reduce(function(s,r){return s+netOf(r);},0), lastUtil=0;
+      lastRows.forEach(function(r){ lastUtil+=n(r['Margin Utilized']||r.marginUtilized||0); });
+      var mk=maxD.slice(0,7), mNet=0, mGross=0, z30=0, c2=C();
+      tr.forEach(function(r){ var x=c2?c2.rowCalc(r):{net:n(r.totalNet),gross:n(r.totalGross)}; if(String(r.dateLabel).slice(0,7)===mk){ mNet+=x.net; mGross+=x.gross; }
+        if(!isNoTrade(r)&&!isTransfer(r)&&!fundOf(r)&&Math.abs(x.net)>0.004&&daysBetween(r.dateLabel,maxD)<=30) z30++; });
+      return {peak:peak,peakD:peakD,cumNow:cum,sDays:sDays.reverse(),seq10:seq10,curDD:curDD,last10:last10.length,w10:w10,mNet:mNet,mGross:mGross,z30:z30,name:t,rows:tr,net:net,charges:ch,gross:gross,brk:brk,win:w,loss:l,days:w+l,avgFund:af,roi:af?net/af*100:null,
+        dd:dd,ddPct:af?dd/af*100:null,best:best,worst:worst,streak:streak,last:last,lastTrade:lastTrade||'',port:port,demat:dem,
+        strat:Object.keys(strat).filter(Boolean).join(', '),curFund:cur,lastNet:lastNet,lastUtil:lastUtil,months:months,
+        idle:lastRows.length>0&&lastRows.every(isNoTrade),idleAmt:idleAmt,idleSince:idleSince,transfers:transfers};
+    });
+    return {list:list,maxD:maxD};
+  }
+
+  /* ---------- Data issues (not trading risk): shown under the header badge, not in Risk Alerts ---------- */
+  function dataIssues(rs,S){
+    var out=[];
+    S.list.forEach(function(t){ if(t.z30>0) out.push({t:t,title:'Trades with Fund = 0',m:'Last 30 days: '+t.z30+' rows · fill Allocated funds in the trader sheet'}); });
+    var pools={}; rs.forEach(function(r){ var k=[comp(r),trader(r),r['Demat Account'],r['Portfolio Name']||r.portfolio,r['Researcher Name']||r.researcher].join('|'); var p=pools[k]=pools[k]||{d:'',rows:[]}; if(r.dateLabel>p.d){p.d=r.dateLabel;p.rows=[r];} else if(r.dateLabel===p.d) p.rows.push(r); });
+    Object.keys(pools).forEach(function(k){ var p=pools[k]; if(!p.d||p.d>=S.maxD||daysBetween(p.d,S.maxD)>45) return; if(p.rows.some(isTransfer)) return;
+      var f=p.rows.reduce(function(a,r){return a+fundOf(r);},0); if(f<=0) return; var t=S.list.find(function(x){return x.name===trader(p.rows[0]);}); if(!t) return;
+      out.push({t:t,title:'Data upload pending',m:comp(p.rows[0]).replace(/ Pvt Ltd/i,'')+' · '+(p.rows[0]['Demat Account']||'')+' · '+short(f)+' · last data '+fmtD(p.d)}); });
+    return out;
+  }
+  window.mx10ShowDataIssues=function(){ var L=window.__mx10DataIssues||[]; E('mx10ModalBox').innerHTML='<button class="mx10-x" onclick="document.getElementById(\'mx10Modal\').style.display=\'none\'">✕</button><div class="mx10-title">Data check</div><div class="mx10-sub" style="margin-bottom:12px">These are not trading risks. The data needs correction (for admin).</div>'+(L.length?L.map(function(a){ return '<div class="mx10-alert gry">'+avatar(a.t.name,28)+'<div><b>'+esc(a.t.name)+'</b> · <span class="ttl">'+esc(a.title)+'</span><div class="mx10-meta" style="color:inherit">'+esc(a.m)+'</div></div></div>'; }).join(''):'<div class="mx10-alert blu">✓ All good</div>'); E('mx10Modal').style.display='flex'; };
+  /* ---------- 1. Header: login photo, data check badge, PDF ---------- */
+  function currentUser(){ try{ return JSON.parse(localStorage.getItem('minixUser')||sessionStorage.getItem('MINIX_USER')||'null'); }catch(e){ return null; } }
+  function renderHeader(rs,S){
+    var box=E('minixLoggedUserBox');
+    if(box && box.style.display!=='none'){
+      var u=currentUser()||{}, role=String(u.role||'').toLowerCase();
+      var nm=role==='admin'?'Minix Admin':(u.trader_name||u.researcher_name||u.pm_name||u.display_name||u.full_name||u.name||u.username||'Minix User');
+      var ring=role==='admin'?'#f59e0b':role==='pm'?'#3b82f6':role.indexOf('research')===0?'#a78bfa':'#22c55e';
+      var key=nm+'|'+ring;
+      if(box.__mx10!==key){ box.__mx10=key; var old=box.querySelector('.mx10-loginav'); if(old) old.remove();
+        var w=D.createElement('span'); w.className='mx10-loginav'; w.style.cssText='display:inline-flex;align-items:center'; w.innerHTML=avatar(nm,46,ring);
+        box.insertBefore(w,box.firstChild);
+        var t=sessionStorage.getItem('MX10_LOGIN_AT'); if(!t){ t=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); sessionStorage.setItem('MX10_LOGIN_AT',t); }
+        var lab=E('minixLoggedUserText'); if(lab && !E('mx10LoginMeta')){ var m=D.createElement('div'); m.id='mx10LoginMeta'; m.className='mx10-meta'; m.textContent='Login '+t; lab.parentNode.insertBefore(m,lab.nextSibling); var col=D.createElement('div'); col.style.cssText='display:flex;flex-direction:column'; lab.parentNode.insertBefore(col,lab); col.appendChild(lab); col.appendChild(m); }
+      }
+    }
+    var host=box&&box.parentNode; if(!host) return;
+    var b=E('mx10Badges'); if(!b){ b=D.createElement('div'); b.id='mx10Badges'; b.className='mx10-badges'; host.appendChild(b); }
+    var c=C(), A=c?c.agg(rs):{gross:0,charges:0,net:0}, diff=Math.abs(A.gross-A.charges-A.net), ok=diff<1&&rs.length>0;
+    var di=dataIssues(rs,S); window.__mx10DataIssues=di;
+    var html=(di.length?'<span class="mx10-badge mx10-btn" style="border-color:#92400e;color:#fde68a" onclick="mx10ShowDataIssues()" title="Data needs correction">⚠ '+di.length+' data issues</span>':'')+'<span class="mx10-badge '+(ok?'ok':'bad')+'" title="Gross − Charges = Net check on every visible row">'+(ok?'✓ Data check OK':'✗ Data check: '+inr(diff)+' difference')+'</span>'+
+      '<span class="mx10-badge">Data upto '+fmtD(S.maxD)+'</span><span class="mx10-badge">'+rs.length.toLocaleString('en-IN')+' rows</span>'+
+      '<span class="mx10-badge mx10-btn" onclick="window.print()" title="Print / Save as PDF">🖨 PDF</span>';
+    if(b.innerHTML!==html) b.innerHTML=html;
+  }
+
+  function calcBox(lines,note){
+    return '<details class="mx10-calc"><summary class="mx10-calc-h">🧮 How is this calculated?</summary>'+lines.map(function(l){ return '<div class="mx10-cr'+(l[3]?' tot':'')+'"><span>'+esc(l[0])+'</span><b class="'+(l[2]==='amb'?'mx10-amb':l[2]==='neg'?'mx10-neg':l[2]==='pos'?'mx10-pos':'')+'">'+esc(l[1])+'</b></div>'; }).join('')+(note?'<div class="mx10-cn">'+esc(note)+'</div>':'')+'</details>';
+  }
+  function sg(v){ return v<0?'neg':v>0?'pos':''; }
+  function renderSnapCalc(rs){
+    var c=C(); if(!c) return;
+    var A=c.agg(rs), seg={F:0,C:0,M:0}, brk=0, govt=0, gst=0, div=0;
+    rs.forEach(function(r){ seg.F+=n(r['FNO Gross']!==undefined?r['FNO Gross']:r.fnoGross); seg.C+=n(r['Cash Gross']!==undefined?r['Cash Gross']:r.cashGross); seg.M+=n(r['MCX Gross']!==undefined?r['MCX Gross']:r.mcxGross);
+      var x=c.rowCalc(r); brk+=x.brk+x.brkGst; govt+=x.govt; gst+=x.govtGst; div+=x.div; });
+    var other=A.charges-brk-govt-gst, wl=c.winLoss(rs), dd=wl.win+wl.loss, af=avgFund(rs);
+    var map={
+      mxGross:[[['FNO',inr(seg.F),sg(seg.F)],['Cash',inr(seg.C),sg(seg.C)],['MCX',inr(seg.M),sg(seg.M)],['Gross',inr(A.gross),sg(A.gross),1]]],
+      mxCharges:[[['Brokerage + GST',inr(brk)],['Govt charges (STT, Trx, SEBI, Stamp…)',inr(govt)],['GST',inr(gst)]].concat(Math.abs(other)>1?[['Adjustment (broker breakup difference)',inr(other),'amb']]:[]).concat([['Total charges',inr(A.charges),'',1]]),Math.abs(other)>1?'Jainam brokerage is already deducted inside Gross, so the breakup shows more; total charges are correct':''],
+      mxNet:[[['Gross',inr(A.gross),sg(A.gross)],['− Charges',inr(A.charges)],['Net',inr(A.net),sg(A.net),1]],'Dividend not included'],
+      mxRoi:[[['Net P&L',inr(A.net),sg(A.net)],['÷ Avg fund',inr(af)],['× 100',(af?(A.net/af*100).toFixed(2):'0.00')+'%',sg(A.net),1]],'On the average fund for the period, not today\'s fund'],
+      mxDays:[[['Profit days',String(wl.win),'pos'],['+ Loss days',String(wl.loss),'neg'],['Trading days',String(dd),'',1]]],
+      mxWin:[[['Profit days',String(wl.win),'pos'],['÷ Trading days',String(dd)],['× 100',(dd?(wl.win/dd*100).toFixed(1):'0.0')+'%','',1]]],
+      mxDividend:[[['Dividend received',inr(div),'pos']],'Not added to Net P&L; shown separately']
+    };
+    Object.keys(map).forEach(function(id){ var v=E(id), card=v&&v.closest('.mx-exec-card'); if(!card) return; var box=card.querySelector('.mx10-calc'), h=calcBox(map[id][0],map[id][1]);
+      if(!box){ var w=D.createElement('div'); w.innerHTML=h; card.appendChild(w.firstChild); } else { var op=box.open; box.removeAttribute('open'); if(box.outerHTML!==h){ box.outerHTML=h; box=card.querySelector('.mx10-calc'); } if(op&&box) box.open=true; } });
+  }
+  /* ---------- 3. Fund position (replaces old section 2) ---------- */
+  function hideOldSection2(){
+    /* V10: section 2 stays (Gross / Expenses / Net / ROI / days). Total Fund + Utilized cards are hidden by CSS (#mx10-style). */
+    D.querySelectorAll('#summarySection .mx10-hide').forEach(function(el){ el.classList.remove('mx10-hide'); el.style.removeProperty('display'); });
+    D.querySelectorAll('#summarySection .segment-grid').forEach(function(g){ if(g.style.getPropertyValue('grid-template-columns')) g.style.removeProperty('grid-template-columns'); });
+    return Array.prototype.find.call(D.querySelectorAll('#summarySection .section-title'),function(x){return /^\s*2\.\s*Overall Performance Summary/i.test(x.textContent);});
+  }
+  function shell(id,title,sub,after){
+    var s=E(id); if(s) return s; if(!after||!after.parentNode) return null;
+    s=D.createElement('div'); s.id=id; s.className='mx10-shell';
+    s.innerHTML='<div class="mx10-head"><div><div class="mx10-title">'+title+'</div><div class="mx10-sub">'+sub+'</div></div></div><div class="mx10-body"></div>';
+    after.parentNode.insertBefore(s,after.nextSibling); return s;
+  }
+  function put(s,html){ var b=s&&s.querySelector('.mx10-body'); if(b && b.__h!==html){ var op=Array.prototype.map.call(b.querySelectorAll('details.mx10-calc'),function(d){return d.open;}); b.__h=html; b.innerHTML=html; b.querySelectorAll('details.mx10-calc').forEach(function(d,i){ if(op[i]) d.open=true; }); } }
+  function renderFund(rs,S){
+    var anchor=E('mxExecutiveSnapshot')||hideOldSection2(); var s=shell('mx10Fund','Fund Position','Capital today, idle capital, and the fund base used for return',anchor); if(!s) return;
+    var active=0, idle=0, idleList=[];
+    S.list.forEach(function(t){ if(t.last!==S.maxD) return; idle+=t.idleAmt; active+=t.curFund-t.idleAmt; if(t.idleAmt>0) idleList.push(t); });
+    var trList=[]; S.list.forEach(function(t){ t.transfers.forEach(function(x){ trList.push({t:t,d:x.d,seg:x.seg,amt:x.amt}); }); }); trList.sort(function(a,b){return a.d<b.d?1:-1;});
+    var af=avgFund(rs), au=avgUtil(rs), mu=af?au/af*100:null;
+    idleList.sort(function(a,b){return b.idleAmt-a.idleAmt;});
+    /* Kul fund: each company's latest fund (company may have older last date) */
+    var M9=MX(), lfn=(M9&&M9.calc&&M9.calc.latestFund)||function(){return 0;}, byCo={};
+    rs.forEach(function(r){ var k=comp(r)||'Other'; (byCo[k]=byCo[k]||[]).push(r); });
+    var coL=Object.keys(byCo).sort().map(function(k){ var r=byCo[k], d=''; r.forEach(function(x){ if(x.dateLabel>d) d=x.dateLabel; }); return {k:k,f:lfn(r),d:d}; });
+    var kul=coL.reduce(function(a,x){return a+x.f;},0);
+    var fDays={}; rs.forEach(function(r){ if(fundOf(r)&&r.dateLabel) fDays[r.dateLabel]=1; }); var nD=Object.keys(fDays).length;
+    var idleTop=idleList.slice(0,3), idleRest=idleList.slice(3).reduce(function(a,t){return a+t.idleAmt;},0);
+    var html='<div class="mx10-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">'+
+      '<div class="mx10-card up"><div class="mx10-lbl">TOTAL FUND</div><div class="mx10-val">'+short(kul)+'</div><div class="mx10-note">All companies, each at its latest date</div>'+
+        calcBox(coL.map(function(x){ return [x.k.replace(/ Pvt Ltd/i,'')+' ('+fmtD(x.d)+')',short(x.f),x.d<S.maxD?'amb':'']; }).concat([['Total',short(kul),'',1]]),
+          coL.some(function(x){return x.d<S.maxD;})?coL.filter(function(x){return x.d<S.maxD;}).map(function(x){return x.k.replace(/ Pvt Ltd/i,'')+': data pending after '+fmtD(x.d);}).join(' · '):'')+'</div>'+
+      '<div class="mx10-card"><div class="mx10-lbl">CURRENT FUND</div><div class="mx10-val">'+short(active+idle)+'</div><div class="mx10-note">'+'As on '+fmtD(S.maxD)+'</div>'+
+        calcBox([['Active traders',short(active)],['+ Idle (funded, not trading)',short(idle),'amb'],['Current fund',short(active+idle),'',1]])+'</div>'+
+      '<div class="mx10-card '+(idle>0?'warn':'')+'"><div class="mx10-lbl">IDLE FUND</div><div class="mx10-val '+(idle>0?'mx10-amb':'')+'">'+short(idle)+'</div><div class="mx10-note">'+(idleList.length?idleList.length+' traders: funded but not trading':'No idle traders')+'</div>'+
+        (idleList.length?calcBox(idleTop.map(function(t){return [t.name,short(t.idleAmt)];}).concat(idleRest?[['+ '+(idleList.length-3)+' more',short(idleRest)]]:[]).concat([['Total idle',short(idle),'amb',1]])):'')+'</div>'+
+      '<div class="mx10-card"><div class="mx10-lbl">AVG FUND (PERIOD)</div><div class="mx10-val">'+short(af)+'</div><div class="mx10-note">ROI is calculated on this fund</div>'+
+        calcBox([['Sum of each day\'s total fund',short(af*nD)],['÷ Days with fund',String(nD)],['Avg fund',short(af),'',1]],'Fund changed during the year, so the average is used')+'</div>'+
+      '<div class="mx10-card"><div class="mx10-lbl">MARGIN USED</div><div class="mx10-val">'+(mu==null||!au?'—':mu.toFixed(1)+'%')+'</div><div class="mx10-note">Avg margin ÷ avg fund</div>'+
+        (au?calcBox([['Average margin used',short(au)],['÷ Avg fund',short(af)],['× 100',mu.toFixed(1)+'%','',1]]):'')+'</div></div>';
+    var idH=idleList.length?'<div class="mx10-card warn"><div class="mx10-lbl">IDLE TRADERS · '+idleList.length+' · '+short(idle)+'</div><div class="mx10-listscroll">'+idleList.map(function(t){ return '<div class="mx10-row mx10-click" data-mx10t="'+esc(t.name)+'">'+avatar(t.name,30,'#f59e0b')+'<div class="mx10-name">'+esc(t.name)+' <span class="mx10-meta">'+idleTxt(t,S.maxD)+'</span></div><b class="mx10-amb">'+short(t.idleAmt)+'</b></div>'; }).join('')+'</div></div>':'';
+    var trH=trList.length?'<div class="mx10-card down"><div class="mx10-lbl">FUND TRANSFER · '+trList.length+'</div><div class="mx10-listscroll">'+trList.map(function(x){ return '<div class="mx10-row mx10-click" data-mx10t="'+esc(x.t.name)+'">'+avatar(x.t.name,30,'#ef4444')+'<div class="mx10-name">'+esc(x.t.name)+' <span class="mx10-meta">'+fmtD(x.d)+' · '+esc(x.seg||'-')+(x.t.lastTrade>x.d?' · account closed; trader active elsewhere':' · stopped trading')+'</span></div><b class="mx10-neg">'+(x.amt?'-'+short(x.amt).replace('-',''):'—')+'</b></div>'; }).join('')+'</div></div>':'';
+    if(idH||trH) html+='<div class="mx10-grid mx10-g2" style="margin-top:10px">'+idH+trH+'</div>';
+    put(s,html);
+  }
+
+  /* ---------- 4 + 5. Leaderboard and risk alerts ---------- */
+  function renderBoard(rs,S){
+    var anchor=E('mxExecutiveInsights')||E('mx10Fund'); var s=shell('mx10Board','Trader Leaderboard &amp; Risk Alerts','ROI on average fund · click a name to open the profile',anchor); if(!s) return;
+    var ranked=S.list.filter(function(t){return t.avgFund>0&&t.days>0;}).sort(function(a,b){return b.roi-a.roi;});
+    function row(t,i){ return '<div class="mx10-row mx10-click" data-mx10t="'+esc(t.name)+'"><span class="mx10-rank" style="'+(i===0?'color:#fbbf24':'')+'">'+(i+1)+'</span>'+avatar(t.name,34,t.net>=0?'#22c55e':'#ef4444')+'<div style="flex:1;min-width:0"><div class="mx10-name">'+esc(t.name)+'</div><div class="mx10-meta">Win '+(t.days?Math.round(t.win/t.days*100):0)+'% · '+t.days+' days · '+short(t.net)+'</div></div><b class="'+cls(t.roi)+'">'+pct(t.roi)+'</b></div>'; }
+    var top=ranked.slice(0,5), bottom=ranked.length>8?ranked.slice(-3):[];
+    var lb=top.map(row).join('')+(bottom.length?'<div class="mx10-meta" style="padding:6px 4px">…</div>'+bottom.map(function(t){return row(t,ranked.indexOf(t));}).join(''):'');
+    var al=[];
+    function A(c,t,title,m,p,k){ al.push({c:c,t:t,title:title,m:m,p:p,k:k||''}); }
+    var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(S.maxD.slice(5,7))-1]||'Month';
+    S.list.forEach(function(t){
+      var recent=t.lastTrade&&daysBetween(t.lastTrade,S.maxD)<=15, af=t.avgFund;
+      var closed=(t.transfers||[]).length && t.transfers[0].d>=(t.lastTrade||'') && t.last!==S.maxD;
+      if(closed){ (t.transfers||[]).forEach(function(x){ if(daysBetween(x.d,S.maxD)<=30) A('blu',t,'Fund transfer (stopped trading)',fmtD(x.d)+' · '+(x.seg||'-')+' · '+(x.amt?short(x.amt)+' withdrawn':'fund 0')+' · no further risk',3,(x.amt?'Fund before '+short(x.amt):'Fund')+' → ₹0 on '+fmtD(x.d)+'; no trades after this date'); }); return; }
+      if(t.last===S.maxD && t.curFund>0 && t.lastNet< -0.02*t.curFund) A('red',t,'Large single-day loss',fmtD(S.maxD)+': '+short(t.lastNet)+' ('+Math.abs(t.lastNet/t.curFund*100).toFixed(1)+'% of fund)',0,'Day net '+short(t.lastNet)+' ÷ fund '+short(t.curFund)+' = '+(t.lastNet/t.curFund*100).toFixed(1)+'% (limit −2%)');
+      if(recent && t.streak>=5) A('red',t,'Losing streak',t.streak+' losing days in a row',1,t.sDays.map(function(x){return fmtD(x[0]).slice(0,6)+' '+short(x[1]);}).join(' · ')+' (limit 5 days)');
+      if(recent && af && t.curDD>0.10*af) A('red',t,'Drawdown from peak',short(-t.curDD)+' · '+(t.curDD/af*100).toFixed(1)+'% of avg fund',1,'Peak '+short(t.peak)+(t.peakD?' ('+fmtD(t.peakD)+')':'')+' → today '+short(t.cumNow)+' = '+short(-t.curDD)+' · ÷ avg fund '+short(af)+' = '+(t.curDD/af*100).toFixed(1)+'% (limit 10%)');
+      if(recent && af && t.mNet< -0.03*af) A('red',t,'Loss this month',short(t.mNet)+' · '+(Math.abs(t.mNet)/af*100).toFixed(1)+'% of avg fund',1,mName+' net '+short(t.mNet)+' ÷ avg fund '+short(af)+' = '+(t.mNet/af*100).toFixed(1)+'% (limit −3%)');
+      var __id=t.idleSince||(t.idle?t.lastTrade:''); if(t.idleAmt>0 && (!__id || daysBetween(__id,S.maxD)>=7)) A('amb',t,'Idle fund',idleTxt(t,S.maxD)+' · '+short(t.idleAmt)+' idle',2,'Fund '+short(t.idleAmt)+' on '+fmtD(S.maxD)+(__id?' · last trade '+fmtD(__id)+' → '+daysBetween(__id,S.maxD)+' days without trade':' · no trade in this account')+' (limit 7 days)');
+      if(recent && t.last10>=10 && t.w10<=3) A('amb',t,'Win rate dropping','Only '+t.w10+' profitable days in the last 10',2,'Last 10 days (old → new): '+t.seq10+' = '+t.w10+' of 10 (limit 3)');
+      if(recent && t.mGross>0 && t.mNet<0) A('amb',t,'Charges wiped out profit','This month gross '+short(t.mGross)+' but net '+short(t.mNet),2,'Gross '+short(t.mGross)+' − charges '+short(t.mGross-t.mNet)+' = net '+short(t.mNet));
+      if(t.last===S.maxD && t.curFund>0 && t.lastUtil>t.curFund) A('blu',t,'Margin above fund','Margin '+short(t.lastUtil)+' · fund '+short(t.curFund),3,'Margin '+short(t.lastUtil)+' > fund '+short(t.curFund)+' = '+(t.lastUtil/t.curFund*100).toFixed(0)+'% of fund');
+    });
+    al.sort(function(a,b){return a.p-b.p;});
+    var cnt={red:0,amb:0,blu:0,gry:0}; al.forEach(function(a){cnt[a.c]++;});
+    var ah=al.length?'<div class="mx10-meta" style="margin-bottom:8px">🔴 '+cnt.red+' loss · 🟡 '+cnt.amb+' watch · 🔵 '+cnt.blu+' info</div><div class="mx10-alerts">'+al.map(function(a){ return '<div class="mx10-alert '+a.c+' mx10-click" data-mx10t="'+esc(a.t.name)+'">'+avatar(a.t.name,28)+'<div><b>'+esc(a.t.name)+'</b> · <span class="ttl">'+esc(a.title)+'</span><div class="mx10-meta" style="color:inherit">'+esc(a.m)+'</div>'+(a.k?'<div class="mx10-acalc">🧮 '+esc(a.k)+'</div>':'')+'</div></div>'; }).join('')+'</div>':'<div class="mx10-alert blu">✓ No risk alerts</div>';
+    var t1=ranked[0], lbCalc='<details class="mx10-calc"><summary class="mx10-calc-h">🧮 How is this calculated?</summary>'+
+      '<div class="mx10-cr"><span><b style="font-weight:800;color:#e2e8f0">ROI</b> = Net P&amp;L ÷ Avg Fund × 100</span></div>'+
+      '<div class="mx10-cr"><span><b style="font-weight:800;color:#e2e8f0">Win %</b> = Profit days ÷ Trading days × 100</span></div>'+
+      '<div class="mx10-cn" style="color:#94a3b8">Ranked by ROI, highest first. A small fund with a good return can rank above a big fund.</div>'+
+      (t1?'<div class="mx10-cr tot"><span>Example: '+esc(t1.name)+'</span></div><div class="mx10-cr"><span>'+short(t1.net)+' ÷ '+short(t1.avgFund)+' × 100</span><b class="'+cls(t1.roi)+'">'+pct(t1.roi)+'</b></div><div class="mx10-cr"><span>'+t1.win+' profit days ÷ '+t1.days+' days × 100</span><b>'+(t1.days?(t1.win/t1.days*100).toFixed(1):'0')+'%</b></div>':'')+'</details>';
+    var alCalc='<details class="mx10-calc"><summary class="mx10-calc-h">🧮 How is this calculated?</summary><table class="mx10-rules">'+
+      [['🔴 Drawdown from peak','(Peak cumulative P&amp;L − today) ÷ Avg Fund &gt; 10%'],['🔴 Loss this month','Month net ÷ Avg Fund &lt; −3%'],['🔴 Losing streak','5 losing days in a row'],['🔴 Large single-day loss','Day loss &gt; 2% of fund'],
+       ['🟡 Idle fund','Fund &gt; 0 and no trade for 7+ days'],['🟡 Win rate dropping','3 or fewer profit days in the last 10'],['🟡 Charges wiped out profit','Month gross &gt; 0 but net &lt; 0'],['🔵 Fund transfer','Fund taken back (shown for 30 days)']]
+       .map(function(x){return '<tr><td>'+x[0]+'</td><td>'+x[1]+'</td></tr>';}).join('')+'</table><div class="mx10-cn" style="color:#94a3b8">Traders whose fund was transferred out are not checked for risk. Each alert shows its own calculation.</div></details>';
+    put(s,'<div class="mx10-grid mx10-g2"><div class="mx10-card"><div class="mx10-lbl">LEADERBOARD</div>'+lbCalc+(lb||'<div class="mx10-note">No data</div>')+'</div><div class="mx10-card '+(al.length?'down':'up')+'"><div class="mx10-lbl">RISK ALERTS ('+al.length+')</div>'+alCalc+'<div style="margin-top:8px">'+ah+'</div></div></div>');
+  }
+
+  /* ---------- 9 + 11 + 12. Heatmap, charges efficiency, company split ---------- */
+  function heat(v){ if(v==null||!isFinite(v)) return 'background:#111827;color:#475569'; var a=Math.min(1,Math.abs(v)/3)*.55+.12; return v>=0?'background:rgba(34,197,94,'+a+')':'background:rgba(239,68,68,'+a+')'; }
+  function renderAnalysis(rs,S){
+    var anchor=E('mx10Board'); var s=shell('mx10Analysis','Monthly ROI, Charges &amp; Company Split','Monthly ROI %, who spends most on charges, and Holding vs Fintech',anchor); if(!s) return;
+    var allM={}; S.list.forEach(function(t){Object.keys(t.months).forEach(function(m){allM[m]=1;});});
+    var ms=Object.keys(allM).sort().slice(-6), mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var tl=S.list.filter(function(t){return t.days>0&&ms.some(function(m){return t.months[m];});}).sort(function(a,b){return Math.abs(b.net)-Math.abs(a.net);}).slice(0,15);
+    var hm='<div class="mx10-scroll"><table class="mx10-tbl"><tr><th></th>'+ms.map(function(m){return '<th>'+mn[Number(m.slice(5))-1]+' '+m.slice(2,4)+'</th>';}).join('')+'</tr>'+
+      tl.map(function(t){ return '<tr><td class="nm mx10-click" data-mx10t="'+esc(t.name)+'">'+esc(t.name)+'</td>'+ms.map(function(m){ var r=t.months[m]; if(!r) return '<td><div style="'+heat(null)+'">·</div></td>'; var net=r.reduce(function(a,x){return a+netOf(x);},0), f=avgFund(r), v=f?net/f*100:null; return '<td title="'+esc(t.name)+' '+m+': '+inr(net)+'"><div style="'+heat(v)+'">'+(v==null?'—':(v>0?'+':'')+v.toFixed(1))+'</div></td>'; }).join('')+'</tr>'; }).join('')+'</table></div>';
+    var cl=S.list.filter(function(t){return t.charges>0;}).sort(function(a,b){return b.charges-a.charges;}).slice(0,10);
+    var ce='<table class="mx10-plain"><tr><th>Trader</th><th>Charges</th><th>Brokerage share</th><th>% of avg fund</th></tr>'+cl.map(function(t){ return '<tr class="mx10-click" data-mx10t="'+esc(t.name)+'"><td>'+esc(t.name)+'</td><td>'+short(t.charges)+'</td><td>'+(t.charges?(t.brk/t.charges*100).toFixed(1)+'%':'—')+'</td><td>'+(t.avgFund?(t.charges/t.avgFund*100).toFixed(2)+'%':'—')+'</td></tr>'; }).join('')+'</table>';
+    var byC={}; rs.forEach(function(r){ var k=comp(r)||'Other'; (byC[k]=byC[k]||[]).push(r); });
+    var cc=Object.keys(byC).sort().map(function(k){ var r=byC[k], c=C(), A=c?c.agg(r):{net:0,charges:0}, f=avgFund(r), wl=c?c.winLoss(r):{win:0,loss:0}, roi=f?A.net/f*100:null, dd=wl.win+wl.loss;
+      return '<div class="mx10-card '+(A.net>=0?'up':'down')+'"><div class="mx10-lbl">'+esc(k.toUpperCase())+'</div><div class="mx10-val '+cls(A.net)+'">'+short(A.net)+'</div><div class="mx10-note">ROI <b class="'+cls(roi)+'">'+pct(roi)+'</b> · Charges '+short(A.charges)+'<br>Avg fund '+short(f)+' · Win '+(dd?(wl.win/dd*100).toFixed(1):'0')+'%</div></div>'; }).join('');
+    put(s,'<div class="mx10-card" style="margin-bottom:10px"><div class="mx10-lbl">MONTHLY ROI % (TOP 15 TRADERS)</div><div style="margin-top:8px">'+(ms.length?hm:'<div class="mx10-note">No data</div>')+'</div></div>'+
+      '<div class="mx10-grid mx10-g2"><div class="mx10-card"><div class="mx10-lbl">CHARGES EFFICIENCY (TOP 10)</div><div style="margin-top:6px">'+ce+'</div></div><div><div class="mx10-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">'+cc+'</div></div></div>');
+  }
+
+  /* ---------- 8. Trader profile card ---------- */
+  var lastS=null;
+  function openProfile(name){
+    if(!lastS) return; var t=lastS.list.find(function(x){return x.name===name;}); if(!t) return;
+    var st=t.idle?'<span class="mx10-badge" style="border-color:#92400e;color:#fde68a">Idle</span>':(t.lastTrade&&daysBetween(t.lastTrade,lastS.maxD)<=15?'<span class="mx10-badge ok">Active</span>':'<span class="mx10-badge">Inactive</span>');
+    function k(l,v,c){ return '<div class="mx10-card '+(c||'')+'"><div class="mx10-lbl">'+l+'</div><div class="mx10-val" style="font-size:19px">'+v+'</div></div>'; }
+    E('mx10ModalBox').innerHTML='<button class="mx10-x" onclick="document.getElementById(\'mx10Modal\').style.display=\'none\'">✕</button>'+
+      '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px">'+avatar(t.name,92,t.net>=0?'#22c55e':'#ef4444')+'<div><div class="mx10-title">'+esc(t.name)+'</div><div class="mx10-sub">'+esc(t.port)+' · '+esc(t.demat)+(t.strat?' · '+esc(t.strat):'')+'</div><div style="margin-top:6px">'+st+'</div></div></div>'+
+      '<div class="mx10-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">'+
+      k('NET P&amp;L','<span class="'+cls(t.net)+'">'+short(t.net)+'</span>',t.net>=0?'up':'down')+k('ROI','<span class="'+cls(t.roi)+'">'+pct(t.roi)+'</span>',t.roi>=0?'up':'down')+
+      k('WIN RATIO',(t.days?(t.win/t.days*100).toFixed(1):'0')+'%')+k('TRADING DAYS',t.win+' + / '+t.loss+' −')+
+      k('MAX DRAWDOWN','<span class="mx10-neg">'+short(-t.dd)+'</span>'+(t.ddPct!=null?' <span class="mx10-meta">('+t.ddPct.toFixed(1)+'%)</span>':''),'down')+
+      k('BEST DAY','<span class="mx10-pos">'+(isFinite(t.best.v)?short(t.best.v):'—')+'</span> <span class="mx10-meta">'+fmtD(t.best.d)+'</span>','up')+
+      k('WORST DAY','<span class="mx10-neg">'+(isFinite(t.worst.v)?short(t.worst.v):'—')+'</span> <span class="mx10-meta">'+fmtD(t.worst.d)+'</span>','down')+
+      k('CHARGES',short(t.charges))+k('AVG FUND',short(t.avgFund))+k('CURRENT FUND',t.last===lastS.maxD?short(t.curFund):'₹0 <span class="mx10-meta">(no fund / transferred)</span>')+k('LAST TRADE',fmtD(t.lastTrade))+'</div>'+(t.transfers.length?'<div class="mx10-card down" style="margin-top:10px"><div class="mx10-lbl">FUND TRANSFER</div>'+t.transfers.map(function(x){return '<div class="mx10-row"><div class="mx10-name">'+fmtD(x.d)+' <span class="mx10-meta">'+esc(x.seg||'-')+' stopped trading</span></div><b class="mx10-neg">'+(x.amt?short(x.amt):'—')+'</b></div>';}).join('')+'</div>':'')+(t.idleAmt>0?'<div class="mx10-card warn" style="margin-top:10px"><div class="mx10-lbl">IDLE FUND</div><div class="mx10-val mx10-amb" style="font-size:19px">'+short(t.idleAmt)+'</div><div class="mx10-note">Funded but no trades till '+fmtD(lastS.maxD)+'</div></div>':'');
+    E('mx10Modal').style.display='flex';
+  }
+  D.addEventListener('click',function(e){ var el=e.target.closest&&e.target.closest('[data-mx10t]'); if(el){ e.preventDefault(); openProfile(el.getAttribute('data-mx10t')); } });
+
+  /* ---------- 10. Online / offline list with photos (LAN build only) ---------- */
+  function decoratePresence(){
+    var list=E('minixPresenceList'); if(!list) return;
+    list.querySelectorAll('.minix-presence-row').forEach(function(row){
+      if(row.__mx10) return; row.__mx10=1;
+      var dot=row.querySelector('.minix-presence-status'), nm=(row.querySelector('.minix-presence-name')||{}).textContent||'';
+      if(!dot) return; var on=!dot.classList.contains('offline'), self=dot.classList.contains('self');
+      var w=D.createElement('span'); w.innerHTML=avatar(nm,34,self?'#38bdf8':on?'#22c55e':'#ef4444',!on&&!self); row.style.gridTemplateColumns='38px 1fr auto'; dot.replaceWith(w.firstChild);
+    });
+    var box=E('minixPresenceBox'), sum=box&&box.querySelector('.minix-presence-summary');
+    if(box && sum){ var names=Array.prototype.map.call(list.querySelectorAll('.minix-presence-row'),function(r){ var a=r.querySelector('.minix-presence-name'); var b=r.querySelector('.mx10-av'); return {n:a?a.textContent:'',on:b&&!b.style.filter}; }).filter(function(x){return x.on;}).slice(0,3);
+      var key=names.map(function(x){return x.n;}).join('|'), st=E('mx10Stack');
+      if(!st){ st=D.createElement('span'); st.id='mx10Stack'; st.style.cssText='display:inline-flex;align-items:center'; var dot0=box.querySelector('.minix-presence-dot'); box.insertBefore(st,dot0||box.firstChild); if(dot0) dot0.style.display='none'; }
+      if(st.__k!==key){ st.__k=key; st.innerHTML=names.map(function(x,i){ return '<span style="margin-left:'+(i?-8:0)+'px">'+avatar(x.n,26,'#22c55e')+'</span>'; }).join('')||'<span class="minix-presence-dot"></span>'; }
+    }
+  }
+  try{ var po=new MutationObserver(function(){ decoratePresence(); }); var waitP=setInterval(function(){ var l=E('minixPresenceList'); if(l){ clearInterval(waitP); po.observe(l,{childList:true}); decoratePresence(); } },1500); setTimeout(function(){clearInterval(waitP);},60000); }catch(e){}
+
+  /* Strategy slicer: "No Trade" / "Fund Transfer" are system rows, not strategies */
+  function cleanSlicers(){
+    D.querySelectorAll('select[id*="trategy"]').forEach(function(sel){
+      Array.prototype.slice.call(sel.options).forEach(function(o){ if(/^(no\s*trade|fund\s*transfer)/i.test(o.value||o.text)) o.remove(); });
+    });
+    D.querySelectorAll('[data-value]').forEach(function(el){ var v=el.getAttribute('data-value')||''; if(/^(no\s*trade|fund\s*transfer)/i.test(v) && el.closest('[class*="multi"],[class*="slicer"],[class*="dropdown"]')) el.style.display='none'; });
+  }
+  /* ---------- render loop (only when filters / data change) ---------- */
+  var sig='';
+  function tick(){
+    try{
+      var m=MX(); if(!m||!m.rowsFor||!E('summarySection')) return;
+      hideOldSection2(); cleanSlicers();
+      var rs=rows(), c=m.criteria?m.criteria('summarySection'):{};
+      var s=rs.length+'|'+JSON.stringify(c)+'|'+(rs.length?rs[0].dateLabel+rs[rs.length-1].dateLabel:'')+'|'+(E('minixLoggedUserBox')||{style:{}}).style.display+'|'+!!E('mxExecutiveInsights');
+      if(s===sig){ var dc=E('mxDividend'); if(dc&&!dc.closest('.mx-exec-card').querySelector('.mx10-calc')) renderSnapCalc(rs); return; } sig=s;
+      var S=stats(rs); lastS=S;
+      renderHeader(rs,S); renderSnapCalc(rs); renderFund(rs,S); renderBoard(rs,S); renderAnalysis(rs,S);
+    }catch(e){ if(window.console) console.warn('MX10',e); }
+  }
+  setInterval(tick,1500); setTimeout(tick,800);
+})();
+</script>
+<!-- === END MINIX V10 BOARDROOM === -->
 </body>
 </html>
 

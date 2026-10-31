@@ -835,6 +835,17 @@ body.clean #mxExitClean{display:block}
 #mxPhotoView.on{display:flex}
 #mxPhotoView img{width:min(80vh,90vw);height:auto;max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6);background:#fff;object-fit:contain}
 #mxPhotoView .pv-x{position:absolute;top:16px;right:20px;height:38px;padding:0 16px;border-radius:10px;border:0;background:#fff;color:#111;font-weight:600;font-size:14px;cursor:pointer}
+
+/* v12 */
+.wa-grid .wa-row{white-space:nowrap;gap:12px}
+.wa-grid .wa-row span{flex:none}
+.wa-grid .wa-row small{font-size:10.5px}
+.wa-grid .wa-row b{flex:none}
+.wa-grid .grid.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))!important}
+.wa-grid .grid.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))!important}
+.wa-grid .tbl th,.wa-grid .tbl td{white-space:nowrap;padding:5px 7px}
+.wa-grid .card{overflow-x:auto}
+.cmbx{height:20px;min-width:20px;padding:0 5px;font-size:12px;line-height:1;margin-left:4px}
 </style>
 </head>
 <body class="auth-locked">
@@ -1700,7 +1711,7 @@ function table(el,o){
       el._leaf=[];
       var tm=function(n){return match(n.row)||(n.children||[]).some(tm);};
       var walk=function(nodes,depth,path){
-        nodes.slice().sort(function(a,b){return sorter(a.row,b.row);}).forEach(function(n){
+        nodes.slice().sort(function(a,b){var pa=a.row._pin?1:0,pb=b.row._pin?1:0;if(pa!==pb)return pb-pa;return sorter(a.row,b.row);}).forEach(function(n){
           if(q&&!tm(n))return;var key=path+'\u0001'+n.row.name,has=n.children&&n.children.length;
           if(has){var op=st.all||!!st.open[key]||!!q;
             body+=rowHtml(n.row,' class="grp lv'+Math.min(depth,2)+'" data-g="'+esc(key)+'"','<span class="chev" style="margin-left:'+(depth*16)+'px">'+(op?'−':'+')+'</span>');
@@ -1789,11 +1800,12 @@ function mxb(o){var k=o.sk;return (k.indexOf('MCX')>=0&&k.indexOf('FNO')<0&&k.in
    on that day add each pool (researcher + portfolio + strategy) once. A "Fund Transfer ₹0" on the last day closes it. */
 /* last trading day of each trader+demat+(Equity/MCX) group, taken from ALL rows (not the subset), so a pool that was closed or moved is never counted again */
 function fiGk(o){return o.company+'|'+o.trader+'|'+o.demat+'|'+mxb(o);}
-var LASTC={r:null,m:{}};
+var LASTC={r:null,m:{}},FI_CTX=null;
+function withCtx(rows,fn){var p=FI_CTX;FI_CTX=rangeOf(rows)[1]||null;try{return fn();}finally{FI_CTX=p;}}
 function lastMap(up){if(LASTC.r!==ROWS)LASTC={r:ROWS,m:{}};var k=up||'~';if(LASTC.m[k])return LASTC.m[k];var L={};ROWS.forEach(function(o){if(up&&o.iso>up)return;var g=fiGk(o);if(!L[g]||o.iso>L[g])L[g]=o.iso;});return LASTC.m[k]=L;}
 function fundInfo(rows,seg,upto){
   var ok=function(o){return !upto||o.iso<=upto;},gk=fiGk;
-  var up=upto||rows.reduce(function(m,o){return o.iso>m?o.iso:m;},''),last=lastMap(up);
+  var up=upto||FI_CTX||rows.reduce(function(m,o){return o.iso>m?o.iso:m;},''),last=lastMap(up);
   var pools={};rows.forEach(function(o){if(!ok(o))return;var g=gk(o);if(o.iso!==last[g])return;var p=g+'|'+o.researcher+'|'+o.portfolio+'|'+o.sk;if(!pools[p]||o.fund>pools[p].fund)pools[p]={fund:o.fund,o:o};});
   var out={total:0,byCompany:{},byTrader:{},byBucket:{FNO:0,Cash:0,MCX:0,Mixed:0,Other:0},companyDate:{}};
   Object.keys(pools).forEach(function(k){var p=pools[k],o=p.o;if(!p.fund||(seg&&!segMatch(o,seg)))return;out.total+=p.fund;out.byCompany[o.company]=(out.byCompany[o.company]||0)+p.fund;out.byTrader[o.trader]=(out.byTrader[o.trader]||0)+p.fund;out.byBucket[bucketOf(o)]+=p.fund;if(!out.companyDate[o.company]||o.iso>out.companyDate[o.company])out.companyDate[o.company]=o.iso;});
@@ -1995,7 +2007,10 @@ var COMBO_ORDER=['FNO only','FNO + Equity','Equity only','MCX only','FNO + MCX',
 function comboKey(k){k=String(k||'');if(/FUNDTRANSFER|NOTRADE/.test(k))return null;var f=k.indexOf('FNO')>=0||k==='FO'||k.indexOf('FO')===0,c=k.indexOf('CASH')>=0,m=k.indexOf('MCX')>=0,n=(f?1:0)+(c?1:0)+(m?1:0);if(!n)return null;if(n===1)return f?'FNO only':c?'Equity only':'MCX only';return [f?'FNO':'',c?'Equity':'',m?'MCX':''].filter(Boolean).join(' + ');}
 function buildCombo(rows){var c={};rows.forEach(function(o){var k=comboKey(o.sk);if(!k)return;var m=c[o.trader]||(c[o.trader]={});m[k]=(m[k]||0)+1;});TCOMBO={};Object.keys(c).forEach(function(t){var m=c[t];TCOMBO[t]=Object.keys(m).sort(function(a,b){return m[b]-m[a];})[0];});rows.forEach(function(o){o.combo=comboKey(o.sk)||TCOMBO[o.trader]||'FNO only';});}
 function comboSort(a,b){var x=COMBO_ORDER.indexOf(a),y=COMBO_ORDER.indexOf(b);return (x<0?99:x)-(y<0?99:y);}
-function comboRows(list,upto){var fi={};var g=groupBy(list,function(o){return o.combo;});return Array.from(g.keys()).sort(comboSort).map(function(k){var l=g.get(k);return {name:k,traders:uniq(l.map(function(o){return o.trader;})).length,tfund:fundInfo(l,null,upto).total,fund:capAvg(l,null,'fund'),gross:sum(l,function(o){return o.gross;}),chg:sum(l,function(o){return o.chg;}),net:sum(l,function(o){return o.net;})};}).map(function(r){r.roi=r.fund?r.net/r.fund*100:0;return r;});}
+var CSEG={'FNO':'FNO','Equity':'Cash','MCX':'MCX'};
+function comboSegs(name){return String(name).replace(' only','').split(' + ').map(function(x){return CSEG[x];}).filter(Boolean);}
+function comboParts(list,name){var ss=comboSegs(name);if(ss.length<2)return [];return ss.map(function(S){return {name:'↳ '+SEGNAME[S]+' part',seg:S,_pin:1,_part:1,gross:sum(list,function(o){return o.seg[S].gross;}),chg:sum(list,function(o){return o.seg[S].chg;}),net:sum(list,function(o){return o.seg[S].net;})};});}
+function comboRows(list,upto){var fi={};var g=groupBy(list,function(o){return o.combo;});return Array.from(g.keys()).sort(comboSort).map(function(k){var l=g.get(k);return {name:k,parts:comboParts(l,k),traders:uniq(l.map(function(o){return o.trader;})).length,tfund:fundInfo(l,null,upto).total,fund:capAvg(l,null,'fund'),gross:sum(l,function(o){return o.gross;}),chg:sum(l,function(o){return o.chg;}),net:sum(l,function(o){return o.net;})};}).map(function(r){r.roi=r.fund?r.net/r.fund*100:0;return r;});}
 function buildTMain(rows){buildCombo(rows);var c={};rows.forEach(function(o){delete o._fs;if(/FUNDTRANSFER/.test(o.sk))return;var p=primSeg(o.sk);if(!p)return;var m=c[o.trader]||(c[o.trader]={});m[p]=(m[p]||0)+1;});TMAIN={};Object.keys(c).forEach(function(t){var m=c[t];TMAIN[t]=Object.keys(m).sort(function(a,b){return m[b]-m[a];})[0];});}
 function lvOpen(id,tree,lv){var st=tableState[id]||(tableState[id]={key:'net',dir:-1,q:'',open:{},all:false});st.open={};st.all=false;
   (function rec(nodes,dep,path){(nodes||[]).forEach(function(n){var k=path+'\u0001'+n.row.name;if(n.children&&n.children.length&&dep<lv-1){st.open[k]=true;rec(n.children,dep+1,k);}});})(tree,0,'');}
@@ -2157,8 +2172,8 @@ function ovExtra(el,rows){
   var dm=peopleRows(rows,'demat').filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;});
   col3d($('ovBrC'),dm.map(function(r){return {label:r.name,value:r.net};}),{h:150,aria:'Broker / demat comparison'});
   miniCal($('ovCal'),rows);
-  var cr=comboRows(rows);
-  table($('ovCmb'),{id:'ov-cmb',title:'Trader combination',search:false,defaultSort:{key:'tfund',dir:-1},columns:[{key:'name',label:'Combination'},{key:'traders',label:'Traders',type:'int'},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'}],rows:cr,total:(function(){var t={name:'Total',tfund:sum(cr,function(r){return r.tfund;}),fund:capAvg(rows,null,'fund'),net:sum(cr,function(r){return r.net;})};t.roi=t.fund?t.net/t.fund*100:0;return t;})()});
+  var cr=withCtx(rows,function(){return comboRows(rows);});
+  table($('ovCmb'),{id:'ov-cmb',title:'Trader combination',search:false,defaultSort:{key:'tfund',dir:-1},columns:[{key:'name',label:'Combination'},{key:'traders',label:'Traders',type:'int'},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'}],tree:cr.map(function(r){return r.parts.length?{row:r,children:r.parts.map(function(p){return {row:p};})}:{row:r};}),total:(function(){var t={name:'Total',tfund:sum(cr,function(r){return r.tfund;}),fund:capAvg(rows,null,'fund'),net:sum(cr,function(r){return r.net;})};t.roi=t.fund?t.net/t.fund*100:0;return t;})()});
   ovShortNames(el);}
 function shortCoText(root){var t1=/Minix\s+(Fintech|Holdings?)\s+(Pvt\.?|Private)\s*(Ltd\.?|Limited)/i,rg=/Minix\s+(Fintech|Holdings?)\s+(Pvt\.?|Private)\s*(Ltd\.?|Limited)\.?/gi,rep=function(t){return t.replace(rg,function(m,a){return /^fin/i.test(a)?'Fintech':'Holding';});};
   var w=D.createTreeWalker(root,NodeFilter.SHOW_TEXT),n;while((n=w.nextNode()))if(t1.test(n.nodeValue))n.nodeValue=rep(n.nodeValue);
@@ -2195,7 +2210,7 @@ function waShell(host,left,msg,msg2,t2){
   $('waCopy').onclick=function(){waCopy(msg);};
   if(msg2){var col=$('waSend').closest('.wa-act').parentNode;col.insertAdjacentHTML('beforeend','<div class="wa-phone" style="margin-top:12px"><div class="wa-head"><i>M</i>'+esc(t2||'Second message')+'</div><div class="wa-bub">'+waFmt(msg2)+'</div></div><div class="wa-act"><button type="button" class="btn wa" id="waSend2">Send via WhatsApp</button><button type="button" class="btn" id="waCopy2">Copy text</button></div>');$('waSend2').onclick=function(){window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(msg2),'_blank','noopener');};$('waCopy2').onclick=function(){waCopy(msg2);};}}
 function waRow(l,v,c){return '<div class="wa-row"><span>'+l+'</span><b class="'+(c||'')+'">'+v+'</b></div>';}
-var waTab='k',waK={seg:'eq',date:'',eq:'',fno:'',_d:''},waS={co:'',fy:'',date:'',seg:'all'};
+var waTab='k',waK={seg:'eq',date:'',eq:'',fno:'',_d:''},waS={co:'',fy:'',date:'',seg:'all',open:{},split:true};
 function waKanwal(host,focusKey){
   var kr=ROWS.filter(function(o){return /kanwal/i.test(o.trader);});
   if(!waK.date)waK.date=iso(new Date());
@@ -2220,25 +2235,30 @@ function waKanwal(host,focusKey){
 function waCompanies(cur){var cos=uniq(ROWS.map(function(o){return o.company;})).sort();if(cos.indexOf(cur)<0)cur=cos.find(function(c){return /fintech/i.test(c);})||cos[0]||'';return {list:cos,cur:cur};}
 function waSel(id,list,cur,lab){return '<label>'+lab+'<select class="sel" id="'+id+'" style="height:36px">'+list.map(function(x){var v=Array.isArray(x)?x[0]:x,t=Array.isArray(x)?x[1]:x;return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'</select></label>';}
 function waSeg(host){
-  var c=waCompanies(waS.co);waS.co=c.cur;var cr=ROWS.filter(function(o){return o.company===waS.co;}),fys=uniq(cr.map(function(o){return o.fy;})).sort();if(fys.indexOf(waS.fy)<0)waS.fy=fys[fys.length-1]||'';
-  var fr=cr.filter(function(o){return o.fy===waS.fy;}),dts=uniq(fr.map(function(o){return o.iso;})).sort();if(dts.indexOf(waS.date)<0)waS.date=dts[dts.length-1]||'';
+  var c=waCompanies(waS.co);waS.co=c.cur;var cr=ROWS.filter(function(o){return o.company===waS.co;}),fys=uniq(cr.map(function(o){return o.fy;})).sort();if(waS.fy!=='ALL'&&fys.indexOf(waS.fy)<0)waS.fy=fys[fys.length-1]||'';var fyL=waS.fy==='ALL'?'All FY':'FY '+waS.fy;
+  var fr=cr.filter(function(o){return waS.fy==='ALL'||o.fy===waS.fy;}),dts=uniq(fr.map(function(o){return o.iso;})).sort();if(dts.indexOf(waS.date)<0)waS.date=dts[dts.length-1]||'';
   var list=fr.filter(function(o){return o.iso<=waS.date;});
   var SEC=[['FNO','FNO'],['Cash','Equity'],['MCX','MCX'],[null,'Total']].map(function(x){var S=x[0];return {S:S,lab:x[1],fund:waS.date?fundInfo(list,S,waS.date).total:0,avg:capAvg(list,S,'fund'),g:sum(list,function(o){return V(o,S,'gross');}),c:sum(list,function(o){return V(o,S,'chg');}),n:sum(list,function(o){return V(o,S,'net');})};});
-  var one=function(x){var T=x.S===null,P=T?'Total ':'';return ['*'+coShort(waS.co)+' – '+x.lab+' Summary*','','*(Data up to '+(waS.date?dMon(waS.date):'-')+')*','','*FY '+waS.fy+' (YTD)*','','⚪ *'+(T?'Total':x.lab)+' Fund ('+(waS.date?dMon(waS.date,1):'-')+')* = '+crS(x.fund),'','⚪ *Daily Avg '+(T?'':x.lab+' ')+'Fund* = '+crS(x.avg),'',dot(x.g)+' *'+P+'Gross* = '+rsS(x.g),'','🔴 *'+P+'Charges* = '+rsS(x.c),'',dot(x.n)+' *'+P+'Net* = '+rsS(x.n)].join('\n');};
+  var one=function(x){var T=x.S===null,P=T?'Total ':'';return ['*'+coShort(waS.co)+' – '+x.lab+' Summary*','','*(Data up to '+(waS.date?dMon(waS.date):'-')+')*','','*'+(waS.fy==='ALL'?'All FY (till '+(waS.date?dMon(waS.date):'-')+')':'FY '+waS.fy+' (YTD)')+'*','','⚪ *'+(T?'Total':x.lab)+' Fund ('+(waS.date?dMon(waS.date,1):'-')+')* = '+crS(x.fund),'','⚪ *Daily Avg '+(T?'':x.lab+' ')+'Fund* = '+crS(x.avg),'',dot(x.g)+' *'+P+'Gross* = '+rsS(x.g),'','🔴 *'+P+'Charges* = '+rsS(x.c),'',dot(x.n)+' *'+P+'Net* = '+rsS(x.n)].join('\n');};
   var idx={FNO:0,Cash:1,MCX:2,tot:3}[waS.seg],msg=waS.seg==='all'?SEC.map(one).join('\n\n━━━━━━━━━━━━━━━━━\n\n'):one(SEC[idx]);
-  var left='<div class="wa-ctl">'+waSel('waSCo',c.list,waS.co,'Company')+waSel('waSFy',fys.map(function(f){return [f,f+' (YTD)'];}),waS.fy,'Financial year')+waSel('waSDt',dts.slice().reverse().map(function(d){return [d,dmy(d)];}),waS.date,'Date (data up to)')+'</div>'+
+  var left='<div class="wa-ctl">'+waSel('waSCo',c.list,waS.co,'Company')+waSel('waSFy',[['ALL','All']].concat(fys.map(function(f){return [f,f+' (YTD)'];})),waS.fy,'Financial year')+waSel('waSDt',dts.slice().reverse().map(function(d){return [d,dmy(d)];}),waS.date,'Date (data up to)')+'</div>'+
     '<div class="wa-ctl">'+segBtns('was',[['FNO','FNO'],['Cash','Equity'],['MCX','MCX'],['tot','Total'],['all','All in one']],waS.seg)+'</div>'+
     '<div class="grid g2" style="gap:8px">'+SEC.map(function(x){return '<div class="card" style="padding:10px 12px"><div class="card-h" style="margin-bottom:4px"><h2>'+x.lab+' summary (FY '+esc(waS.fy)+')</h2></div>'+waRow('⚪ '+x.lab+' fund ('+(waS.date?dMon(waS.date,1):'-')+')',crS(x.fund))+waRow('⚪ Daily average fund',crS(x.avg))+waRow((x.g<0?'🔴':'🟢')+' Gross',rsS(x.g),cls(x.g))+waRow('🔴 Charges',rsS(x.c),'loss')+waRow((x.n<0?'🔴':'🟢')+' Net',rsS(x.n),cls(x.n))+'</div>';}).join('')+'</div>';
   var CR=comboRows(list,waS.date),CT={tfund:sum(CR,function(r){return r.tfund;}),fund:capAvg(list,null,'fund'),gross:sum(CR,function(r){return r.gross;}),chg:sum(CR,function(r){return r.chg;}),net:sum(CR,function(r){return r.net;})};
   var CIC={'FNO only':'🔵','FNO + Equity':'🟣','Equity only':'🟤','MCX only':'🟠','FNO + MCX':'⚫','Equity + MCX':'🟡','FNO + Equity + MCX':'🟢'};
-  var m2=['*'+coShort(waS.co)+' – Trader Combination Summary*','','*(Data up to '+(waS.date?dMon(waS.date):'-')+')*','','*FY '+waS.fy+' (YTD)*'];
-  CR.concat([Object.assign({name:'Total'},CT)]).forEach(function(r){var T=r.name==='Total';m2.push('',(T?'🟢':(CIC[r.name]||'⚪'))+' *'+r.name+'*'+(T?'':' ('+r.traders+' traders)'),'⚪ *Fund ('+(waS.date?dMon(waS.date,1):'-')+')* = '+crS(r.tfund),'⚪ *Daily Avg Fund* = '+crS(r.fund),dot(r.gross)+' *Gross* = '+rsS(r.gross),'🔴 *Charges* = '+rsS(r.chg),dot(r.net)+' *Net* = '+rsS(r.net));});
+  var m2=['*'+coShort(waS.co)+' – Trader Combination Summary*','','*(Data up to '+(waS.date?dMon(waS.date):'-')+')*','','*'+(waS.fy==='ALL'?'All FY (till '+(waS.date?dMon(waS.date):'-')+')':'FY '+waS.fy+' (YTD)')+'*'];
+  CR.concat([Object.assign({name:'Total',parts:[]},CT)]).forEach(function(r){var T=r.name==='Total',sp=waS.split&&r.parts&&r.parts.length,pl=function(k){return '   ↳ '+r.parts.map(function(p){return SEGNAME[p.seg]+' = '+rsS(p[k]);}).join(' | ');};m2.push('',(T?'🟢':(CIC[r.name]||'⚪'))+' *'+r.name+'*'+(T?'':' ('+r.traders+' traders)'),'⚪ *Fund ('+(waS.date?dMon(waS.date,1):'-')+')* = '+crS(r.tfund),'⚪ *Daily Avg Fund* = '+crS(r.fund),dot(r.gross)+' *Gross* = '+rsS(r.gross));if(sp)m2.push(pl('gross'));m2.push('🔴 *Charges* = '+rsS(r.chg));if(sp)m2.push(pl('chg'));m2.push(dot(r.net)+' *Net* = '+rsS(r.net));if(sp)m2.push(pl('net'));});
   var msg2=m2.join('\n');
-  left+='<div class="card" style="padding:10px 12px;margin-top:10px"><div class="card-h" style="margin-bottom:4px"><h2>Trader combination summary (FY '+esc(waS.fy)+')</h2><p>How traders actually trade. Fund is not split, so the total matches.</p></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th></th>'+CR.map(function(r){return '<th class="n">'+esc(r.name)+'</th>';}).join('')+'<th class="n">Total</th></tr></thead><tbody>'+
-    [['Traders',function(r){return r.traders==null?'':r.traders;}],['Fund ('+(waS.date?dMon(waS.date,1):'-')+')',function(r){return crS(r.tfund);}],['Daily avg fund',function(r){return crS(r.fund);}],['Gross',function(r){return '<span class="'+cls(r.gross)+'">'+rsS(r.gross)+'</span>';}],['Charges',function(r){return '<span class="loss">'+rsS(r.chg)+'</span>';}],['Net',function(r){return '<b class="'+cls(r.net)+'">'+rsS(r.net)+'</b>';}]].map(function(x){return '<tr><td>'+x[0]+'</td>'+CR.map(function(r){return '<td class="n">'+x[1](r)+'</td>';}).join('')+'<td class="n"><b>'+x[1](Object.assign({traders:null},CT))+'</b></td></tr>';}).join('')+'</tbody></table></div></div>';
+  var COLS=[];CR.forEach(function(r){COLS.push({r:r,h:esc(r.name)+(r.parts.length?' <button type="button" class="btn sm cmbx" data-cmb="'+esc(r.name)+'">'+(waS.open[r.name]?'−':'+')+'</button>':''),main:1});if(r.parts.length&&waS.open[r.name])r.parts.forEach(function(p){COLS.push({r:p,h:'<span class="muted">'+esc(p.name)+'</span>',part:1});});});
+  var cell=function(c,k){var r=c.r;if(c.part&&(k==='traders'||k==='tfund'||k==='fund'))return '<span class="muted">–</span>';if(k==='traders')return r.traders==null?'':r.traders;if(k==='tfund'||k==='fund')return crS(r[k]);if(k==='chg')return '<span class="loss">'+rsS(r.chg)+'</span>';if(k==='net')return '<b class="'+cls(r.net)+'">'+rsS(r.net)+'</b>';return '<span class="'+cls(r[k])+'">'+rsS(r[k])+'</span>';};
+  var RW=[['Traders','traders'],['Fund ('+(waS.date?dMon(waS.date,1):'-')+')','tfund'],['Daily avg fund','fund'],['Gross','gross'],['Charges','chg'],['Net','net']];
+  left+='<div class="card" style="padding:10px 12px;margin-top:10px"><div class="card-h" style="margin-bottom:4px"><h2>Trader combination summary ('+esc(fyL)+')</h2><div class="tools"><label class="lvl"><input type="checkbox" id="waSplit"'+(waS.split?' checked':'')+'> Segment part in message</label></div><p>How traders actually trade. Press + to see the FNO / Equity / MCX part. Fund is not split.</p></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th></th>'+COLS.map(function(c){return '<th class="n">'+c.h+'</th>';}).join('')+'<th class="n">Total</th></tr></thead><tbody>'+
+    RW.map(function(x){return '<tr><td>'+x[0]+'</td>'+COLS.map(function(c){return '<td class="n">'+cell(c,x[1])+'</td>';}).join('')+'<td class="n"><b>'+cell({r:Object.assign({traders:null},CT)},x[1])+'</b></td></tr>';}).join('')+'</tbody></table></div></div>';
   waShell(host,left,msg,msg2,'Trader combination summary');
   $('waSCo').onchange=function(){waS.co=this.value;waS.fy='';waS.date='';waSeg(host);};$('waSFy').onchange=function(){waS.fy=this.value;waS.date='';waSeg(host);};$('waSDt').onchange=function(){waS.date=this.value;waSeg(host);};
-  bindSeg(host,'was',function(v){waS.seg=v;waSeg(host);});}
+  bindSeg(host,'was',function(v){waS.seg=v;waSeg(host);});
+  host.querySelectorAll('[data-cmb]').forEach(function(b){b.onclick=function(){var k=b.dataset.cmb;waS.open[k]=!waS.open[k];waSeg(host);};});
+  var sx=$('waSplit');if(sx)sx.onchange=function(){waS.split=sx.checked;waSeg(host);};}
 function dplName(co,d){return 'DPL|'+coCode(co)+'|'+d;}
 function dplGet(co,d){var v=cfgGet(dplName(co,d),null);return v&&v.e?v.e:null;}
 function pctS(r){r=num(r);return (r<0?'- ':'+ ')+Math.abs(r).toFixed(2)+'%';}
@@ -2340,10 +2360,10 @@ R.fy=function(el,rows){rows=segRows(rows);var S=GSEG,s=stats(rows,S),fi=fundInfo
   var fyTree=treeBy(fyBase,[{get:function(o){return o.fy;},label:function(v){return 'FY '+v;}},{get:function(o){return o.demat;}},{get:function(o){return o.mkey;},label:monthLabelFromKey}]);
   var fyS=stats(fyBase,GSEG),fyF=fundInfo(fyBase,GSEG).total,fyNb=niftyBank(fyBase);
   table(cb[0],{id:'pp-fy',title:'FY vs FY',defaultSort:{key:'key',dir:1},columns:[{key:'name',label:'FY / demat / month'},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net',type:'money'},{key:'nfund',label:'Net fund',type:'money',plain:1},{key:'roi',label:'ROI',type:'pct'}].concat(idxCols(),[{key:'days',label:'Days',type:'int'},{key:'traders',label:'Traders',type:'int'},{key:'win',label:'Win %',type:'pct',plain:1}]),tree:fyTree,total:statRow('Grand total',fyS,{tfund:fyF,nfund:fyF+fyS.net,nifty:fyNb[0],bank:fyNb[1]})});
-  var FDT=segTree(rows);bindSeg(el,'flv',function(v){fundLvl=+v;lvOpen('fd-tree',FDT,fundLvl);render();});
+  var FDT=withCtx(rows,function(){return segTree(rows);});bindSeg(el,'flv',function(v){fundLvl=+v;lvOpen('fd-tree',FDT,fundLvl);render();});
   if(!tableState['fd-tree'])tableState['fd-tree']={key:'net',dir:-1,q:'',open:{},all:false};
   table(cb[1],{id:'fd-tree',title:'Company → segment → portfolio → trader',columns:[nameAny,{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'nfund',label:'Net fund',type:'money',plain:1},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}].concat(idxCols(),[{key:'fdate',label:'Fund date',type:'date'}]),tree:FDT,total:statRow('Total',s,{tfund:fi.total,nfund:fi.total+s.net,nifty:niftyBank(rows)[0],bank:niftyBank(rows)[1]})});
-  table(cb[2],{id:'fd-combo',title:'Company → combination → trader',columns:[nameAny,{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}],tree:treeBy(rows,[{get:function(o){return o.company;}},{get:function(o){return o.combo;}},{get:function(o){return o.trader;},kind:'Trader'}]),total:statRow('Total',s,{tfund:fi.total})});
+  table(cb[2],{id:'fd-combo',title:'Company → combination → trader',columns:[nameAny,{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}],tree:withCtx(rows,function(){var T=treeBy(rows,[{get:function(o){return o.company;}},{get:function(o){return o.combo;}},{get:function(o){return o.trader;},kind:'Trader'}]);T.forEach(function(c){(c.children||[]).forEach(function(k){var l=rows.filter(function(o){return o.company===c.row.key&&o.combo===k.row.key;});var ps=comboParts(l,k.row.key);if(ps.length)k.children=ps.map(function(p){return {row:p};}).concat(k.children||[]);});});return T;}),total:statRow('Total',s,{tfund:fi.total})});
 };
 
 /* ---------- 1. Overview (one page, tabbed cards) ---------- */
@@ -2550,10 +2570,14 @@ R.people=function(el,rows){
   var acols=[{key:'name',label:act.length?act.map(function(k){return lvName('tr',k);}).join(' → '):'Trader',render:function(v,r){return r.kind?who(v,r.kind):esc(v);}}];
   if(flat)acols=acols.concat([{key:'company',label:'Company'},{key:'portfolio',label:'Portfolio'},{key:'researcher',label:'Research'}]);
   acols=acols.concat([{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'nfund',label:'Net fund',type:'money',plain:1},{key:'days',label:'Days',type:'int'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'},{key:'win',label:'Win %',type:'pct',plain:1},{key:'roi',label:'ROI',type:'pct'}],idxCols(),[{key:'best',label:'Best day',type:'money'},{key:'worst',label:'Worst day',type:'money'},{key:'maxDD',label:'Max drawdown',type:'money'},{key:'div',label:'Dividend',type:'money',plain:1}]);
+  var ctxOk=act.indexOf('mkey')<0&&(act.indexOf('combo')>=0||act.indexOf('seg')>=0);if(ctxOk)FI_CTX=rangeOf(rows)[1];
   var avd=flat?{rows:peopleRows(rows,'trader').map(function(r){r.kind='Trader';return r;})}:(act.length===1?{rows:lvTree(rows,act,mk).map(function(n){return n.row;})}:{tree:lvTree(rows,act,mk)});
+  FI_CTX=null;
   table($('ppAll'),Object.assign({id:'pp-all-'+(act.join('-')||'tr'),title:'All traders',defaultSort:{key:'net',dir:-1},columns:acols,total:statRow('Grand total',s,{tfund:fi.total,nfund:fi.total+s.net,nifty:nb[0],bank:nb[1]})},avd));
   var ac=lc.filter(Boolean),ck=ac.length?ac:['trader'];
+  var ctx2=ck.indexOf('mkey')<0&&(ck.indexOf('combo')>=0||ck.indexOf('seg')>=0);if(ctx2)FI_CTX=rangeOf(rows)[1];
   var cdata=ck.length===1?{rows:lvTree(rows,ck,mk).map(function(n){return n.row;})}:{tree:lvTree(rows,ck,mk)};
+  FI_CTX=null;
   table($('ppChg'),Object.assign({id:'pp-chg-'+ck.join('-'),title:'Charges by trader & efficiency',defaultSort:{key:'chg',dir:-1},columns:[{key:'name',label:ck.map(function(k){return lvName('tr',k);}).join(' → '),render:function(v,r){return r.kind?who(v,r.kind):esc(v);}},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'chgPct',label:'Charges % of fund',type:'pct',plain:1,render:function(v){return '<span class="'+(v>2.5?'loss':v<1?'gain':'warn')+'">'+pct(v)+'</span>';}},{key:'gpPct',label:'Charges % of gross profit',type:'pct',plain:1,render:function(v){return v==null?'<span class="muted">gross in loss</span>':pct(v,1);}},{key:'net',label:'Net P&L',type:'money'}],total:Object.assign({name:'Total'},chgMetrics(rows))},cdata));
   var dsAll=uniq(rows.map(function(o){return o.iso;})).sort(),cum=0,byD=groupBy(rows,function(o){return o.iso;});
   var drows=dsAll.map(function(d){var l=byD.get(d),f=capAvg(l,GSEG,'fund'),n=netOf(l),tf=fundInfo(rows,GSEG,d).total;cum+=n;var tn={};l.forEach(function(o){tn[o.trader]=(tn[o.trader]||0)+V(o,GSEG,'net');});var tp=0,tl=0;Object.keys(tn).forEach(function(k){if(tn[k]>0.004)tp++;else if(tn[k]<-0.004)tl++;});

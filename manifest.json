@@ -2,7 +2,7 @@
   "id": "/dashboard",
   "name": "Minix Trader Dashboard",
   "short_name": "Minix Trader",
-  "description": "Minix role-based trader dashboard, daily reports and notifications.",
+  "description": "Minix Fintech trader dashboard, daily reports and notifications.",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
@@ -10,8 +10,8 @@
     "standalone",
     "minimal-ui"
   ],
-  "background_color": "#020617",
-  "theme_color": "#2563eb",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
   "orientation": "any",
   "lang": "en",
   "categories": [

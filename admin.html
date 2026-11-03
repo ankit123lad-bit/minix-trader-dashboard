@@ -36,6 +36,7 @@ table{color:var(--text)}th{background:var(--p2)!important;color:var(--muted)!imp
 .awarn{background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 55%,transparent)}
 .aok{background:color-mix(in srgb,var(--gain) 14%,transparent);border:1px solid color-mix(in srgb,var(--gain) 55%,transparent)}
 .abk{background:var(--p2);border:1px solid var(--line)}
+.ahdr.alogin-mode .alogo,.ahdr.alogin-mode .atitle,.ahdr.alogin-mode .awho{display:none}
 @media(max-width:700px){.akpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -346,6 +347,12 @@ if(h1){h1.parentNode.insertBefore(hd,h1);h1.style.display='none';}
 hd.querySelectorAll('[data-th]').forEach(function(b){b.onclick=function(){setTheme(b.dataset.th);};});
 $('aBack').onclick=function(e){if(typeof window.minixReturnToDashboard==='function'){e.preventDefault();return window.minixReturnToDashboard();}};
 setTheme(th);
+/* inside the dashboard window the dashboard already shows "Back to dashboard" */
+var EMB=false;try{EMB=window.parent&&window.parent!==window;}catch(e){EMB=true;}
+if(EMB)$('aBack').style.display='none';
+/* on the login screen show the logo only once (inside the login box) */
+function hdrMode(){var app=$('app'),inApp=app&&!app.classList.contains('hidden');hd.classList.toggle('alogin-mode',!inApp);}
+hdrMode();setInterval(hdrMode,700);
 /* login card */
 var lc=$('loginCard');if(lc){var h2=lc.querySelector('h2');var top=D.createElement('div');top.className='alogin-top';top.innerHTML='<div class="alogo"><img src="'+LOGO+'" alt="Minix Fintech"></div><div class="muted" style="margin-top:6px">Admin Entry · secure login</div>';lc.insertBefore(top,lc.firstChild);if(h2)h2.style.display='none';var bk=D.createElement('a');bk.href='index.html';bk.className='aback';bk.textContent='← Back to Home';lc.appendChild(bk);}
 /* tab icons */

@@ -3,7 +3,7 @@
   "name": "Minix Trader Dashboard",
   "short_name": "Minix Trader",
   "description": "Minix Fintech trader dashboard, daily reports and notifications.",
-  "start_url": "/dashboard",
+  "start_url": "/dashboard.html",
   "scope": "/",
   "display": "standalone",
   "display_override": [
@@ -24,7 +24,7 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "Open the Minix dashboard",
-      "url": "/dashboard",
+      "url": "/dashboard.html",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -37,7 +37,7 @@
       "name": "Admin",
       "short_name": "Admin",
       "description": "Open admin entry",
-      "url": "/admin",
+      "url": "/admin.html",
       "icons": [
         {
           "src": "/icon-192.png",

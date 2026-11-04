@@ -37,6 +37,29 @@ table{color:var(--text)}th{background:var(--p2)!important;color:var(--muted)!imp
 .aok{background:color-mix(in srgb,var(--gain) 14%,transparent);border:1px solid color-mix(in srgb,var(--gain) 55%,transparent)}
 .abk{background:var(--p2);border:1px solid var(--line)}
 .ahdr.alogin-mode .alogo,.ahdr.alogin-mode .atitle,.ahdr.alogin-mode .awho{display:none}
+/* login like the dashboard */
+#loginCard.alogin{max-width:460px;margin:24px auto!important;padding:24px 26px!important}
+#loginCard.alogin .grid{display:flex!important;flex-direction:column;gap:6px;grid-template-columns:none!important}
+#loginCard.alogin .alab{font-size:13px;color:var(--muted);margin-top:6px;text-align:left}
+#loginCard.alogin input{width:100%;height:46px;font-size:15px;padding:0 14px}
+#loginCard.alogin .apw{position:relative}
+#loginCard.alogin .apw input{padding-right:70px}
+#loginCard.alogin .apw-show{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto!important;height:34px;padding:0 12px!important;background:transparent!important;color:var(--muted)!important;border:0!important;box-shadow:none!important;font-weight:500}
+#loginCard.alogin #loginBtn{margin-top:14px;height:48px;font-size:16px}
+#loginCard.alogin .msg{margin-top:12px}
+#loginCard.alogin .alogin-top .muted{font-size:14px}
+/* light theme: no dark boxes */
+html[data-theme=light] .msg{background:#e8efff!important;color:#1e3a8a!important;border:1px solid #c7d6f5}
+html[data-theme=light] .msg[style*="69, 10, 10"],html[data-theme=light] .msg[style*="450a0a"]{background:#fde8ea!important;color:#9b1c2c!important;border-color:#f3b8c0}
+html[data-theme=light] .msg[style*="20, 83, 45"],html[data-theme=light] .msg[style*="14532d"]{background:#e7f8f0!important;color:#0f6b47!important;border-color:#a7e3c8}
+html[data-theme=light] .minix-ux-activity-rows>div{background:#f5f7fb!important;border-color:#dbe3ee!important}
+html[data-theme=light] .minix-ux-activity-rows span{color:#1d4ed8!important}
+html[data-theme=light] .minix-ux-activity-rows b{color:#111827!important}
+html[data-theme=light] .minix-ux-activity-rows small{color:#64748b!important}
+html[data-theme=light] .minix-ux-validation{background:#f5f7fb!important;border-color:#dbe3ee!important;color:#1e293b!important}
+html[data-theme=light] .minix-ux-valid-grid span{background:#ffffff!important;border-color:#dbe3ee!important;color:#1e293b!important}
+html[data-theme=light] .minix-ux-import-progress{background:linear-gradient(90deg,rgba(59,130,246,.30) 0 var(--mux-pct),#eef2f8 var(--mux-pct) 100%)!important;color:#1e3a8a!important;border-color:#bfd0ea!important}
+html[data-theme=light] .minix-ux-health,html[data-theme=light] .minix-ux-backup{background:#e7f8f0!important;color:#0f6b47!important;border-color:#a7e3c8!important}
 @media(max-width:700px){.akpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -354,7 +377,15 @@ if(EMB)$('aBack').style.display='none';
 function hdrMode(){var app=$('app'),inApp=app&&!app.classList.contains('hidden');hd.classList.toggle('alogin-mode',!inApp);}
 hdrMode();setInterval(hdrMode,700);
 /* login card */
-var lc=$('loginCard');if(lc){var h2=lc.querySelector('h2');var top=D.createElement('div');top.className='alogin-top';top.innerHTML='<div class="alogo"><img src="'+LOGO+'" alt="Minix Fintech"></div><div class="muted" style="margin-top:6px">Admin Entry · secure login</div>';lc.insertBefore(top,lc.firstChild);if(h2)h2.style.display='none';var bk=D.createElement('a');bk.href='index.html';bk.className='aback';bk.textContent='← Back to Home';lc.appendChild(bk);}
+var lc=$('loginCard');if(lc){var h2=lc.querySelector('h2');var top=D.createElement('div');top.className='alogin-top';top.innerHTML='<div class="alogo"><img src="'+LOGO+'" alt="Minix Fintech"></div><div class="muted" style="margin-top:6px">Admin Entry · secure login</div>';lc.insertBefore(top,lc.firstChild);if(h2)h2.style.display='none';var bk=D.createElement('a');bk.href='index.html';bk.className='aback';bk.textContent='← Back to Home';lc.appendChild(bk);
+  lc.classList.add('alogin');var em=$('email'),pw=$('password'),lb=$('loginBtn');
+  var LANX=typeof window.lanAllPayloads==='function';
+  var lab=function(t,forId){var l=D.createElement('label');l.className='alab';l.htmlFor=forId;l.textContent=t;return l;};
+  if(em){em.parentNode.insertBefore(lab(LANX?'Username':'Email',em.id),em);if(LANX)em.placeholder='Username';}
+  if(pw){var w=D.createElement('div');w.className='apw';pw.parentNode.insertBefore(lab('Password',pw.id),pw);pw.parentNode.insertBefore(w,pw);w.appendChild(pw);var sb2=D.createElement('button');sb2.type='button';sb2.className='apw-show';sb2.textContent='Show';sb2.onclick=function(){var on=pw.type==='password';pw.type=on?'text':'password';sb2.textContent=on?'Hide':'Show';};w.appendChild(sb2);}
+  if(lb)lb.textContent='Sign in';
+  [em,pw].forEach(function(x){if(x)x.addEventListener('keydown',function(e){if(e.key==='Enter'&&lb){e.preventDefault();lb.click();}});});
+  var lm=$('loginMsg');if(lm&&lb)lb.parentNode.parentNode.insertBefore(lm,lb.parentNode.nextSibling);}
 /* tab icons */
 var IC={'Trader Daily Entry':'📈 ','Nifty / BankNifty Entry':'📊 ','User Management':'👥 '};
 D.querySelectorAll('.tabs button').forEach(function(b){var t=b.textContent.trim();if(IC[t])b.textContent=IC[t]+t;});
@@ -457,6 +488,22 @@ async function renderHistory(){histCard();var t=$('aHistT');if(!t)return;var h=(
 /* manual "copy to online now" also updates the online-copy time */
 if(typeof window.mirrorTable==='function'){var mo=window.mirrorTable;window.mirrorTable=async function(t){var r=await mo.apply(this,arguments);if(r)await cfgSave('ONLINE_COPY',{at:new Date().toISOString(),table:t});return r;};}
 setup('trader',{input:'traderCsv',btn:'replaceTraderBtn',table:'trader_rows',orig:'replaceTradersCsv'});
+/* Add / Import: only for new days. A full CSV with old days must use Backup & replace. */
+if(typeof window.importCsv==='function'){var oi=window.importCsv;window.importCsv=async function(table,inputId){
+  var inp=$(inputId),f=inp&&inp.files&&inp.files[0];if(!f){return oi.apply(this,arguments);}
+  try{var rows=csvParse(await f.text()),hs=rows[0].map(function(x){return String(x).replace(/^\uFEFF/,'').trim();}),di=hs.indexOf('Date');
+    var fd=Array.from(new Set(rows.slice(1).map(function(r){return pdate(r[di]);}).filter(Boolean))).sort();
+    var cur=(await readAll(table)).map(unw),cs=new Set(cur.map(function(p){return pdate(p.Date);}).filter(Boolean));
+    var old=fd.filter(function(d){return cs.has(d);});
+    if(old.length){var msg='⚠ This CSV has '+old.length+' day(s) that are already in the data ('+dLab(old[0])+(old.length>1?' … '+dLab(old[old.length-1]):'')+').\nAdding it would count those days twice.\n\nPress OK to use “Backup & replace” instead, or Cancel to stop.';
+      if(confirm(msg)){var fn=table==='trader_rows'?'replaceTradersCsv':'replaceMarketCsv';return window[fn]();}return;}
+  }catch(e){console.warn('Add/Import check:',e);}
+  var r=await oi.apply(this,arguments);
+  var st=$('status');if(st&&/^CSV import complete/i.test(st.textContent||'')){var onl='direct';if(IS_LAN){await new Promise(function(res){setTimeout(res,400);});var om=$('onSyncMsg');onl=om&&/Online saved/.test(om.textContent)?'ok':'fail';}
+    var h=(await cfgRead('UPLOAD_HISTORY'))||[];h.unshift({at:new Date().toISOString(),by:(typeof user!=='undefined'&&user&&user.email)||'admin',file:(table==='trader_rows'?'Trader':'Nifty')+' (add)',name:f.name,rows:Number((st.textContent.match(/(\d[\d,]*)\s*rows/)||[])[1]||0),online:onl});await cfgSave('UPLOAD_HISTORY',h.slice(0,20));
+    if(table==='trader_rows'){try{var all=(await readAll(table)).map(unw),ds=all.map(function(p){return pdate(p.Date);}).filter(Boolean).sort();await cfgSave('DATA_INFO',{rows:all.length,first:ds[0],last:ds[ds.length-1],at:new Date().toISOString()});}catch(e){}}
+    renderHistory();}
+  return r;};}
 setup('market',{input:'marketCsv',btn:'replaceMarketBtn',table:'market_rows',orig:'replaceMarketCsv'});
 var hT=setInterval(function(){var app=$('app');if(app&&!app.classList.contains('hidden')){clearInterval(hT);renderHistory();}},800);
 })();

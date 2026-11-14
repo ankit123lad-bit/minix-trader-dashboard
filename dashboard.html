@@ -846,7 +846,391 @@ body.clean #mxExitClean{display:block}
 .wa-grid .tbl th,.wa-grid .tbl td{white-space:nowrap;padding:5px 7px}
 .wa-grid .card{overflow-x:auto}
 .cmbx{height:20px;min-width:20px;padding:0 5px;font-size:12px;line-height:1;margin-left:4px}
+
+
+/* v14 */
+#page-overview .ovg>#ovMkt{grid-template-columns:1fr!important;align-self:stretch;align-content:space-between}
+#page-overview .ovg>#ovMkt .card.mk .spark{width:44%!important}
+#page-overview .ovg>#ovMkt .card.mk .v{font-size:14px}
+
+/* v15 compact wide tables */
+.page .tbl th,.page .tbl td{padding-left:7px;padding-right:7px}
+#page-people .tbl,#page-fund .tbl,#page-fy .tbl{font-size:12px}
+#page-people .tbl th,#page-fund .tbl th,#page-fy .tbl th{font-size:11px}
+
+/* v15 responsive overview: when the screen is narrow (e.g. laptop at 100%), use fewer cards per row so nothing needs side-scroll */
+.ovg{container-type:inline-size;container-name:ovg}
+@container ovg (max-width:1500px){
+ .ovg>.sp3{grid-column:span 4}.ovg>.sp4{grid-column:span 6}.ovg>.sp5{grid-column:span 6}.ovg>.sp9{grid-column:span 8}
+ .ovg>.card:has(#ovCmb),.ovg>.card:has(#ovHeat){grid-column:span 12}
+}
+@container ovg (max-width:1000px){.ovg>*{grid-column:span 12!important}}
+#page-people .tbl th,#page-people .tbl td{padding-left:6px;padding-right:6px}
+.wa-grid .grid.g2{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))!important}
 </style>
+<script>
+/* ===== MINIX ADD-ON (Nov-2026): Holiday, Provisional MTM, Admin Entry, Login Photo ===== */
+(function(){
+  'use strict';
+  /* ---------- 1. Market holiday calendar (NSE equity + F&O). Update every year. ---------- */
+  var HOL={
+    '2026-01-15':'Municipal Corporation Election (Maharashtra)','2026-01-26':'Republic Day','2026-03-03':'Holi',
+    '2026-03-26':'Shri Ram Navami','2026-03-31':'Shri Mahavir Jayanti','2026-04-03':'Good Friday',
+    '2026-04-14':'Dr. Baba Saheb Ambedkar Jayanti','2026-05-01':'Maharashtra Day','2026-05-28':'Bakri Id',
+    '2026-06-26':'Moharram','2026-09-14':'Ganesh Chaturthi','2026-10-02':'Mahatma Gandhi Jayanti',
+    '2026-10-20':'Dussehra','2026-11-10':'Diwali-Balipratipada','2026-11-24':'Guru Nanak Jayanti','2026-12-25':'Christmas'
+  };
+  var SPECIAL_OPEN={'2026-11-08':'Muhurat Trading'};
+  window.MINIX_NSE_HOLIDAYS=HOL;
+  function pad(n){return String(n).padStart(2,'0');}
+  function isoOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+  function istTodayIso(){var p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),x={};p.forEach(function(a){x[a.type]=a.value;});return x.year+'-'+x.month+'-'+x.day;}
+  function dmy(iso){return String(iso).slice(0,10).split('-').reverse().join('-');}
+  var WD=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  window.minixHolidayInfo=function(iso){
+    iso=String(iso||'').slice(0,10);if(!iso)return null;
+    var cu=window.MINIX_CUSTOM_HOL;if(!cu){try{cu=JSON.parse(localStorage.getItem('MX_CUSTOM_HOL')||'[]');}catch(e){cu=[];}}
+    var hit=(cu||[]).find(function(x){return x&&x.d===iso;});if(hit)return hit.type==='O'?null:{name:hit.name||'Holiday'};
+    if(SPECIAL_OPEN[iso])return null;
+    if(HOL[iso])return {name:HOL[iso]};
+    var w=new Date(iso+'T00:00:00').getDay();
+    if(w===0||w===6)return {name:WD[w]};
+    return null;
+  };
+  window.minixIsMarketDay=function(iso){return !window.minixHolidayInfo(iso||istTodayIso());};
+  window.minixPrevMarketDay=function(iso){var d=new Date(String(iso).slice(0,10)+'T00:00:00');for(var i=0;i<15;i++){d.setDate(d.getDate()-1);var s=isoOf(d);if(!window.minixHolidayInfo(s))return s;}return '';};
+  window.minixHolidayHtml=function(key){
+    var h=window.minixHolidayInfo(key),prev=window.minixPrevMarketDay(key),w=WD[new Date(key+'T00:00:00').getDay()];
+    return '<div class="minix-today-head"><h2>📊 Today’s Role-wise Report – '+dmy(key)+' ('+w+')</h2></div>'+
+      '<div style="text-align:center;padding:42px 16px;border:1px dashed #475569;border-radius:16px;margin:10px 0">'+
+      '<div style="font-size:46px">🏖️</div><div style="font-size:22px;font-weight:800;margin-top:6px">Market Holiday – No report needed today</div>'+
+      '<div style="color:#94a3b8;margin-top:6px">'+(h?h.name:'')+'</div>'+
+      (prev?'<div style="color:#93c5fd;margin-top:10px">Last trading day: <b>'+dmy(prev)+' ('+WD[new Date(prev+'T00:00:00').getDay()]+')</b></div>':'')+
+      '</div>';
+  };
+
+  /* ---------- helpers ---------- */
+  function num(v){var n=Number(String(v==null?0:v).replace(/[^0-9.-]/g,''));return isFinite(n)?n:0;}
+  var MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,sept:8,oct:9,nov:10,dec:11};
+  function pDate(v){
+    var s=String(v==null?'':v).trim(),m;if(!s)return '';
+    if(/^\d{5}(\.\d+)?$/.test(s)){var b=new Date(1899,11,30);b.setDate(b.getDate()+Math.floor(+s));return isoOf(b);}
+    if((m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/)))return m[1]+'-'+pad(m[2])+'-'+pad(m[3]);
+    if((m=s.match(/^(\d{1,2})[-\/ ]([A-Za-z]{3,4})[-\/ ](\d{2}|\d{4})$/))){var mi=MON[m[2].toLowerCase()];if(mi==null)return '';var y=+m[3];if(y<100)y+=2000;return y+'-'+pad(mi+1)+'-'+pad(m[1]);}
+    if((m=s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/)))return m[3]+'-'+pad(m[2])+'-'+pad(m[1]);
+    return '';
+  }
+  function addDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return isoOf(d);}
+  function fyOf(iso){var y=+iso.slice(0,4),mo=+iso.slice(5,7);var s=mo>=4?y:y-1;return s+'-'+String(s+1).slice(2);}
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function sbClient(){var c=window.MINIX_CONFIG||{};return window.supabase&&c.supabaseUrl&&c.supabaseAnonKey?window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey):null;}
+  function user(){try{return JSON.parse(localStorage.getItem('minixUser')||'null');}catch(e){return null;}}
+  function roleOf(u){u=u||{};return String((Array.isArray(u.roles)&&u.roles.length?u.roles.join(' '):u.role)||'');}
+  function isAdmin(u){return /admin/i.test(roleOf(u||user()));}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* ---------- 2. Provisional MTM: trader / admin daily reports added until CSV arrives ---------- */
+  window.minixMergeProvisional=async function(rows){
+    rows=Array.isArray(rows)?rows:[];
+    var info={lastCsv:'',provDates:[],missing:{},added:0,skipped:0};window.MINIX_PROV_INFO=info;
+    var csvByTrader={},latest={},lastCsv='';
+    rows.forEach(function(r){var d=pDate(r.Date),t=String(r['Trader Name']||'').trim();if(!d||!t)return;
+      if(d>lastCsv)lastCsv=d;(csvByTrader[t.toLowerCase()]=csvByTrader[t.toLowerCase()]||{})[d]=1;
+      var L=latest[t.toLowerCase()];if(!L||d>=L.d)latest[t.toLowerCase()]={d:d,r:r,name:t};});
+    info.lastCsv=lastCsv;if(!lastCsv)return rows;
+    var c=sbClient();if(!c)return rows;
+    var from=addDays(lastCsv,-7),today=istTodayIso(),reps=[];
+    try{var q=await c.from('minix_daily_trader_reports').select('*').gte('report_date',from);if(q.error)throw q.error;reps=q.data||[];}
+    catch(e){try{var q2=await c.from('minix_daily_trader_reports').select('*');reps=(q2.data||[]).filter(function(x){return String(x.report_date||'').slice(0,10)>=from;});}catch(e2){console.warn('Provisional load failed',e2);return rows;}}
+    var add=[],seen={};
+    reps.forEach(function(x){
+      var d=String(x.report_date||'').slice(0,10),t=String(x.trader_name||'').trim(),k=t.toLowerCase();if(!d||!t||d>today)return;
+      seen[d+'|'+k]=1;
+      if(String(x.today_status||'').toUpperCase()!=='TRADED')return;
+      var hasCsv=csvByTrader[k]&&csvByTrader[k][d];
+      if(d<=lastCsv&&hasCsv)return;               /* CSV is the final truth */
+      var L=latest[k];if(!L){info.skipped++;return;}
+      var base=L.r,fg=num(x.fno_gross),fc=num(x.fno_charges),cg=num(x.cash_gross),cc=num(x.cash_charges),mg=num(x.mcx_gross),mc=num(x.mcx_charges);
+      var segs=[];if(fg||fc)segs.push('FNO');if(cg||cc)segs.push('Cash');if(mg||mc)segs.push('MCX');
+      var fund=num(x.fno_total_fund)+num(x.cash_total_fund)+num(x.mcx_total_fund)||num(x.total_margin)||num(base.Fund);
+      var y=+d.slice(0,4),mo=+d.slice(5,7);
+      var row={'Financial Year':fyOf(d),'Company Name':base['Company Name'],'Demat Account':base['Demat Account'],'Researcher Name':base['Researcher Name'],
+        'Portfolio Name':base['Portfolio Name'],'Trader Name':L.name,'Date':d,'Month':MN[mo-1]+'-'+String(y).slice(2),'Fund':fund,
+        'Margin Utilized':num(x.margin_utilized),'Strategy':segs.length?segs.join(' & '):(base.Strategy||'FNO'),
+        'FNO Gross':fg,'FNO Gorv Chg':fc,'FNO Net Amount':fg-fc,'Cash Gross':cg,'Cash Gorv Chg':cc,'Cash Net Amount':cg-cc,
+        'MCX Gross':mg,'MCX Gorv Chg':mc,'MCX Net Amount':mg-mc,'Dividend Received':0,
+        _provisional:true,_provSource:/^\[Admin Entry\]/.test(String(x.reason||''))?'admin':'trader'};
+      add.push(row);info.added++;if(info.provDates.indexOf(d)<0)info.provDates.push(d);
+    });
+    /* market days after the last CSV date: who has no data at all */
+    var active=Object.keys(latest).filter(function(k){return latest[k].d>=addDays(lastCsv,-30)&&!/test account/i.test(k);});
+    for(var d=addDays(lastCsv,1);d<=today;d=addDays(d,1)){
+      if(window.minixHolidayInfo(d))continue;
+      if(info.provDates.indexOf(d)<0)info.provDates.push(d);
+      var missL=active.filter(function(k){return !seen[d+'|'+k];});if(missL.length)info.missing[d]=missL.length;
+      (info.missNames=info.missNames||{})[d]=missL.map(function(k){return {name:latest[k].name,company:String(latest[k].r['Company Name']||'')};});
+      (info.repNames=info.repNames||{})[d]=active.filter(function(k){return seen[d+'|'+k];}).map(function(k){return {name:latest[k].name,company:String(latest[k].r['Company Name']||'')};});
+    }
+    info.provDates.sort();
+    setTimeout(window.minixShowProvBanner,600);
+    return rows.concat(add);
+  };
+
+  window.minixProvCardHtml=function(d,co){
+    var i=window.MINIX_PROV_INFO;if(!i||!i.lastCsv||!d||d<=i.lastCsv||!i.missNames||!i.missNames[d])return '';
+    var f=function(l){return (l||[]).filter(function(x){return !co||x.company===co;});};
+    var miss=f(i.missNames[d]),rep=f((i.repNames||{})[d]),tot=miss.length+rep.length;
+    var btns=function(l,dt,tag){return l.map(function(x){return '<button type="button" onclick="minixAdminEntryOpen(\''+encodeURIComponent(x.name)+'\',\''+dt+'\')" style="margin:3px 4px 0 0;background:#4c1d95;color:#ede9fe;border:1px solid #7c3aed;border-radius:8px;padding:3px 9px;font-size:11.5px;font-weight:700;cursor:pointer">✏️ '+esc(x.name)+(tag?' ('+dmy(dt).slice(0,5)+')':'')+'</button>';}).join('');};
+    var h;
+    if(!miss.length)h='<div style="color:#34d399;font-weight:800">✅ '+dmy(d)+' – All '+tot+' traders have reported. You can send the WhatsApp message.</div><div style="color:#94a3b8;font-size:12px;margin-top:3px">(Provisional – amounts may change when the CSV is uploaded)</div>';
+    else h='<div style="color:#fbbf24;font-weight:800">⚠️ '+dmy(d)+' – Provisional (CSV not uploaded yet)</div>'+
+      '<div style="margin-top:6px">✅ '+rep.length+' traders have reported</div>'+
+      '<div style="margin-top:3px">⏳ '+miss.length+' pending: '+esc(miss.map(function(x){return x.name;}).join(', '))+'</div>'+
+      '<div style="margin-top:4px">'+btns(miss,d,false)+'</div>'+
+      '<div style="color:#94a3b8;font-size:12px;margin-top:6px">Send the WhatsApp message after all reports are in.</div>';
+    Object.keys(i.missNames).filter(function(x){return x>i.lastCsv&&x<d;}).sort().forEach(function(pd){
+      var pm=f(i.missNames[pd]);
+      h+='<div style="border-top:1px dashed #475569;margin-top:8px;padding-top:6px;color:#fbbf24">⚠️ '+dmy(pd)+' CSV is also pending – reports for '+dmy(pd).slice(0,5)+' are counted in MTD and YTD.</div>'+
+        (pm.length?'<div style="margin-top:3px">⏳ '+dmy(pd).slice(0,5)+': '+pm.length+' pending: '+esc(pm.map(function(x){return x.name;}).join(', '))+'</div><div>'+btns(pm,pd,true)+'</div>':'');
+    });
+    return '<div class="card" style="padding:10px 12px;margin-bottom:8px;border:1px solid '+(miss.length?'#f59e0b':'#10b981')+'">'+h+'</div>';
+  };
+  window.minixShowProvBanner=function(){
+    var i=window.MINIX_PROV_INFO;var old=document.getElementById('minixProvBanner');if(old)old.remove();
+    if(!i||!i.lastCsv)return;
+    var pend=i.provDates.filter(function(d){return d>i.lastCsv;});
+    if(!pend.length)return;
+    var miss=Object.keys(i.missing).sort().map(function(d){return dmy(d)+': '+i.missing[d]+' traders have no data';});
+    var b=document.createElement('div');b.id='minixProvBanner';
+    b.style.cssText='position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99995;max-width:min(860px,94vw);background:#422006;color:#fde68a;border:1px solid #f59e0b;border-radius:12px;padding:9px 38px 9px 14px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.35)';
+    b.innerHTML='⚠️ <b>'+pend.map(dmy).join(', ')+'</b> CSV not uploaded yet. Amounts for these days are <b>provisional (🟡)</b> and will update automatically when the CSV is uploaded.'+
+      (miss.length?'<div style="margin-top:4px;color:#fcd34d">'+esc(miss.join(' • '))+' (counted as 0)</div>':'')+
+      '<button onclick="this.parentNode.remove()" style="position:absolute;right:8px;top:6px;background:none;border:0;color:#fde68a;font-size:18px;cursor:pointer">×</button>';
+    document.body.appendChild(b);
+  };
+
+  /* ---------- 3. Admin Entry (admin fills report when trader has not) ---------- */
+  function aeModal(html){var o=document.getElementById('minixAEModal');if(!o){o=document.createElement('div');o.id='minixAEModal';o.className='minix-push-overlay';o.style.zIndex='1000001';document.body.appendChild(o);}o.innerHTML='<div class="minix-push-card" style="width:min(560px,100%)">'+html+'</div>';o.style.display='flex';}
+  window.minixAEClose=function(){var o=document.getElementById('minixAEModal');if(o)o.style.display='none';};
+  window.minixAdminEntryOpen=function(encName,key){
+    if(!isAdmin())return alert('Admin Entry is available to Admin only.');
+    var name=decodeURIComponent(encName||''),date=key||istTodayIso();
+    var ex=(window.MINIX_TODAY_SUBMISSIONS||[]).find(function(x){return String(x.trader_name||'').trim().toLowerCase()===name.toLowerCase()&&String(x.report_date||'').slice(0,10)===date;})||{};
+    var st=String(ex.today_status||'TRADED').toUpperCase(),reason=String(ex.reason||'').replace(/^\[Admin Entry\]\s*/,'');
+    function inp(id,v){return '<input id="'+id+'" type="number" step="any" value="'+(num(v)||'')+'" oninput="minixAECalc()" style="width:100%;padding:7px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;text-align:right">';}
+    function rad(v,l){return '<label style="margin-right:12px;cursor:pointer"><input type="radio" name="minixAESt" value="'+v+'"'+(st===v?' checked':'')+'> '+l+'</label>';}
+    aeModal('<h2>✏️ Admin Entry – '+esc(name)+'</h2>'+
+      '<div style="margin:8px 0">Date: <input id="minixAEDate" type="date" value="'+date+'" style="padding:6px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0"></div>'+
+      '<div style="margin:8px 0">'+rad('TRADED','Traded')+rad('NO_TRADE','No Trade')+rad('ON_LEAVE','Leave')+rad('SICK_LEAVE','Sick Leave')+'</div>'+
+      '<table style="width:100%;border-collapse:collapse;margin-top:6px"><tr><th></th><th>Fund</th><th>Gross</th><th>Charges</th></tr>'+
+      '<tr><td>F&amp;O</td><td>'+inp('aeFF',ex.fno_total_fund)+'</td><td>'+inp('aeFG',ex.fno_gross)+'</td><td>'+inp('aeFC',ex.fno_charges)+'</td></tr>'+
+      '<tr><td>Cash</td><td>'+inp('aeCF',ex.cash_total_fund)+'</td><td>'+inp('aeCG',ex.cash_gross)+'</td><td>'+inp('aeCC',ex.cash_charges)+'</td></tr>'+
+      '<tr><td>MCX</td><td>'+inp('aeMF',ex.mcx_total_fund)+'</td><td>'+inp('aeMG',ex.mcx_gross)+'</td><td>'+inp('aeMC',ex.mcx_charges)+'</td></tr>'+
+      '<tr><td>Margin Utilized</td><td colspan="3">'+inp('aeMU',ex.margin_utilized)+'</td></tr></table>'+
+      '<div style="margin:10px 0;font-size:16px">Net P&amp;L: <b id="aeNet">0</b> <span style="color:#94a3b8;font-size:12px">(auto calculated)</span></div>'+
+      '<div>Reason: <input id="aeReason" value="'+esc(reason||'Trader did not submit the report')+'" style="width:100%;padding:7px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0"></div>'+
+      '<div id="aeMsg" style="margin-top:8px;color:#fca5a5"></div>'+
+      '<div class="minix-push-actions"><button class="close" onclick="minixAEClose()">Cancel</button><button id="aeSave" onclick="minixAdminEntrySave(\''+encodeURIComponent(name)+'\')">💾 Save</button></div>');
+    window.minixAECalc();
+  };
+  window.minixAECalc=function(){var g=function(id){var e=document.getElementById(id);return e?num(e.value):0;};var n=g('aeFG')+g('aeCG')+g('aeMG')-g('aeFC')-g('aeCC')-g('aeMC');var el=document.getElementById('aeNet');if(el){el.textContent=(n<0?'-':'+')+Math.abs(n).toLocaleString('en-IN',{maximumFractionDigits:2});el.style.color=n<0?'#f87171':'#34d399';}};
+  window.minixAdminEntrySave=async function(encName){
+    var name=decodeURIComponent(encName||''),msg=document.getElementById('aeMsg'),btn=document.getElementById('aeSave');
+    var g=function(id){var e=document.getElementById(id);return e?num(e.value):0;};
+    var date=(document.getElementById('minixAEDate')||{}).value||istTodayIso();
+    var st=(document.querySelector('input[name="minixAESt"]:checked')||{}).value||'TRADED';
+    if(window.minixHolidayInfo(date)&&!confirm(dmy(date)+' is a market holiday. Save anyway?'))return;
+    var traded=st==='TRADED';
+    var p={report_date:date,trader_name:name,today_status:st,
+      fno_total_fund:g('aeFF'),cash_total_fund:g('aeCF'),mcx_total_fund:g('aeMF'),total_margin:g('aeFF')+g('aeCF')+g('aeMF'),
+      margin_utilized:traded?g('aeMU'):0,fno_gross:traded?g('aeFG'):0,fno_charges:traded?g('aeFC'):0,cash_gross:traded?g('aeCG'):0,
+      cash_charges:traded?g('aeCC'):0,mcx_gross:traded?g('aeMG'):0,mcx_charges:traded?g('aeMC'):0,
+      reason:'[Admin Entry] '+((document.getElementById('aeReason')||{}).value||'').trim(),updated_at:new Date().toISOString()};
+    var c=sbClient();if(!c){msg.textContent='No database connection.';return;}
+    btn.disabled=true;btn.textContent='Saving…';
+    try{
+      var ex=await c.from('minix_daily_trader_reports').select('*').eq('report_date',date).eq('trader_name',name);
+      if(ex.error)throw ex.error;
+      var r=(ex.data&&ex.data.length)?await c.from('minix_daily_trader_reports').update(p).eq('report_date',date).eq('trader_name',name)
+                                     :await c.from('minix_daily_trader_reports').insert(p);
+      if(r.error)throw r.error;
+      window.minixAEClose();
+      if(typeof window.__MINIX_V3_REFRESH__==='function')await window.__MINIX_V3_REFRESH__();
+      var host=document.getElementById('mxRoleRep');if(host&&typeof window.minixRenderTodayInto==='function')window.minixRenderTodayInto(host);
+      var pm=document.getElementById('minixPushModal');if(pm&&pm.style.display==='flex'&&typeof window.minixShowTodayReport==='function')window.minixShowTodayReport();
+    }catch(e){btn.disabled=false;btn.textContent='💾 Save';msg.textContent='Save failed: '+(e.message||e)+' (please check the database table permissions or columns)';}
+  };
+
+  /* ---------- 4. Login photo + welcome card ---------- */
+  function displayName(u){
+    var rows=Array.isArray(window.rawData)?window.rawData:[];
+    var tn0=String(u.trader_name||'').trim();if(tn0&&/trader/i.test(roleOf(u)))return tn0;
+    if(/^trader$/i.test(roleOf(u).trim())){var s={};rows.forEach(function(r){var t=String(r['Trader Name']||'').trim();if(t)s[t]=1;});var k=Object.keys(s);if(k.length===1)return k[0];}
+    return String(u.name||u.username||'User').trim();
+  }
+  function photoOf(name,u){
+    if(isAdmin(u)){var l=document.querySelector('.auth-logo');return l?l.src:null;}
+    var P=window.MX_PHOTOS||{};return P[name]||P[String(name).replace(/\s*\(.*\)\s*/,'').trim()]||null;
+  }
+  function initials(n){return String(n).split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase()||'?';}
+  function colorOf(n){var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%360;return 'hsl('+h+',55%,45%)';}
+  function avatarHtml(name,u,size){
+    var p=photoOf(name,u),s='width:'+size+'px;height:'+size+'px;border-radius:50%;flex:0 0 auto;';
+    if(p)return '<img src="'+p+'" alt="" style="'+s+'object-fit:'+(isAdmin(u)?'contain;background:#fff;padding:'+Math.round(size*0.08)+'px':'cover')+';border:2px solid #38bdf8">';
+    return '<span style="'+s+'display:inline-flex;align-items:center;justify-content:center;background:'+colorOf(name)+';color:#fff;font-weight:800;font-size:'+Math.round(size*0.38)+'px;border:2px solid #38bdf8">'+esc(initials(name))+'</span>';
+  }
+  function setHeaderAvatar(){
+    var u=user();if(!u)return;var btn=document.querySelector('#minixLoggedUserBox > button');if(!btn)return;
+    var name=displayName(u),old=btn.querySelector('.minix-hav');if(old)old.remove();
+    var svg=btn.querySelector('svg');if(svg)svg.style.display='none';
+    var w=document.createElement('span');w.className='minix-hav';w.style.cssText='display:inline-flex;margin-right:6px';w.innerHTML=avatarHtml(name,u,26);btn.insertBefore(w,btn.firstChild);
+  }
+  async function welcome(){
+    var u=user();if(!u)return;var k='MINIX_WELCOME_'+(u.username||'');if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1');
+    var name=displayName(u),first=isAdmin(u)?name:name.split(/\s+/)[0],today=istTodayIso();
+    var t=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true}).format(new Date());
+    var status='';
+    if(window.minixIsMarketDay(today)){
+      try{var c=sbClient();if(c){var q=await c.from('minix_daily_trader_reports').select('*').eq('report_date',today);var subs=q.data||[];
+        if(/^trader$/i.test(roleOf(u).trim())){var mine=subs.find(function(x){return String(x.trader_name||'').trim().toLowerCase()===name.toLowerCase();});status=mine?'✅ Today’s report submitted':'⏳ Today’s report pending';}
+        else{var s={};(window.rawData||[]).forEach(function(r){var tn=String(r['Trader Name']||'').trim();if(tn&&!/test account/i.test(tn))s[tn.toLowerCase()]=1;});
+          var pend=Object.keys(s).filter(function(n){return !subs.some(function(x){return String(x.trader_name||'').trim().toLowerCase()===n;});}).length;
+          status=pend?'⏳ '+pend+' traders’ reports pending':'✅ All traders have submitted their reports';}}}catch(e){}
+    }
+    var o=document.createElement('div');o.id='minixWelcome';
+    o.style.cssText='position:fixed;inset:0;z-index:1000002;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.55);transition:opacity .4s';
+    o.innerHTML='<div style="background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:20px;padding:26px 34px;text-align:center;min-width:260px;box-shadow:0 20px 50px rgba(0,0,0,.5)">'+
+      '<div style="display:flex;justify-content:center">'+avatarHtml(name,u,96)+'</div>'+
+      '<div style="margin-top:12px;color:#94a3b8">Welcome back,</div><div style="font-size:22px;font-weight:800">'+esc(first)+'</div>'+
+      '<div style="color:#94a3b8;margin-top:4px">'+esc(roleOf(u)||'User')+' • '+t+'</div>'+
+      (status?'<div style="margin-top:10px;font-weight:700;color:'+(status.indexOf('✅')===0?'#34d399':'#fbbf24')+'">'+esc(status)+'</div>':'')+'</div>';
+    o.onclick=function(){o.remove();};document.body.appendChild(o);
+    setTimeout(function(){o.style.opacity='0';setTimeout(function(){o.remove();},450);},2600);
+  }
+  function onLoggedIn(){if(!user()||document.body.classList.contains('auth-locked'))return;setTimeout(function(){welcome();},1200);}
+  function boot(){
+    new MutationObserver(function(){if(document.body.classList.contains('auth-locked')){try{Object.keys(sessionStorage).forEach(function(k){if(k.indexOf('MINIX_WELCOME_')===0)sessionStorage.removeItem(k);});}catch(e){}}else onLoggedIn();}).observe(document.body,{attributes:true,attributeFilter:['class']});
+    onLoggedIn();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
+</script>
+<script>
+/* ===== Trader self report (Nov-2026) ===== */
+(function(){
+  'use strict';
+  function pad(n){return String(n).padStart(2,'0');}
+  function istToday(){var p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),x={};p.forEach(function(a){x[a.type]=a.value;});return x.year+'-'+x.month+'-'+x.day;}
+  function istMin(){var p=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date()),x={};p.forEach(function(a){x[a.type]=a.value;});return +x.hour*60+ +x.minute;}
+  function tm(v){try{return new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true}).format(new Date(v));}catch(e){return '';}}
+  function dmy(i){return String(i).split('-').reverse().join('-');}
+  function num(v){var n=Number(String(v==null?0:v).replace(/[^0-9.-]/g,''));return isFinite(n)?n:0;}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function user(){try{return JSON.parse(localStorage.getItem('minixUser')||'null');}catch(e){return null;}}
+  function roles(u){u=u||{};return (Array.isArray(u.roles)&&u.roles.length?u.roles:[u.role]).map(function(r){return String(r||'').trim().toLowerCase();});}
+  function isTrader(u){return roles(u).indexOf('trader')>=0;}
+  function sb(){var c=window.MINIX_CONFIG||{};return window.supabase&&c.supabaseUrl&&c.supabaseAnonKey?window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey):null;}
+  function myName(u){
+    var names={};(window.rawData||[]).forEach(function(r){var t=String(r['Trader Name']||'').trim();if(t)names[t.toLowerCase()]=t;});
+    var k=Object.keys(names);var tn=String(u.trader_name||'').trim();if(tn)return names[tn.toLowerCase()]||tn;var nm=String(u.name||'').trim().toLowerCase();
+    if(names[nm])return names[nm];if(k.length===1)return names[k[0]];return String(u.name||u.username||'').trim();
+  }
+  var mine=null;
+  async function loadMine(name){var c=sb();if(!c)return null;var q=await c.from('minix_daily_trader_reports').select('*').eq('report_date',istToday()).eq('trader_name',name);mine=(q.data&&q.data[0])||null;return mine;}
+  function locked(){return !!(mine&&istMin()>975);}
+  var selfMini=false,selfTimer=null;
+  function boxCss(){return 'position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:99992;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:14px;padding:10px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 10px 28px rgba(0,0,0,.45);font-size:13px';}
+  function iconCss(){return 'position:fixed;right:18px;bottom:90px;z-index:99992;width:46px;height:46px;border-radius:50%;background:#2563eb;color:#fff;border:2px solid #93c5fd;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.45)';}
+  window.minixSelfExpand=function(){selfMini=false;paint(true);};
+  async function paint(fromClick){
+    var u=user(),old=document.getElementById('minixSelfBar');
+    if(!u||!isTrader(u)||document.body.classList.contains('auth-locked')){if(old)old.remove();return;}
+    var holiday=window.minixIsMarketDay&&!window.minixIsMarketDay()&&!/[?&]testday=1/.test(location.search);
+    var html,mustStay=false;
+    if(holiday){
+      html='<div><b>📝 Today’s Report ('+dmy(istToday())+')</b><div style="margin-top:2px;color:#93c5fd">🏖️ Market holiday today – no report needed</div></div>';
+    }else{
+      var name=myName(u);try{await loadMine(name);}catch(e){}
+      mustStay=!mine;
+      var st=mine?'<span style="color:#34d399;font-weight:800">✅ Submitted '+esc(tm(mine.updated_at))+'</span>':(istMin()>975?'<span style="color:#f87171;font-weight:800">🔴 Pending (Late)</span>':'<span style="color:#fbbf24;font-weight:800">⏳ Pending</span>');
+      var btn=locked()?'<span style="color:#94a3b8;font-size:12px">To make changes, please contact Admin</span>':'<button onclick="minixSelfReportOpen()" style="background:#2563eb;color:#fff;border:0;border-radius:10px;padding:8px 14px;font-weight:800;cursor:pointer">'+(mine?'✏️ Edit Report':'📝 Submit Report')+'</button>';
+      html='<div><div style="font-weight:800">📝 Today’s Report ('+dmy(istToday())+')</div><div style="margin-top:2px">'+st+'</div></div>'+btn;
+    }
+    var b=old||document.createElement('div');b.id='minixSelfBar';if(!old)document.body.appendChild(b);
+    if(mustStay)selfMini=false;
+    if(selfMini){b.style.cssText=iconCss();b.title='Today’s Report';b.innerHTML='📝';b.onclick=window.minixSelfExpand;return;}
+    b.onclick=null;b.title='';b.style.cssText=boxCss();b.innerHTML=html;
+    clearTimeout(selfTimer);
+    if(!mustStay)selfTimer=setTimeout(function(){selfMini=true;paint();},fromClick===true?8000:5000);
+  }
+  function modal(html){var o=document.getElementById('minixSelfModal');if(!o){o=document.createElement('div');o.id='minixSelfModal';o.className='minix-push-overlay';o.style.zIndex='1000001';document.body.appendChild(o);}o.innerHTML='<div class="minix-push-card" style="width:min(560px,100%)">'+html+'</div>';o.style.display='flex';}
+  window.minixSelfClose=function(){var o=document.getElementById('minixSelfModal');if(o)o.style.display='none';};
+
+  function segPd(v){var s=String(v==null?'':v).trim(),m;var M={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,sept:8,oct:9,nov:10,dec:11};
+    if(/^\d{5}(\.\d+)?$/.test(s)){var b=new Date(1899,11,30);b.setDate(b.getDate()+Math.floor(+s));return b;}
+    if((m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/)))return new Date(+m[1],+m[2]-1,+m[3]);
+    if((m=s.match(/^(\d{1,2})[-\/ ]([A-Za-z]{3,4})[-\/ ](\d{2}|\d{4})$/))){var mi=M[m[2].toLowerCase()];if(mi==null)return null;var y=+m[3];if(y<100)y+=2000;return new Date(y,mi,+m[1]);}
+    return null;}
+  function mySegs(name,ex){
+    var rows=(window.rawData||[]).filter(function(r){return String(r['Trader Name']||'').trim().toLowerCase()===name.toLowerCase();});
+    var last=0;rows.forEach(function(r){var d=segPd(r.Date);if(d&&+d>last)last=+d;});
+    var from=last-60*864e5,g={F:false,C:false,M:false};
+    rows.forEach(function(r){var d=segPd(r.Date);if(!d||+d<from)return;
+      if(num(r['FNO Net Amount'])||num(r['FNO Gross']))g.F=true;if(num(r['Cash Net Amount'])||num(r['Cash Gross']))g.C=true;if(num(r['MCX Net Amount'])||num(r['MCX Gross']))g.M=true;});
+    ex=ex||{};if(num(ex.fno_gross)||num(ex.fno_charges)||num(ex.fno_total_fund))g.F=true;if(num(ex.cash_gross)||num(ex.cash_charges)||num(ex.cash_total_fund))g.C=true;if(num(ex.mcx_gross)||num(ex.mcx_charges)||num(ex.mcx_total_fund))g.M=true;
+    if(!g.F&&!g.C&&!g.M)g={F:true,C:true,M:true};
+    return g;}
+  window.minixSelfShowSeg=function(k){var r=document.getElementById('srRow'+k),b=document.getElementById('srAdd'+k);if(r)r.style.display='';if(b)b.style.display='none';};
+  window.minixSelfReportOpen=function(){
+    var u=user();if(!u||!isTrader(u))return;if(locked())return alert('Reports cannot be edited after 4:15 PM. Please contact Admin.');
+    var name=myName(u),ex=mine||{},st=String(ex.today_status||'TRADED').toUpperCase(),sg=mySegs(name,ex);
+    var hid=function(k){return sg[k]?'':' style="display:none"';};
+    function inp(id,v){return '<input id="'+id+'" type="number" step="any" value="'+(num(v)||'')+'" oninput="minixSelfCalc()" style="width:100%;padding:7px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;text-align:right">';}
+    function rad(v,l){return '<label style="margin-right:12px;cursor:pointer"><input type="radio" name="minixSelfSt" value="'+v+'"'+(st===v?' checked':'')+'> '+l+'</label>';}
+    modal('<h2>📝 Daily Report – '+esc(name)+' – '+dmy(istToday())+'</h2>'+
+      '<div style="margin:8px 0">'+rad('TRADED','Traded')+rad('NO_TRADE','No Trade')+rad('ON_LEAVE','Leave')+rad('SICK_LEAVE','Sick Leave')+'</div>'+
+      '<table style="width:100%;border-collapse:collapse;margin-top:6px"><tr><th></th><th>Fund</th><th>Gross</th><th>Charges</th></tr>'+
+      '<tr id="srRowF"'+hid('F')+'><td>F&amp;O</td><td>'+inp('srFF',ex.fno_total_fund)+'</td><td>'+inp('srFG',ex.fno_gross)+'</td><td>'+inp('srFC',ex.fno_charges)+'</td></tr>'+
+      '<tr id="srRowC"'+hid('C')+'><td>Cash</td><td>'+inp('srCF',ex.cash_total_fund)+'</td><td>'+inp('srCG',ex.cash_gross)+'</td><td>'+inp('srCC',ex.cash_charges)+'</td></tr>'+
+      '<tr id="srRowM"'+hid('M')+'><td>MCX</td><td>'+inp('srMF',ex.mcx_total_fund)+'</td><td>'+inp('srMG',ex.mcx_gross)+'</td><td>'+inp('srMC',ex.mcx_charges)+'</td></tr>'+
+      '<tr><td>Margin Utilized</td><td colspan="3">'+inp('srMU',ex.margin_utilized)+'</td></tr></table>'+
+      '<div style="margin-top:8px">'+[['F','F&amp;O'],['C','Cash'],['M','MCX']].filter(function(x){return !sg[x[0]];}).map(function(x){return '<button type="button" id="srAdd'+x[0]+'" onclick="minixSelfShowSeg(\''+x[0]+'\')" style="margin-right:6px;background:#1e293b;color:#93c5fd;border:1px dashed #60a5fa;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer">+ Add '+x[1]+'</button>';}).join('')+'</div>'+
+      '<div style="margin:10px 0;font-size:16px">Net P&amp;L: <b id="srNet">0</b> <span style="color:#94a3b8;font-size:12px">(auto calculated)</span></div>'+
+      '<div>Reason / Note: <input id="srReason" value="'+esc(ex.reason||'')+'" style="width:100%;padding:7px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0"></div>'+
+      '<div style="color:#94a3b8;font-size:12px;margin-top:6px">You can edit your report until 4:15 PM.</div>'+
+      '<div id="srMsg" style="margin-top:8px;color:#fca5a5"></div>'+
+      '<div class="minix-push-actions"><button class="close" onclick="minixSelfClose()">Cancel</button><button id="srSave" onclick="minixSelfSave()">✅ Submit</button></div>');
+    window.minixSelfCalc();
+  };
+  window.minixSelfCalc=function(){var g=function(id){var e=document.getElementById(id);return e?num(e.value):0;};var n=g('srFG')+g('srCG')+g('srMG')-g('srFC')-g('srCC')-g('srMC');var el=document.getElementById('srNet');if(el){el.textContent=(n<0?'-':'+')+Math.abs(n).toLocaleString('en-IN',{maximumFractionDigits:2});el.style.color=n<0?'#f87171':'#34d399';}};
+  window.minixSelfSave=async function(){
+    var u=user(),name=myName(u),date=istToday(),msg=document.getElementById('srMsg'),btn=document.getElementById('srSave');
+    var g=function(id){var e=document.getElementById(id);return e?num(e.value):0;};
+    var st=(document.querySelector('input[name="minixSelfSt"]:checked')||{}).value||'TRADED',tr=st==='TRADED';
+    if(tr&&!(g('srFG')||g('srCG')||g('srMG')||g('srFC')||g('srCC')||g('srMC'))){msg.textContent='For Traded, please enter Gross / Charges, otherwise select "No Trade".';return;}
+    var p={report_date:date,trader_name:name,today_status:st,fno_total_fund:g('srFF'),cash_total_fund:g('srCF'),mcx_total_fund:g('srMF'),
+      total_margin:g('srFF')+g('srCF')+g('srMF'),margin_utilized:tr?g('srMU'):0,fno_gross:tr?g('srFG'):0,fno_charges:tr?g('srFC'):0,
+      cash_gross:tr?g('srCG'):0,cash_charges:tr?g('srCC'):0,mcx_gross:tr?g('srMG'):0,mcx_charges:tr?g('srMC'):0,
+      reason:((document.getElementById('srReason')||{}).value||'').trim(),updated_at:new Date().toISOString()};
+    var c=sb();if(!c){msg.textContent='No server connection.';return;}
+    btn.disabled=true;btn.textContent='Submitting…';
+    try{
+      var ex=await c.from('minix_daily_trader_reports').select('*').eq('report_date',date).eq('trader_name',name);if(ex.error)throw ex.error;
+      var r=(ex.data&&ex.data.length)?await c.from('minix_daily_trader_reports').update(p).eq('report_date',date).eq('trader_name',name):await c.from('minix_daily_trader_reports').insert(p);
+      if(r.error)throw r.error;
+      window.minixSelfClose();await paint();
+      if(typeof window.__MINIX_V3_REFRESH__==='function')window.__MINIX_V3_REFRESH__();
+    }catch(e){btn.disabled=false;btn.textContent='✅ Submit';msg.textContent='Submit failed: '+(e.message||e);}
+  };
+  function boot(){
+    new MutationObserver(function(){setTimeout(paint,1500);}).observe(document.body,{attributes:true,attributeFilter:['class']});
+    setTimeout(paint,2500);setInterval(paint,120000);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
+</script>
 </head>
 <body class="auth-locked">
 
@@ -898,6 +1282,7 @@ body.clean #mxExitClean{display:block}
           </div>
         </div>
         <button class="hb al" type="button" id="mxAlertBtn" title="Fund additions and withdrawals" onclick="MX.go('fund','alerts')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span>Alerts</span><b id="mxAlertCount">0</b></button>
+        <a class="hb" id="hbAdminEntry" href="admin.html" onclick="return minixOpenAdminEntry(event)" title="Upload CSV / admin entry" style="display:none;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg><span>Admin Entry</span></a>
         <div id="minixLoggedUserBox" class="mx-user">
           <button type="button" class="hb" onclick="MX.userMenu(event)" aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><strong id="minixLoggedUserText"></strong></button>
           <div class="umenu" id="mxUserMenu" onclick="event.stopPropagation()">
@@ -925,6 +1310,8 @@ body.clean #mxExitClean{display:block}
       <section class="page" id="page-charges"></section>
       <section class="page" id="page-fy"></section>
       <section class="page" id="page-wa"></section>
+
+      <section class="page" id="page-rvc"></section>
 
       <section class="page" id="page-daily">
         <div id="minixHeaderActions" style="display:flex;justify-content:flex-end"></div>
@@ -1780,6 +2167,7 @@ var resCol={key:'name',label:'Researcher',render:function(v){return who(v,'Resea
 async function loadSettings(){
   try{var sb=window.MINIX_SB||(window.supabase&&window.MINIX_CONFIG?window.supabase.createClient(MINIX_CONFIG.supabaseUrl,MINIX_CONFIG.supabaseAnonKey):null);window.MINIX_SB=sb;if(!sb)return;
     var r=await sb.from('minix_trader_settings').select('*');var rows=(r&&r.data)||[];SETTINGS={};rows.forEach(function(x){if(x&&x.key)SETTINGS[x.key]=x;});
+    try{if(typeof holApply==='function')holApply();}catch(he){}
     var d=SETTINGS['Default|limit'];if(d&&num(d.limit_pct)>0)DEFAULT_LIMIT=num(d.limit_pct);
   }catch(e){console.warn('Settings not loaded',e);}
 }
@@ -2010,7 +2398,7 @@ function comboSort(a,b){var x=COMBO_ORDER.indexOf(a),y=COMBO_ORDER.indexOf(b);re
 var CSEG={'FNO':'FNO','Equity':'Cash','MCX':'MCX'};
 function comboSegs(name){return String(name).replace(' only','').split(' + ').map(function(x){return CSEG[x];}).filter(Boolean);}
 function comboParts(list,name){var ss=comboSegs(name);if(ss.length<2)return [];return ss.map(function(S){return {name:'↳ '+SEGNAME[S]+' part',seg:S,_pin:1,_part:1,gross:sum(list,function(o){return o.seg[S].gross;}),chg:sum(list,function(o){return o.seg[S].chg;}),net:sum(list,function(o){return o.seg[S].net;})};});}
-function comboRows(list,upto){var fi={};var g=groupBy(list,function(o){return o.combo;});return Array.from(g.keys()).sort(comboSort).map(function(k){var l=g.get(k);return {name:k,parts:comboParts(l,k),traders:uniq(l.map(function(o){return o.trader;})).length,tfund:fundInfo(l,null,upto).total,fund:capAvg(l,null,'fund'),gross:sum(l,function(o){return o.gross;}),chg:sum(l,function(o){return o.chg;}),net:sum(l,function(o){return o.net;})};}).map(function(r){r.roi=r.fund?r.net/r.fund*100:0;return r;});}
+function comboRows(list,upto){var fi={};var g=groupBy(list,function(o){return o.combo;});return Array.from(g.keys()).sort(comboSort).map(function(k){var l=g.get(k);return {name:k,parts:comboParts(l,k),traders:uniq(l.map(function(o){return o.trader;})).length,tfund:fundInfo(l,null,upto).total,fund:capAvg(l,null,'fund'),gross:sum(l,function(o){return o.gross;}),chg:sum(l,function(o){return o.chg;}),net:sum(l,function(o){return o.net;}),_l:l};}).map(function(r){var st=stats(r._l,GSEG);r.pos=st.pos;r.neg=st.neg;delete r._l;r.roi=r.fund?r.net/r.fund*100:0;return r;});}
 function buildTMain(rows){buildCombo(rows);var c={};rows.forEach(function(o){delete o._fs;if(/FUNDTRANSFER/.test(o.sk))return;var p=primSeg(o.sk);if(!p)return;var m=c[o.trader]||(c[o.trader]={});m[p]=(m[p]||0)+1;});TMAIN={};Object.keys(c).forEach(function(t){var m=c[t];TMAIN[t]=Object.keys(m).sort(function(a,b){return m[b]-m[a];})[0];});}
 function lvOpen(id,tree,lv){var st=tableState[id]||(tableState[id]={key:'net',dir:-1,q:'',open:{},all:false});st.open={};st.all=false;
   (function rec(nodes,dep,path){(nodes||[]).forEach(function(n){var k=path+'\u0001'+n.row.name;if(n.children&&n.children.length&&dep<lv-1){st.open[k]=true;rec(n.children,dep+1,k);}});})(tree,0,'');}
@@ -2054,7 +2442,7 @@ function svgPts(a){return a.map(function(p){return p[0].toFixed(1)+','+p[1].toFi
 function hstats(){var h=$('mxHStats');if(!h)return;var lan=!!(window.MINIX_CONFIG&&window.MINIX_CONFIG.lanMode),ds=ALL.map(function(o){return o.iso;}).sort(),last=ROWS.reduce(function(m,o){return o.iso>m?o.iso:m;},'');
   var st=function(l,v,s,c){return '<div class="hs"><span>'+l+'</span><b'+(c?' class="'+c+'"':'')+'>'+v+'</b>'+(s?'<small>'+s+'</small>':'')+'</div>';};
   h.innerHTML=st('Traders',ALL.length.toLocaleString('en-IN'),ds.length?dmyS(ds[0])+' → '+dmyS(ds[ds.length-1]):'')+st('Visible',ROWS.length.toLocaleString('en-IN'))+st('Market',MARKET.length.toLocaleString('en-IN'))+st('Dates Fixed',fixedDates.toLocaleString('en-IN'))+st('Skipped',skipped.toLocaleString('en-IN'))+st('Last Trade',last?dMon(last,1):'–','','gain');
-  var hh=$('hbHome');if(hh)hh.classList.toggle('on',page==='overview');try{crumb();var mm=$('mxModeMenu');if(mm)mm.innerHTML=modePickHtml();setTopH();}catch(e){}}
+  var hh=$('hbHome');if(hh)hh.classList.toggle('on',page==='overview');var ae=$('hbAdminEntry');if(ae)ae.style.display=isPrivileged()?'flex':'none';try{crumb();var mm=$('mxModeMenu');if(mm)mm.innerHTML=modePickHtml();setTopH();}catch(e){}}
 var ZOOM=80;try{ZOOM=+localStorage.getItem('MX_ZOOM')||80;}catch(e){}
 function applyZoom(){ZOOM=Math.max(50,Math.min(150,Math.round(ZOOM/10)*10));var a=D.querySelector('.mx-app');if(a)a.style.zoom=ZOOM===100?'':String(ZOOM/100);var s=$('mxZoomSel');if(s)s.value=String(ZOOM);try{localStorage.setItem('MX_ZOOM',String(ZOOM));}catch(e){}}
 var zoomT=null;
@@ -2146,36 +2534,69 @@ function lvTree(items,keys,mk,leaves){
 var LVTR_SC=[['Company → Trader',['company','trader']],['Portfolio → Trader',['portfolio','trader']],['Research → Trader',['researcher','trader']],['Company → Portfolio',['company','portfolio']],['Trader',['trader']],['Research',['researcher']],['Portfolio',['portfolio']],['Demat',['demat']]];
 
 /* ---- overview extras ---- */
-var OVX='<div class="card"><div class="card-h"><h2>Strategy-wise net P&amp;L</h2></div><div class="chart" id="ovStC"></div></div>'+
-  '<div class="card"><div class="card-h"><h2>Strategy-wise table</h2><p>Strategies with zero net P&amp;L are hidden.</p></div><div id="ovStT"></div></div>'+
-  '<div class="card"><div class="card-h"><h2>Broker / demat comparison</h2><p>Net P&amp;L by demat account</p></div><div class="chart" id="ovBrC"></div></div>'+
+var OVX='<div class="card"><div class="card-h"><h2>Net P&amp;L comparison</h2><div class="tools">'+'<span id="ovCmpBtns"></span>'+'</div></div><div class="chart" id="ovStC"></div></div>'+
+  miHtml('ov')+
+  '<div class="card"><div class="card-h"><h2>Drawdown &amp; Recovery</h2><p>Biggest fall for each company.</p></div><div id="ovDR"></div></div>'+
   '<div class="card"><div class="card-h"><h2>Trading P&amp;L calendar</h2></div><div id="ovCal"></div></div>'+
-  '<div class="card"><div class="card-h"><h2>Trader combination summary</h2><p>How traders trade: FNO only, FNO + Equity, Equity only, MCX only.</p></div><div id="ovCmb"></div></div>';
+  '<div class="card"><div class="card-h"><h2>Trader combination summary</h2><p>How traders trade: FNO only, FNO + Equity, Equity only, MCX only. Press + for the segment part.</p></div><div id="ovCmb"></div></div>';
 function ovArrange(el){
   var q=function(sel){var x=el.querySelector(sel);if(!x)return null;return (x.classList.contains('card')||x.classList.contains('kpis')||x.id==='ovMkt')?x:x.closest('.card');};
   var byH=function(t){var hs=el.querySelectorAll('.card-h h2');for(var i=0;i<hs.length;i++)if(hs[i].textContent.indexOf(t)>=0)return hs[i].closest('.card');return null;};
-  var LAY=[[q('.hero'),9],[q('.fs-mini'),3],[q('.kpis.k9'),12],[q('#ovMkt'),12],
-    [q('#ovCh'),5],[byH('Win ratio'),3],[q('#ovCUt'),4],
-    [q('#ovTA'),3],[q('#ovPL'),3],[q('#ovCo'),3],[q('#ovFy'),3],
-    [q('#ovRkW'),3],[q('#ovRkM'),3],[q('#ovRoi'),3],[q('#ovDD'),3],
-    [q('#ovPLD'),4],[q('#ovHm3'),4],[q('#ovBot'),4],
-    [q('#ovHeat'),5],[q('#ovFlow'),4],[q('#ovPie'),3],
-    [q('#ovCh3'),3],[q('#ovChCo'),3],[q('#ovStT'),3],[q('#ovCal'),3],
-    [q('#ovStC'),4],[q('#ovBrC'),4],[q('#ovCmb'),4]];
+  var LAY=[[q('.hero'),9],[q('.fs-mini'),3],[q('.kpis.k9'),12],
+    [q('#ovMvI'),6],[q('#ovMkt'),6],
+    [q('#ovCh'),5],[byH('Win ratio'),3],[q('#ovStC'),4],
+    [q('#ovCo'),4],[q('#ovDR'),4],[q('#ovFy'),4],
+    [q('#ovCmb'),6],[q('#ovBot'),3],[q('#ovRoi'),3],
+    [q('#ovRkW'),3],[q('#ovRkM'),3],[q('#ovPLD'),6],
+    [q('#ovDD'),4],[q('#ovTA'),4],[q('#ovPL'),4],
+    [q('#ovFlow'),6],[q('#ovCUt'),6],
+    [q('#ovPie'),4],[q('#ovChCo'),4],[q('#ovCh3'),4],
+    [q('#ovHm3'),4],[q('#ovHeat'),5],[q('#ovCal'),3]];
   var old=Array.from(el.children),g=D.createElement('div');g.className='ovg';var seen=[];
   LAY.forEach(function(r){var x=r[0];if(!x||seen.indexOf(x)>=0)return;seen.push(x);x.classList.add('sp'+r[1]);g.appendChild(x);});
   el.insertBefore(g,el.firstChild);old.forEach(function(c){if(c===g||g.contains(c))return;if(!c.classList.contains('card')&&!c.querySelector('.card,.kpis'))c.remove();});}
+var ovCmpV='st',ovMiV='fy';
 function ovExtra(el,rows){
   var strat=Array.from(groupBy(rows,function(o){return o.strategy;}).entries()).map(function(e){return statRow(e[0],stats(e[1],GSEG));}).filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;});
-  col3d($('ovStC'),strat.map(function(r){return {label:r.name,value:r.net};}),{h:150,aria:'Strategy-wise net P&L'});
-  table($('ovStT'),{id:'ov-strat',title:'Strategy-wise',search:false,defaultSort:{key:'net',dir:-1},columns:[{key:'name',label:'Strategy'},{key:'traders',label:'Traders',type:'int'},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}],rows:strat});
   var dm=peopleRows(rows,'demat').filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;});
-  col3d($('ovBrC'),dm.map(function(r){return {label:r.name,value:r.net};}),{h:150,aria:'Broker / demat comparison'});
+  $('ovCmpBtns').innerHTML=segBtns('ovcmp',[['st','Strategy'],['br','Broker / Demat']],ovCmpV);
+  var drawCmp=function(){var d=ovCmpV==='st'?strat:dm;col3d($('ovStC'),d.map(function(r){return {label:r.name,value:r.net};}),{h:190,aria:ovCmpV==='st'?'Strategy-wise net P&L':'Broker / demat net P&L'});};
+  drawCmp();var onCmp=function(v){ovCmpV=v;$('ovCmpBtns').innerHTML=segBtns('ovcmp',[['st','Strategy'],['br','Broker / Demat']],ovCmpV);bindSeg(el,'ovcmp',onCmp);drawCmp();};bindSeg(el,'ovcmp',onCmp);
+  miBind(el,rows,'ov');
+  ovDrawdown($('ovDR'),rows);
   miniCal($('ovCal'),rows);
   var cr=withCtx(rows,function(){return comboRows(rows);});
-  table($('ovCmb'),{id:'ov-cmb',title:'Trader combination',search:false,defaultSort:{key:'tfund',dir:-1},columns:[{key:'name',label:'Combination'},{key:'traders',label:'Traders',type:'int'},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'}],tree:cr.map(function(r){return r.parts.length?{row:r,children:r.parts.map(function(p){return {row:p};})}:{row:r};}),total:(function(){var t={name:'Total',tfund:sum(cr,function(r){return r.tfund;}),fund:capAvg(rows,null,'fund'),net:sum(cr,function(r){return r.net;})};t.roi=t.fund?t.net/t.fund*100:0;return t;})()});
+  table($('ovCmb'),{id:'ov-cmb',title:'Trader combination',search:false,defaultSort:{key:'tfund',dir:-1},columns:[{key:'name',label:'Combination'},{key:'traders',label:'Traders',type:'int'},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}],tree:cr.map(function(r){return r.parts.length?{row:r,children:r.parts.map(function(p){return {row:p};})}:{row:r};}),total:(function(){var st0=stats(rows,GSEG),t={name:'Total',tfund:sum(cr,function(r){return r.tfund;}),fund:capAvg(rows,null,'fund'),net:sum(cr,function(r){return r.net;}),pos:st0.pos,neg:st0.neg};t.roi=t.fund?t.net/t.fund*100:0;return t;})()});
   ovShortNames(el);}
-function shortCoText(root){var t1=/Minix\s+(Fintech|Holdings?)\s+(Pvt\.?|Private)\s*(Ltd\.?|Limited)/i,rg=/Minix\s+(Fintech|Holdings?)\s+(Pvt\.?|Private)\s*(Ltd\.?|Limited)\.?/gi,rep=function(t){return t.replace(rg,function(m,a){return /^fin/i.test(a)?'Fintech':'Holding';});};
+var MIV={};
+function miHtml(px){return '<div class="card"><div class="card-h"><h2>Minix vs Index</h2><div class="tools"><label class="lvl"><input type="checkbox" id="'+px+'MiN" checked> Nifty 50</label><label class="lvl"><input type="checkbox" id="'+px+'MiB" checked> Bank Nifty</label><span id="'+px+'MiBtns"></span></div><p>Minix ROI vs Nifty 50 % and Bank Nifty % change.</p></div><div class="chart" id="'+px+'MvI"></div></div>';}
+function miBind(root,rows,px){if(!$(px+'MvI'))return;MIV[px]=MIV[px]||'fy';var nm=px+'mi';
+  var draw=function(){var keys,lab,grp;if(MIV[px]==='fy'){grp=groupBy(rows,function(o){return o.fy;});keys=Array.from(grp.keys()).sort();lab=function(k){return k;};}else{grp=groupBy(rows,function(o){return o.mkey;});keys=Array.from(grp.keys()).sort().slice(-12);lab=monthLabelFromKey;}
+    var mi=[],nf=[],bk=[];keys.forEach(function(k){var l=grp.get(k),st=stats(l,GSEG),nb=niftyBank(l);mi.push(st.roi);nf.push(nb[0]);bk.push(nb[1]);});
+    var ser=[{name:'Minix ROI',color:'var(--accent)',v:mi}];if($(px+'MiN').checked)ser.push({name:'Nifty 50',color:'#F59E0B',v:nf});if($(px+'MiB').checked)ser.push({name:'Bank Nifty',color:'#A855F7',v:bk});
+    lineMulti($(px+'MvI'),keys.map(lab),ser);};
+  var btn=function(){$(px+'MiBtns').innerHTML=segBtns(nm,[['fy','FY'],['m','Monthly']],MIV[px]);bindSeg(root,nm,function(v){MIV[px]=v;btn();draw();});};
+  btn();draw();$(px+'MiN').onchange=draw;$(px+'MiB').onchange=draw;}
+function lineMulti(el,labels,ser){if(!el)return;if(!labels.length){el.innerHTML='<div class="empty">No data</div>';return;}
+  var W=chartWidth(el),H=200,L=46,Rr=70,T=16,B=26,all=[];ser.forEach(function(s){s.v.forEach(function(x){if(x!=null&&isFinite(x))all.push(x);});});var mn=Math.min(0,Math.min.apply(null,all.length?all:[0])),mx=Math.max(0,Math.max.apply(null,all.length?all:[0]));
+  var tk=niceTicks(mn,mx,4),lo=tk[0],hi=tk[tk.length-1],n=labels.length,X=function(i){return n===1?(L+(W-L-Rr)/2):L+(W-L-Rr)*i/(n-1);},Y=function(v){return T+(H-T-B)*(1-(v-lo)/((hi-lo)||1));},g='';
+  tk.forEach(function(t){g+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" style="stroke:var(--line)" '+(t===0?'':'stroke-dasharray="2 4"')+'/><text x="'+(L-6)+'" y="'+(Y(t)+3.5)+'" text-anchor="end">'+t.toFixed(Math.abs(hi-lo)<4?1:0)+'%</text>';});
+  labels.forEach(function(lb,i){if(n<=14||i%2===0)g+='<text x="'+X(i)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
+  ser.forEach(function(s){var pts=[];s.v.forEach(function(v,i){if(v!=null&&isFinite(v))pts.push([X(i),Y(v),v,i]);});if(!pts.length)return;
+    g+='<polyline fill="none" points="'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+'" style="stroke:'+s.color+';stroke-width:2.2"/>';
+    pts.forEach(function(p){g+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3.6" style="fill:'+s.color+'" data-tip="'+esc(s.name+' · '+labels[p[3]]+'\n'+(p[2]>=0?'+':'')+p[2].toFixed(2)+'%')+'"/>';if(n<=8)g+='<text x="'+(p[0]+5).toFixed(1)+'" y="'+(p[1]-6).toFixed(1)+'" style="font-size:9.5px;fill:'+s.color+'">'+(p[2]>=0?'+':'')+p[2].toFixed(2)+'%</text>';});
+    var lp=pts[pts.length-1];s._ly=lp[1];});
+  var ends=ser.filter(function(s){return s._ly!=null;}).sort(function(a,b){return a._ly-b._ly;});for(var e=1;e<ends.length;e++)if(ends[e]._ly-ends[e-1]._ly<12)ends[e]._ly=ends[e-1]._ly+12;
+  ends.forEach(function(s){g+='<text x="'+(W-Rr+8)+'" y="'+(s._ly+3.5).toFixed(1)+'" style="font-size:10px;fill:'+s.color+';font-weight:600">'+esc(s.name)+'</text>';delete s._ly;});
+  el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Minix ROI vs index">'+g+'</svg>';}
+function ddOf(list){var by={};list.forEach(function(o){by[o.iso]=(by[o.iso]||0)+V(o,GSEG,'net');});var ds=Object.keys(by).sort(),cum=0,pk=-Infinity,pkD='',best=null;var pts=ds.map(function(d){cum+=by[d];return [d,cum];});
+  pts.forEach(function(p,i){if(p[1]>pk){pk=p[1];pkD=p[0];}var dd=p[1]-pk;if(!best||dd<best.fall)best={fall:dd,peak:pk,peakD:pkD,bot:p[1],botD:p[0],bi:i};});
+  if(!best||best.fall>=-1)return null;var rec=null;for(var j=best.bi+1;j<pts.length;j++)if(pts[j][1]>=best.peak){rec={d:pts[j][0],days:j-best.bi};break;}best.rec=rec;best.back=best.fall?Math.max(0,(pts[pts.length-1][1]-best.bot)/(-best.fall)*100):0;return best;}
+function ovDrawdown(el,rows){if(!el)return;var g=groupBy(rows,function(o){return o.company;}),out=[];Array.from(g.keys()).sort().forEach(function(c){var d=ddOf(g.get(c));if(d)out.push([c,d]);});if(g.size>1){var a=ddOf(rows);if(a)out.push(['All',a]);}
+  if(!out.length){el.innerHTML='<div class="empty">No fall in this period</div>';return;}
+  var sg=function(v){return '<span class="'+cls(v)+'">'+(v>=0?'+':'−')+short(Math.abs(v))+'</span>';};
+  el.innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Company</th><th>Peak</th><th>Bottom</th><th class="n">Fall</th><th>Status</th></tr></thead><tbody>'+out.map(function(x){var d=x[1];return '<tr><td>'+(x[0]==='All'?'<b>All</b>':esc(x[0]))+'</td><td>'+sg(d.peak)+' <small class="muted">'+dMon(d.peakD,1)+'</small></td><td>'+sg(d.bot)+' <small class="muted">'+dMon(d.botD,1)+'</small></td><td class="n loss">−'+short(Math.abs(d.fall))+'</td><td>'+(d.rec?'<span class="chip g">Recovered '+dMon(d.rec.d,1)+' ('+d.rec.days+' days)</span>':'<span class="chip r">Still down'+(d.back>=1?' ('+Math.round(d.back)+'% back)':'')+'</span>')+'</td></tr>';}).join('')+'</tbody></table></div>';}
+function shortCoText(root){var t1=/Minix\s+(Fintech|Holdings?)\b/i,rg=/Minix\s+(Fintech|Holdings?)(\s+(Pvt\.?|Private)\s*(Ltd\.?|Limited)\.?)?/gi,rep=function(t){return t.replace(rg,function(m,a){return /^fin/i.test(a)?'Fintech':'Holding';});};
   var w=D.createTreeWalker(root,NodeFilter.SHOW_TEXT),n;while((n=w.nextNode()))if(t1.test(n.nodeValue))n.nodeValue=rep(n.nodeValue);
   root.querySelectorAll('[data-tip],[title]').forEach(function(e){['data-tip','title'].forEach(function(a){var v=e.getAttribute(a);if(v&&t1.test(v))e.setAttribute(a,rep(v));});});}
 var ovObs=null;
@@ -2240,9 +2661,9 @@ function waSeg(host){
   var list=fr.filter(function(o){return o.iso<=waS.date;});
   var SEC=[['FNO','FNO'],['Cash','Equity'],['MCX','MCX'],[null,'Total']].map(function(x){var S=x[0];return {S:S,lab:x[1],fund:waS.date?fundInfo(list,S,waS.date).total:0,avg:capAvg(list,S,'fund'),g:sum(list,function(o){return V(o,S,'gross');}),c:sum(list,function(o){return V(o,S,'chg');}),n:sum(list,function(o){return V(o,S,'net');})};});
   var one=function(x){var T=x.S===null,P=T?'Total ':'';return ['*'+coShort(waS.co)+' – '+x.lab+' Summary*','','*(Data up to '+(waS.date?dMon(waS.date):'-')+')*','','*'+(waS.fy==='ALL'?'All FY (till '+(waS.date?dMon(waS.date):'-')+')':'FY '+waS.fy+' (YTD)')+'*','','⚪ *'+(T?'Total':x.lab)+' Fund ('+(waS.date?dMon(waS.date,1):'-')+')* = '+crS(x.fund),'','⚪ *Daily Avg '+(T?'':x.lab+' ')+'Fund* = '+crS(x.avg),'',dot(x.g)+' *'+P+'Gross* = '+rsS(x.g),'','🔴 *'+P+'Charges* = '+rsS(x.c),'',dot(x.n)+' *'+P+'Net* = '+rsS(x.n)].join('\n');};
-  var idx={FNO:0,Cash:1,MCX:2,tot:3}[waS.seg],msg=waS.seg==='all'?SEC.map(one).join('\n\n━━━━━━━━━━━━━━━━━\n\n'):one(SEC[idx]);
+  var idx={FNO:0,Cash:1,MCX:2,tot:3,cmb:3}[waS.seg],msg=waS.seg==='all'?SEC.map(one).join('\n\n━━━━━━━━━━━━━━━━━\n\n'):one(SEC[idx]);
   var left='<div class="wa-ctl">'+waSel('waSCo',c.list,waS.co,'Company')+waSel('waSFy',[['ALL','All']].concat(fys.map(function(f){return [f,f+' (YTD)'];})),waS.fy,'Financial year')+waSel('waSDt',dts.slice().reverse().map(function(d){return [d,dmy(d)];}),waS.date,'Date (data up to)')+'</div>'+
-    '<div class="wa-ctl">'+segBtns('was',[['FNO','FNO'],['Cash','Equity'],['MCX','MCX'],['tot','Total'],['all','All in one']],waS.seg)+'</div>'+
+    '<div class="wa-ctl">'+segBtns('was',[['FNO','FNO'],['Cash','Equity'],['MCX','MCX'],['tot','Total'],['cmb','Combination'],['all','All in one']],waS.seg)+'</div>'+
     '<div class="grid g2" style="gap:8px">'+SEC.map(function(x){return '<div class="card" style="padding:10px 12px"><div class="card-h" style="margin-bottom:4px"><h2>'+x.lab+' summary (FY '+esc(waS.fy)+')</h2></div>'+waRow('⚪ '+x.lab+' fund ('+(waS.date?dMon(waS.date,1):'-')+')',crS(x.fund))+waRow('⚪ Daily average fund',crS(x.avg))+waRow((x.g<0?'🔴':'🟢')+' Gross',rsS(x.g),cls(x.g))+waRow('🔴 Charges',rsS(x.c),'loss')+waRow((x.n<0?'🔴':'🟢')+' Net',rsS(x.n),cls(x.n))+'</div>';}).join('')+'</div>';
   var CR=comboRows(list,waS.date),CT={tfund:sum(CR,function(r){return r.tfund;}),fund:capAvg(list,null,'fund'),gross:sum(CR,function(r){return r.gross;}),chg:sum(CR,function(r){return r.chg;}),net:sum(CR,function(r){return r.net;})};
   var CIC={'FNO only':'🔵','FNO + Equity':'🟣','Equity only':'🟤','MCX only':'🟠','FNO + MCX':'⚫','Equity + MCX':'🟡','FNO + Equity + MCX':'🟢'};
@@ -2254,7 +2675,8 @@ function waSeg(host){
   var RW=[['Traders','traders'],['Fund ('+(waS.date?dMon(waS.date,1):'-')+')','tfund'],['Daily avg fund','fund'],['Gross','gross'],['Charges','chg'],['Net','net']];
   left+='<div class="card" style="padding:10px 12px;margin-top:10px"><div class="card-h" style="margin-bottom:4px"><h2>Trader combination summary ('+esc(fyL)+')</h2><div class="tools"><label class="lvl"><input type="checkbox" id="waSplit"'+(waS.split?' checked':'')+'> Segment part in message</label></div><p>How traders actually trade. Press + to see the FNO / Equity / MCX part. Fund is not split.</p></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th></th>'+COLS.map(function(c){return '<th class="n">'+c.h+'</th>';}).join('')+'<th class="n">Total</th></tr></thead><tbody>'+
     RW.map(function(x){return '<tr><td>'+x[0]+'</td>'+COLS.map(function(c){return '<td class="n">'+cell(c,x[1])+'</td>';}).join('')+'<td class="n"><b>'+cell({r:Object.assign({traders:null},CT)},x[1])+'</b></td></tr>';}).join('')+'</tbody></table></div></div>';
-  waShell(host,left,msg,msg2,'Trader combination summary');
+  if(waS.seg==='cmb')msg=msg2;else if(waS.seg==='all')msg=msg+'\n\n━━━━━━━━━━━━━━━━━\n\n'+msg2;
+  waShell(host,left,msg,waS.seg==='cmb'?null:msg2,'Trader combination summary');
   $('waSCo').onchange=function(){waS.co=this.value;waS.fy='';waS.date='';waSeg(host);};$('waSFy').onchange=function(){waS.fy=this.value;waS.date='';waSeg(host);};$('waSDt').onchange=function(){waS.date=this.value;waSeg(host);};
   bindSeg(host,'was',function(v){waS.seg=v;waSeg(host);});
   host.querySelectorAll('[data-cmb]').forEach(function(b){b.onclick=function(){var k=b.dataset.cmb;waS.open[k]=!waS.open[k];waSeg(host);};});
@@ -2314,7 +2736,7 @@ function waDaily(host){
   if(!inCsv){var rowsH=people.map(function(p){var e=(waD.ent&&waD.ent[p.key])||{};var n=num(e.f)+num(e.e)+num(e.m);return '<tr data-pk="'+esc(p.key)+'"><td>'+esc(p.name)+'</td><td class="n">'+short(p.fund)+'</td>'+['f','e','m'].map(function(s){return '<td><input class="wa-in en" style="height:28px;font-size:12.5px;text-align:right;min-width:90px" inputmode="decimal" data-s="'+s+'" value="'+esc(e[s]||'')+'"></td>';}).join('')+'<td class="n en-net '+cls(n)+'">'+inrS(n)+'</td><td class="n en-roi '+cls(n)+'">'+pctS(roi(n,p.fund))+'</td></tr>';}).join('');
     entH='<div class="card" style="padding:10px 12px;margin-bottom:8px;border-color:var(--warn)"><div class="card-h" style="margin-bottom:4px"><h2>Today’s entry – '+dmy(d)+'</h2><div class="tools"><button type="button" class="btn sm primary" id="enSave">Save</button><button type="button" class="btn sm" id="enClear">Clear</button></div><p>'+dmy(d)+' is not in the CSV yet. Write each trader’s Net (after charges). Total fund comes from the CSV ('+(lastCsv?dmy(lastCsv):'-')+'). Net Amt and ROI are automatic.</p></div>'+
       '<div class="tbl-wrap" style="max-height:340px"><table class="tbl"><thead><tr><th>Trader</th><th class="n">Total fund</th><th class="n">FNO (₹)</th><th class="n">Equity (₹)</th><th class="n">MCX (₹)</th><th class="n">Net Amt</th><th class="n">ROI</th></tr></thead><tbody>'+rowsH+'</tbody><tfoot><tr><td><b>Total</b></td><td class="n"><b>'+short(sum(people,function(p){return p.fund;}))+'</b></td><td class="n" id="enTf"></td><td class="n" id="enTe"></td><td class="n" id="enTm"></td><td class="n" id="enTn"></td><td class="n" id="enTr"></td></tr></tfoot></table></div><p class="muted" id="enMsg" style="font-size:12px;margin-top:6px"></p></div>';}
-  var left='<div class="wa-ctl">'+waSel('waDCo',c.list,waD.co,'Company')+'<label>Date<input class="wa-in" type="date" id="waDDt" value="'+d+'"></label><label>Financial year<input class="wa-in" value="'+esc(fy)+' (YTD)" readonly></label>'+'</div>'+entH+
+  var left='<div class="wa-ctl">'+waSel('waDCo',c.list,waD.co,'Company')+'<label>Date<input class="wa-in" type="date" id="waDDt" value="'+d+'"></label><label>Financial year<input class="wa-in" value="'+esc(fy)+' (YTD)" readonly></label>'+'</div>'+(typeof window.minixProvCardHtml==='function'?window.minixProvCardHtml(d,waD.co):'')+entH+
     '<div class="grid g3" style="gap:8px">'+
       '<div class="card" style="padding:10px 12px"><div class="card-h" style="margin-bottom:4px"><h2>Today’s summary ('+esc(coCode(waD.co))+')</h2></div>'+waRow('Total fund',short(TF))+waRow('Today’s P&amp;L',amt(td,rT),cls(td))+waRow('Total MTD',amt(tm,rM),cls(tm))+waRow('Total YTD',amt(ty,rY),cls(ty))+'</div>'+
       '<div class="card" style="padding:10px 12px"><div class="card-h" style="margin-bottom:4px"><h2>Segment today’s P&amp;L</h2></div>'+SG.map(function(x){var v=sn(T,x[0]);return waRow(x[1]+' '+x[2]+' <small class="muted">'+short(segF(x[0]))+'</small>',amt(v,roi(v,segF(x[0]))),cls(v));}).join('')+'</div>'+
@@ -2354,7 +2776,7 @@ function waAdminBind(body){var b=$('waAdmSave');if(!b)return;b.onclick=async fun
 /* ---- FY-wise Trading Performance ---- */
 R.fy=function(el,rows){rows=segRows(rows);var S=GSEG,s=stats(rows,S),fi=fundInfo(rows,S),comps=Object.keys(fi.byCompany).sort();
   el.innerHTML=card('FY vs FY – FY / demat / month','Open a financial year to see each demat account, then each month. Total fund = fund on the last day of that period.')+
-    '<div class="card"><div class="card-h"><h2>Company → segment → portfolio → trader</h2><div class="tools">'+segBtns('flv',[['1','Level 1'],['2','Level 2'],['3','Level 3'],['4','Level 4']],String(fundLvl))+'</div><p>Fund date = last trading day used for that row’s total fund.</p></div><div class="cb"></div></div>'+card('Company → combination → trader','How traders trade: FNO only, FNO + Equity, Equity only, MCX only. Fund is not split, so totals match.');
+    '<div class="card"><div class="card-h"><h2>Company → segment → portfolio → trader</h2><div class="tools">'+segBtns('flv',[['1','Level 1'],['2','Level 2'],['3','Level 3'],['4','Level 4']],String(fundLvl))+'</div><p>Fund date = last trading day used for that row’s total fund.</p></div><div class="cb"></div></div>'+card('Company → combination → trader','How traders trade: FNO only, FNO + Equity, Equity only, MCX only. Fund is not split, so totals match.')+miHtml('fy');
   var cb=el.querySelectorAll('.card>.cb');
   var fyBase=ROWS.filter(function(o){for(var i=0;i<FKEYS.length;i++){var k=FKEYS[i][0];if(k==='fy'||k==='month'||k==='wk')continue;if(F[k].size&&!F[k].has(o[k]))return false;}if(GSEG&&!(segMatch(o,GSEG)||o.seg[GSEG].net||o.seg[GSEG].gross))return false;for(var k2 in LF){if(LF[k2]&&o[k2]!==LF[k2])return false;}return true;});
   var fyTree=treeBy(fyBase,[{get:function(o){return o.fy;},label:function(v){return 'FY '+v;}},{get:function(o){return o.demat;}},{get:function(o){return o.mkey;},label:monthLabelFromKey}]);
@@ -2364,10 +2786,11 @@ R.fy=function(el,rows){rows=segRows(rows);var S=GSEG,s=stats(rows,S),fi=fundInfo
   if(!tableState['fd-tree'])tableState['fd-tree']={key:'net',dir:-1,q:'',open:{},all:false};
   table(cb[1],{id:'fd-tree',title:'Company → segment → portfolio → trader',columns:[nameAny,{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'nfund',label:'Net fund',type:'money',plain:1},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}].concat(idxCols(),[{key:'fdate',label:'Fund date',type:'date'}]),tree:FDT,total:statRow('Total',s,{tfund:fi.total,nfund:fi.total+s.net,nifty:niftyBank(rows)[0],bank:niftyBank(rows)[1]})});
   table(cb[2],{id:'fd-combo',title:'Company → combination → trader',columns:[nameAny,{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}],tree:withCtx(rows,function(){var T=treeBy(rows,[{get:function(o){return o.company;}},{get:function(o){return o.combo;}},{get:function(o){return o.trader;},kind:'Trader'}]);T.forEach(function(c){(c.children||[]).forEach(function(k){var l=rows.filter(function(o){return o.company===c.row.key&&o.combo===k.row.key;});var ps=comboParts(l,k.row.key);if(ps.length)k.children=ps.map(function(p){return {row:p};}).concat(k.children||[]);});});return T;}),total:statRow('Total',s,{tfund:fi.total})});
+  miBind(el,rows,'fy');
 };
 
 /* ---------- 1. Overview (one page, tabbed cards) ---------- */
-var ovChart='day',ovSeries='Net',ovPie='chg',ovBot='top',ovHw='top',ovHr='all',ovRk={kw:'trader',km:'trader',w:'',m:''},ovHm={p:'7',m:'%'};
+var ovChart='day',ovSeries='Net',ovPie='chg',ovBot='top',ovHw='top',ovHr='6',ovRk={kw:'trader',km:'trader',w:'',m:''},ovHm={p:'7',m:'%'};
 R.overview=function(el,rows){
   var s=stats(rows,GSEG),fi=fundInfo(rows,GSEG),dates=Object.keys(s.dn).sort(),from=dates[0],to=dates[dates.length-1],nb=niftyBank(rows),comps=Object.keys(fi.byCompany).sort();
   var segS=SEGS.map(function(S){return [S,stats(rows,S)];});
@@ -2648,6 +3071,7 @@ R.fund=function(el,rows){
 /* ---------- 6. Charges & Brokers ---------- */
 var GOVT=['Trx Chgs','Sebi Chgs','IPF Charges','Stamp Duty','STT','Clearing Charges','GST'],vbC='co_tr';
 R.charges=function(el,rows){
+  if(vbC==='co_tr'||vbC==='co_pm')vbC='co';
   var S=GSEG;
   function chOf(o,k,seg){if(seg)return o.seg[seg].ch[k];return o.seg.FNO.ch[k]+o.seg.Cash.ch[k]+o.seg.MCX.ch[k];}
   function line(list,label,extra,seg){seg=seg===undefined?S:seg;var r=Object.assign({name:label,gross:sum(list,function(o){return V(o,seg,'gross');}),chg:sum(list,function(o){return V(o,seg,'chg');}),net:sum(list,function(o){return V(o,seg,'net');})},extra||{});var det=0;CHG.forEach(function(c){r[c[0]]=sum(list,function(o){return chOf(o,c[0],seg);});det+=r[c[0]];});r.other=r.chg-det;r.govt=sum(GOVT,function(k){return r[k];});r.brk=r.BRK+r['BRK On GST'];return r;}
@@ -2671,6 +3095,149 @@ R.charges=function(el,rows){
 };
 
 /* ---------- menu ---------- */
+/* ===== Report vs CSV (Nov-2026) ===== */
+var RVC={from:'',to:'',co:'',tr:'',data:null,key:'',open:{}};
+var RVC_TOL=100;
+function rvcIso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function rvcSig(v){return (Math.round(v)>0?'+':Math.round(v)<0?'-':'')+Math.round(Math.abs(num(v))).toLocaleString('en-IN');}
+async function rvcLoad(from,to){
+  var sb=window.MINIX_SB||(window.supabase&&window.MINIX_CONFIG?window.supabase.createClient(MINIX_CONFIG.supabaseUrl,MINIX_CONFIG.supabaseAnonKey):null);
+  if(!sb)throw Error('No database connection');
+  var q=await sb.from('minix_daily_trader_reports').select('*').gte('report_date',from).lte('report_date',to);
+  if(q.error){var q2=await sb.from('minix_daily_trader_reports').select('*');if(q2.error)throw Error(q2.error.message||q2.error);return (q2.data||[]).filter(function(x){var d=String(x.report_date||'').slice(0,10);return d>=from&&d<=to;});}
+  return q.data||[];
+}
+function rvcBuild(reps){
+  var from=RVC.from,to=RVC.to,lc=function(s){return String(s||'').trim().toLowerCase();};
+  var csv=ALL.filter(function(o){return !(o.raw&&o.raw._provisional);});
+  var lastCsv=csv.reduce(function(m,o){return o.iso>m?o.iso:m;},'');
+  var info={},csvDay={};
+  ALL.forEach(function(o){var k=lc(o.trader);var i=info[k];if(!i||o.iso>=i.iso)info[k]={iso:o.iso,name:o.trader,company:o.company};});
+  csv.forEach(function(o){if(o.iso<from||o.iso>to)return;var k=o.iso+'|'+lc(o.trader);var c=csvDay[k]||(csvDay[k]={F:0,C:0,M:0,n:0});c.F+=num(o.seg.FNO.net);c.C+=num(o.seg.Cash.net);c.M+=num(o.seg.MCX.net);c.n++;});
+  var out=[],seen={};
+  reps.forEach(function(x){
+    var d=String(x.report_date||'').slice(0,10),k=lc(x.trader_name);if(!d||!k)return;seen[d+'|'+k]=1;
+    var st=String(x.today_status||'').toUpperCase(),tr=st==='TRADED';
+    var r={F:tr?num(x.fno_gross)-num(x.fno_charges):0,C:tr?num(x.cash_gross)-num(x.cash_charges):0,M:tr?num(x.mcx_gross)-num(x.mcx_charges):0};
+    var c=csvDay[d+'|'+k],rn=r.F+r.C+r.M,cn=c?c.F+c.C+c.M:null,status,diff=null;
+    if(c){diff=cn-rn;status=Math.abs(diff)<=RVC_TOL?'match':'diff';}
+    else if(d>lastCsv){status='pending';}
+    else{if(!tr||Math.abs(rn)<=RVC_TOL){status='match';cn=0;diff=-rn;}else{status='nocsv';cn=0;diff=-rn;}}
+    var inf=info[k]||{name:String(x.trader_name).trim(),company:''};
+    out.push({d:d,k:k,name:inf.name,company:inf.company,st:st,by:/^\[Admin Entry\]/.test(String(x.reason||''))?'admin':'trader',rep:r,rn:rn,csv:c,cn:cn,diff:diff,status:status});
+  });
+  Object.keys(csvDay).forEach(function(key){if(seen[key])return;var p=key.split('|'),c=csvDay[key],cn=c.F+c.C+c.M;if(Math.abs(cn)<=RVC_TOL)return;
+    var inf=info[p[1]]||{name:p[1],company:''};
+    out.push({d:p[0],k:p[1],name:inf.name,company:inf.company,st:'',by:'',rep:null,rn:null,csv:c,cn:cn,diff:null,status:'norep'});});
+  return {rows:out,lastCsv:lastCsv};
+}
+var RVC_ST={match:['✅ Match','gain',4],diff:['⚠️ Difference','loss',0],nocsv:['⚠️ Not in CSV','loss',1],norep:['❌ No report','loss',2],pending:['🟡 CSV pending','',3]};
+function rvcRender(el){
+  var B=RVC.data,rows=B.rows.filter(function(r){return (!RVC.co||r.company===RVC.co)&&(!RVC.tr||r.name===RVC.tr);});
+  rows.sort(function(a,b){var s=RVC_ST[a.status][2]-RVC_ST[b.status][2];if(s)return s;var da=Math.abs(b.diff||0)-Math.abs(a.diff||0);if(da)return da;return b.d.localeCompare(a.d)||a.name.localeCompare(b.name);});
+  var cos=uniq(B.rows.map(function(r){return r.company;}).filter(Boolean)).sort(),trs=uniq(B.rows.filter(function(r){return !RVC.co||r.company===RVC.co;}).map(function(r){return r.name;})).sort();
+  var both=rows.filter(function(r){return r.status==='match'||r.status==='diff'||r.status==='nocsv';});
+  var repT=sum(both,function(r){return r.rn||0;}),csvT=sum(both,function(r){return r.cn||0;});
+  var cnt=function(s){return rows.filter(function(r){return r.status===s;}).length;};
+  var opt=function(l,cur,all){return '<option value="">'+all+'</option>'+l.map(function(v){return '<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>';}).join('');};
+  var h='<div class="card"><div class="card-h"><h2>Report vs CSV – Trader report vs actual CSV</h2><div class="tools"><button type="button" class="btn sm" id="rvcXls">⬇ Excel</button></div>'+
+    '<p>Compares the evening report (trader or Admin Entry) with the CSV uploaded later. Differences up to ₹'+RVC_TOL+' count as a match. Last CSV: '+(B.lastCsv?dmy(B.lastCsv):'-')+'</p></div>'+
+    '<div class="wa-ctl" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
+      '<label>Company<select class="wa-in" id="rvcCo">'+opt(cos,RVC.co,'All')+'</select></label>'+
+      '<label>Trader<select class="wa-in" id="rvcTr">'+opt(trs,RVC.tr,'All')+'</select></label>'+
+      '<label>From<input class="wa-in" type="date" id="rvcFrom" value="'+RVC.from+'"></label>'+
+      '<label>To<input class="wa-in" type="date" id="rvcTo" value="'+RVC.to+'"></label></div>'+
+    '<div class="kpis k6">'+kpi('Report total',rvcSig(repT),'',cls(repT))+kpi('CSV total',rvcSig(csvT),'',cls(csvT))+kpi('Difference',rvcSig(csvT-repT),'CSV − Report',cls(csvT-repT))+
+      kpi('Match',String(cnt('match')),'','gain')+kpi('Differences',String(cnt('diff')+cnt('nocsv')),'',(cnt('diff')+cnt('nocsv'))?'loss':'')+kpi('No report / CSV pending',cnt('norep')+' / '+cnt('pending'))+'</div>'+
+    '<div class="tbl-wrap" style="max-height:520px;margin-top:10px"><table class="tbl"><thead><tr><th>Date</th><th>Trader</th><th>Entered by</th><th class="n">Report P&amp;L</th><th class="n">CSV P&amp;L</th><th class="n">Difference</th><th>Status</th></tr></thead><tbody>'+
+    (rows.map(function(r,i){var id=r.d+'|'+r.k,st=RVC_ST[r.status];
+      var main='<tr class="rvc-r" data-id="'+esc(id)+'" style="cursor:pointer"><td>'+dmy(r.d)+'</td><td>'+esc(r.name)+'</td><td>'+(r.by==='admin'?'✏️ Admin':r.by==='trader'?'Trader':'–')+(r.st&&r.st!=='TRADED'?' <small class="muted">('+esc(r.st.replace('_',' '))+')</small>':'')+'</td>'+
+        '<td class="n '+cls(r.rn||0)+'">'+(r.rn==null?'–':rvcSig(r.rn))+'</td><td class="n '+cls(r.cn||0)+'">'+(r.status==='pending'?'–':rvcSig(r.cn||0))+'</td><td class="n '+(r.diff==null?'':Math.abs(r.diff)<=RVC_TOL?'':'loss')+'">'+(r.diff==null?'–':rvcSig(r.diff))+'</td><td class="'+st[1]+'"><b>'+st[0]+'</b></td></tr>';
+      if(!RVC.open[id])return main;
+      var seg=[['F','F&amp;O'],['C','Cash'],['M','MCX']].map(function(s){var rv=r.rep?r.rep[s[0]]:null,cv=r.csv?r.csv[s[0]]:(r.status==='pending'?null:0);if(!rv&&!cv)return '';
+        var df=(rv==null||cv==null)?null:cv-rv;return '<tr><td>'+s[1]+'</td><td class="n">'+(rv==null?'–':rvcSig(rv))+'</td><td class="n">'+(cv==null?'–':rvcSig(cv))+'</td><td class="n '+(df!=null&&Math.abs(df)>RVC_TOL?'loss':'')+'">'+(df==null?'–':rvcSig(df))+'</td></tr>';}).join('');
+      return main+'<tr><td></td><td colspan="6"><table class="tbl" style="max-width:520px;margin:4px 0 8px"><thead><tr><th>'+esc(r.name)+' – '+dmy(r.d)+'</th><th class="n">Report</th><th class="n">CSV</th><th class="n">Difference</th></tr></thead><tbody>'+(seg||'<tr><td colspan="4" class="muted">All 0</td></tr>')+'</tbody></table></td></tr>';
+    }).join('')||'<tr><td colspan="7" class="empty">No reports in this period</td></tr>')+'</tbody></table></div></div>';
+  /* trader accuracy */
+  var acc={};rows.forEach(function(r){if(r.status==='pending')return;var a=acc[r.name]||(acc[r.name]={n:0,m:0,f:0,nr:0});if(r.status==='norep'){a.nr++;return;}a.n++;if(r.status==='match')a.m++;else a.f++;});
+  var al=Object.keys(acc).map(function(n){var a=acc[n];return [n,a.n,a.m,a.f,a.nr,a.n?a.m/a.n*100:0];}).sort(function(a,b){return a[5]-b[5]||b[3]-a[3];});
+  h+='<div class="card"><div class="card-h"><h2>Trader-wise accuracy</h2><p>How accurately each trader reports. Lowest accuracy first.</p></div><div class="tbl-wrap" style="max-height:420px"><table class="tbl"><thead><tr><th>Trader</th><th class="n">Report</th><th class="n">Match</th><th class="n">Difference</th><th class="n">No report</th><th class="n">Accuracy</th></tr></thead><tbody>'+
+    (al.map(function(a){return '<tr><td>'+esc(a[0])+'</td><td class="n">'+a[1]+'</td><td class="n gain">'+a[2]+'</td><td class="n '+(a[3]?'loss':'')+'">'+a[3]+'</td><td class="n '+(a[4]?'loss':'')+'">'+a[4]+'</td><td class="n '+(a[1]?(a[5]>=90?'gain':'loss'):'')+'"><b>'+(a[1]?a[5].toFixed(0)+'% '+(a[5]>=90?'✅':'⚠️'):'–')+'</b></td></tr>';}).join('')||'<tr><td colspan="6" class="empty">No data</td></tr>')+'</tbody></table></div></div>';
+  el.innerHTML=h;
+  var re=function(){rvcRender(el);};
+  $('rvcCo').onchange=function(){RVC.co=this.value;RVC.tr='';re();};
+  $('rvcTr').onchange=function(){RVC.tr=this.value;re();};
+  $('rvcFrom').onchange=function(){RVC.from=this.value;R.rvc(el);};
+  $('rvcTo').onchange=function(){RVC.to=this.value;R.rvc(el);};
+  el.querySelectorAll('.rvc-r').forEach(function(tr){tr.onclick=function(){var id=tr.dataset.id;RVC.open[id]=!RVC.open[id];re();};});
+  $('rvcXls').onclick=function(){
+    var L=[['Date','Trader','Company','Entered by','Status','Report FNO','Report Cash','Report MCX','Report Net','CSV FNO','CSV Cash','CSV MCX','CSV Net','Difference','Result']];
+    rows.forEach(function(r){var g=function(o,k){return o?Math.round(o[k]):'';};L.push([dmy(r.d),r.name,r.company,r.by,r.st,g(r.rep,'F'),g(r.rep,'C'),g(r.rep,'M'),r.rn==null?'':Math.round(r.rn),g(r.csv,'F'),g(r.csv,'C'),g(r.csv,'M'),r.status==='pending'?'':Math.round(r.cn||0),r.diff==null?'':Math.round(r.diff),RVC_ST[r.status][0].replace(/^[^ ]+ /,'')]);});
+    var csvTxt='\ufeff'+L.map(function(x){return x.map(function(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}).join('\n');
+    var a=D.createElement('a');a.href=URL.createObjectURL(new Blob([csvTxt],{type:'text/csv;charset=utf-8'}));a.download='Report_vs_CSV_'+RVC.from+'_to_'+RVC.to+'.csv';D.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);};
+}
+R.rvc=function(el){
+  if(!isPrivileged()){el.innerHTML='<div class="card empty">Report vs CSV is available to Admin only.</div>';return;}
+  if(!RVC.to){var t=new Date();RVC.to=rvcIso(t);t.setDate(t.getDate()-6);RVC.from=rvcIso(t);}
+  var key=RVC.from+'|'+RVC.to+'|'+ALL.length;
+  if(RVC.data&&RVC.key===key){rvcRender(el);return;}
+  el.innerHTML='<div class="card empty">Loading reports…</div>';
+  rvcLoad(RVC.from,RVC.to).then(function(reps){RVC.data=rvcBuild(reps);RVC.key=key;if(page==='rvc')rvcRender(el);}).catch(function(e){el.innerHTML='<div class="card loss">Could not load reports: '+esc(e.message||e)+'</div>';});
+};
+
+/* ===== Market Holiday List setting (Admin) ===== */
+function holList(){try{return (JSON.parse((SETTINGS['Config|NSE_HOLIDAYS']||{}).note||'{}').list)||[];}catch(e){return [];}}
+function holApply(){var l=holList();window.MINIX_CUSTOM_HOL=l;try{localStorage.setItem('MX_CUSTOM_HOL',JSON.stringify(l));}catch(e){}}
+var HOL_EDIT=null;
+function holCard(host){
+  if(!isPrivileged())return;
+  var box=$('mxHolCard');if(!box){box=D.createElement('div');box.id='mxHolCard';host.appendChild(box);}
+  if(!HOL_EDIT)HOL_EDIT=holList().map(function(x){return Object.assign({},x);});
+  var base=window.MINIX_NSE_HOLIDAYS||{},yr=new Date().getFullYear();
+  var builtIn=Object.keys(base).filter(function(d){return +d.slice(0,4)>=yr&&!HOL_EDIT.some(function(x){return x.d===d;});}).sort().map(function(d){return '<tr><td>'+dmy(d)+'</td><td>'+esc(base[d])+'</td><td class="muted">Built-in (Holiday)</td><td></td></tr>';}).join('');
+  var rowsH=HOL_EDIT.map(function(x,i){return '<tr><td><input class="wa-in" type="date" data-i="'+i+'" data-f="d" value="'+esc(x.d||'')+'"></td><td><input class="wa-in" data-i="'+i+'" data-f="name" value="'+esc(x.name||'')+'" placeholder="Name (e.g. Holi)"></td><td><select class="wa-in" data-i="'+i+'" data-f="type"><option value="H"'+(x.type!=='O'?' selected':'')+'>Holiday</option><option value="O"'+(x.type==='O'?' selected':'')+'>Market Open</option></select></td><td><button type="button" class="btn sm" data-del="'+i+'">✕</button></td></tr>';}).join('');
+  box.innerHTML='<div class="card" style="margin-top:12px"><div class="card-h"><h2>📅 Market Holiday List</h2><div class="tools"><input type="file" id="holFile" accept=".csv,text/csv" style="display:none"><button type="button" class="btn sm" id="holUp">⬆ Upload CSV</button><button type="button" class="btn sm" id="holAdd">+ Add</button><button type="button" class="btn sm primary" id="holSave">💾 Save</button></div>'+
+    '<p>Add new holidays here, or upload the NSE holiday CSV (columns: DATE, DESCRIPTION). Manually added dates are kept. "Market Open" = market is open on a weekend or holiday (e.g. Muhurat Trading). This list is used by Today’s Report, the trader report box and reminders.</p></div>'+
+    '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Name</th><th>Type</th><th></th></tr></thead><tbody>'+rowsH+(rowsH?'':'<tr><td colspan="4" class="muted">No dates added yet</td></tr>')+builtIn+'</tbody></table></div><p class="muted" id="holMsg"></p></div>';
+  box.querySelectorAll('[data-f]').forEach(function(inp){inp.onchange=function(){HOL_EDIT[+inp.dataset.i][inp.dataset.f]=inp.value;};});
+  box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){HOL_EDIT.splice(+b.dataset.del,1);holCard(host);};});
+  $('holAdd').onclick=function(){HOL_EDIT.unshift({d:'',name:'',type:'H'});holCard(host);};
+  $('holUp').onclick=function(){$('holFile').value='';$('holFile').click();};
+  $('holFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;var rd=new FileReader();rd.onload=async function(){
+    var txt=String(rd.result||'').replace(/^\ufeff/,''),lines=txt.split(/\r?\n/).filter(function(l){return l.trim();});
+    var split=function(l){var out=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(ch===','&&!q){out.push(cur);cur='';}else cur+=ch;}out.push(cur);return out.map(function(x){return x.trim();});};
+    if(!lines.length){$('holMsg').textContent='The CSV is empty.';return;}
+    var hd=split(lines[0]).map(function(h){return h.toLowerCase();});
+    var di=hd.findIndex(function(h){return /date/.test(h);}),ni=hd.findIndex(function(h){return /desc|name|holiday|occasion/.test(h);}),ti=hd.findIndex(function(h){return /^type$|status/.test(h);});
+    if(di<0){$('holMsg').textContent='Could not find a DATE column in the CSV.';return;}
+    var MO={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+    var pd=function(v){var m,t=String(v||'').trim();if(!t)return '';
+      if(/^\d{5}$/.test(t)){var b=new Date(1899,11,30);b.setDate(b.getDate()+(+t));return rvcIso(b);}
+      if((m=t.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/)))return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+      if((m=t.match(/^(\d{1,2})[-\/ ]([A-Za-z]{3,9})[-\/ ,]+(\d{2,4})$/))){var mo=MO[m[2].slice(0,m[2].toLowerCase().startsWith('sept')?4:3).toLowerCase()];if(!mo)return '';var y=+m[3];if(y<100)y+=2000;return y+'-'+String(mo).padStart(2,'0')+'-'+m[1].padStart(2,'0');}
+      if((m=t.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})$/))){var mo2=MO[m[1].slice(0,3).toLowerCase()];if(!mo2)return '';return m[3]+'-'+String(mo2).padStart(2,'0')+'-'+m[2].padStart(2,'0');}
+      if((m=t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/)))return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+      return '';};
+    var added=0,updated=0,skipped=0;
+    lines.slice(1).forEach(function(l){var c=split(l),d=pd(c[di]);if(!d){skipped++;return;}
+      var name=ni>=0?(c[ni]||'Holiday'):'Holiday',tv=ti>=0?String(c[ti]||'').toLowerCase():'';
+      var type=/open/.test(tv)||(!tv&&/muhurat/i.test(name))?'O':'H';
+      var ex=HOL_EDIT.find(function(x){return x.d===d;});
+      if(ex){ex.name=name;ex.type=type;updated++;}else{HOL_EDIT.push({d:d,name:name,type:type});added++;}});
+    HOL_EDIT.sort(function(a,b){return String(a.d).localeCompare(String(b.d));});
+    holCard(host);
+    try{await $('holSave').onclick();}catch(e){}
+    var m=$('holMsg');if(m)m.textContent='CSV imported: '+added+' added, '+updated+' updated'+(skipped?', '+skipped+' rows skipped (no valid date)':'')+'. '+m.textContent;
+  };rd.readAsText(f);};
+
+  $('holSave').onclick=async function(){
+    var clean=HOL_EDIT.filter(function(x){return /^\d{4}-\d{2}-\d{2}$/.test(x.d||'');}).map(function(x){return {d:x.d,name:String(x.name||'').trim()||'Holiday',type:x.type==='O'?'O':'H'};}).sort(function(a,b){return a.d.localeCompare(b.d);});
+    try{await saveSettings([{key:'Config|NSE_HOLIDAYS',kind:'Config',name:'NSE_HOLIDAYS',note:JSON.stringify({list:clean})}]);HOL_EDIT=clean.map(function(x){return Object.assign({},x);});holApply();holCard(host);$('holMsg').textContent='Saved '+new Date().toLocaleTimeString('en-IN')+' – '+clean.length+' dates.';}
+    catch(e){$('holMsg').textContent='Save failed: '+(e.message||e);}
+  };
+}
+(function(){var orig=R.admin;R.admin=function(el){orig.apply(this,arguments);try{holCard(el);}catch(e){console.warn(e);}};})();
+
 var PAGES=[
  {id:'overview',title:'Dashboard',sub:'Everything at a glance',icon:'<path d="M3 13h4v8H3zM10 9h4v12h-4zM17 4h4v17h-4z"/>'},
  {id:'traders',title:'Weekly & Monthly Performance',sub:'Rankings, weekly, heatmap, calendar, drawdown',icon:'<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/>'},
@@ -2681,19 +3248,21 @@ var PAGES=[
  {id:'charges',title:'Charges & Brokers',sub:'Charges and efficiency',icon:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>'},
  {id:'wa',title:'WhatsApp Message Center',sub:'KANWAL MTM, segment summary, daily P&L',icon:'<path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 21l2.2-5.2A8.5 8.5 0 1 1 21 11.5z"/><path d="M9 9.5c.5 2 2 3.5 4 4.2l1.2-1.2 2 1-.6 1.8c-3.5.2-7.6-3.6-7.6-7.4l1.8-.6 1 2z"/>'},
  {id:'daily',title:'Today\u2019s Report',sub:'Submissions and daily summary',icon:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>'},
+ {id:'rvc',title:'Report vs CSV',sub:'Trader report vs CSV farak, accuracy',icon:'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'},
  {id:'admin',title:'Admin Settings',sub:'Photos, limits, notes, data',icon:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'}];
 var SECS={overview:[['Net P&L and fund summary','Net P&L after charges'],['KPI cards','Total fund'],['Market cards','NIFTY 50'],['Win ratio summary','Win ratio'],['Trader × month heatmap','Trader × month'],['Top 5 traders','Top 5'],['Fund flow','Fund flow'],['Charges breakup','Charges breakup'],['Strategy-wise','Strategy-wise'],['Broker / demat comparison','Broker / demat'],['Trading P&L calendar','Trading P&L calendar']],
- traders:[['Weekly ranking','Weekly ranking'],['Monthly ranking','Monthly ranking'],['Weekly net P&L','Weekly net P&L'],['P&L Heatmap & Calendar','P&L Heatmap'],['Drawdown','Drawdown table']],
+ traders:[['Weekly ranking','Weekly ranking'],['Monthly ranking','Monthly ranking'],['Weekly net P&L','Weekly net P&L'],['P&L Heatmap','P&L Heatmap'],['Trading Calendar','Trading Calendar'],['Drawdown','Drawdown table']],
  people:[['All traders','All traders'],['Charges by trader & efficiency','Charges by trader'],['Date wise','date wise']],
- fy:[['FY vs FY','FY vs FY'],['Company → Segment → Trader','Company → segment']],
+ fy:[['FY vs FY','FY vs FY'],['Company → Segment → Portfolio → Trader','Company → segment'],['Company → Combination → Trader','Company → combination'],['Minix vs Index','Minix vs Index']],
  index:[['Index cards','NIFTY'],['Firm daily net vs Nifty 50','Firm daily net'],['Nifty 50 chart','Nifty 50'],['Bank Nifty chart','Nifty Bank'],['Monthly Minix vs index','Monthly'],['Index data table','Index data']],
  fund:[['Fund transfer alerts','Fund transfer alerts'],['Fund flow','Fund flow'],['Fund flow by month','Fund flow by month']],
- charges:[['Charges comparison','Charges comparison'],['Charges breakup','Charges breakup'],['Broker / demat comparison (3D)','Broker / demat comparison'],['Charges by month','Charges by month'],['Government charges','Government charges'],['Broker / demat table','Broker / demat table']],
+ charges:[['Charges comparison','Charges comparison'],['Charges breakup','Charges breakup'],['Broker / demat comparison','Broker / demat comparison'],['Charges by month','Charges by month'],['Charges summary – month wise','Charges summary'],['Government charges','Government charges'],['Broker / demat table','Broker / demat table']],
  wa:[['KANWAL MTM Summary','k'],['FNO / Equity / MCX Summary','s'],['Daily Trading P&L Report','d']],
  daily:[['Today’s Role-wise Report','Role-wise'],['Latest trading day','Latest trading day']],
+ rvc:[['Report vs CSV','Report vs CSV'],['Trader-wise accuracy','Trader-wise accuracy']],
  admin:[['Settings','Settings'],['Admin entry','Admin'],['WhatsApp settings','WhatsApp settings']]};
 function svgI(p){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
-var PCOL={traders:'#A06CE8',people:'#14B8A6',fy:'#4F8CF7',fund:'#E3A23B',charges:'#22B8CF',index:'#7C83FD',wa:'#25D366',daily:'#F0577A',admin:'#8B97A8'},ADMIN_ONLY={admin:1,daily:1,wa:1};
+var PCOL={traders:'#A06CE8',people:'#14B8A6',fy:'#4F8CF7',fund:'#E3A23B',charges:'#22B8CF',index:'#7C83FD',wa:'#25D366',daily:'#F0577A',rvc:'#F97316',admin:'#8B97A8'},ADMIN_ONLY={admin:1,daily:1,wa:1,rvc:1};
 function buildNav(){
   var adm=isPrivileged(),box=$('mxMega');if(!box)return;var list=PAGES.filter(function(p){return p.id!=='overview'&&(!ADMIN_ONLY[p.id]||adm);});
   box.innerHTML='<div class="mg-search"><input type="search" id="mgQ" placeholder="Search menu or report…" aria-label="Search menu or report"><button type="button" class="mg-x" aria-label="Close menu" onclick="MX.mega(false)">✕</button></div><div class="mg-grid" style="grid-template-columns:repeat('+list.length+',minmax(0,1fr))">'+list.map(function(p){return '<div class="mg-card'+(p.id===page?' cur':'')+'" style="--pc:'+(PCOL[p.id]||'var(--accent)')+'"><button type="button" class="mg-h" data-p="'+p.id+'"><span class="ib mgi">'+svgI(p.icon)+'</span><b>'+esc(p.title)+'</b></button><ul>'+(SECS[p.id]||[]).map(function(x,i){return '<li><button type="button" class="'+(curSec&&curSec.p===p.id&&curSec.i===i?'on':'')+'" data-p="'+p.id+'" data-s="'+i+'">'+esc(x[0])+'<i>›</i></button></li>';}).join('')+'</ul></div>';}).join('')+'</div>';
@@ -2711,7 +3280,7 @@ MX.go=function(p,opt){page=p;pageOpt=opt?{focus:opt}:{};try{history.replaceState
 function render(){
   if(D.body.classList.contains('auth-locked'))return;
   exportables=[];buildIdx();
-  var P=PAGES.find(function(x){return x.id===page;})||PAGES[0];if((P.id==='admin'||P.id==='daily'||P.id==='wa')&&!isPrivileged())P=PAGES[0];page=P.id;
+  var P=PAGES.find(function(x){return x.id===page;})||PAGES[0];if((P.id==='admin'||P.id==='daily'||P.id==='wa'||P.id==='rvc')&&!isPrivileged())P=PAGES[0];page=P.id;
   buildNav();
   D.querySelectorAll('.page').forEach(function(s){s.classList.toggle('on',s.id==='page-'+page);});
   $('mxPageTitle').textContent=P.title;$('mxPageSub').textContent=P.sub+(GSEG?' · Segment: '+SEGNAME[GSEG]:'');
@@ -2795,7 +3364,8 @@ async function refresh(){
     var bt=norm(res[0],TRADER_ALIASES),ct=norm(res[2],TRADER_ALIASES),bm=norm(res[1],{}),cm=norm(res[3],{});
     var valid=function(r){return !!(r&&r.Date&&(r['Trader Name']||r['Demat Account']));};
     ct=ct.filter(valid);bt=bt.filter(valid);
-    ingest(ct.length?ct:bt,cm.length?cm:bm);
+    var __tr=ct.length?ct:bt;try{if(typeof window.minixMergeProvisional==='function')__tr=await window.minixMergeProvisional(__tr);}catch(pe){console.warn('Provisional merge:',pe);}
+    ingest(__tr,cm.length?cm:bm);
     await loadSettings();
     if(D.body.classList.contains('auth-locked')&&!loginUser())return;
     firstRender();
@@ -2885,7 +3455,7 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',start);else st
     }
     const gross=fg+cg+mg,charges=fc+cc+mc,net=gross-charges,base=utilized||margin;
     const phone=String(val(submission,['whatsapp_number','whatsapp','mobile_number','mobile','phone_number','phone'])||val(all[0],['WhatsApp Number','Whatsapp Number','WhatsApp','Whatsapp','Mobile Number','Mobile','Phone Number','Phone'])||'');
-    return{name,phone,margin,utilized,ff,cf,mf,fg,fc,cg,cc,mg,mc,gross,charges,net,roi:base?net/base*100:0,status:statusOf(all,today,submission),reason:String(submission?.reason||''),submittedAt:submissionTime(submission?.updated_at),late:isLate(submission?.updated_at)};
+    return{name,phone,margin,utilized,ff,cf,mf,fg,fc,cg,cc,mg,mc,gross,charges,net,roi:base?net/base*100:0,status:statusOf(all,today,submission),reason:String(submission?.reason||'').replace(/^\[Admin Entry\]\s*/,''),adminEntry:/^\[Admin Entry\]/.test(String(submission?.reason||'')),submittedAt:submissionTime(submission?.updated_at),late:isLate(submission?.updated_at)};
   }
   function build(){
     const all=rows(),key=istToday(),names=[...new Set(all.map(trader).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -2896,9 +3466,10 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',start);else st
   const cls=n=>n>0?'#34d399':n<0?'#f87171':'#cbd5e1';
   function metric(label,value,color){return '<div class="minix-today-kpi"><span>'+label+'</span><b style="color:'+(color||'#e2e8f0')+'">'+value+'</b></div>'}
   function cell(n){return '<td class="amount" style="color:'+cls(n)+'">'+money(n)+'</td>'}
+  function aeBtn(x,key){return '<div style="margin-top:5px"><button type="button" onclick="minixAdminEntryOpen(\''+encodeURIComponent(x.name)+'\',\''+key+'\')" style="background:#4c1d95;color:#ede9fe;border:1px solid #7c3aed;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer">✏️ '+(x.adminEntry?'Edit Admin Entry':'Admin Entry')+'</button></div>'}
   function statusCell(x,key,allowWhatsApp){
-    if(x.status.cls==='pending'&&allowWhatsApp)return '<td><button type="button" class="minix-status minix-status-pending minix-whatsapp-pending" onclick="minixOpenPendingWhatsApp(\''+encodeURIComponent(x.name)+'\',\''+encodeURIComponent(x.phone||'')+'\',\''+key+'\')" title="Open WhatsApp reminder">'+x.status.text+'</button><span class="minix-whatsapp-hint">🟢 Click to send WhatsApp reminder</span></td>';
-    return '<td><span class="minix-status minix-status-'+x.status.cls+'">'+x.status.text+'</span>'+(x.submittedAt?'<div style="color:#93c5fd;margin-top:4px">Submitted: '+esc(x.submittedAt)+'</div>':'')+(x.reason?'<div style="color:#94a3b8;margin-top:3px">'+esc(x.reason)+'</div>':'')+'</td>';
+    if(x.status.cls==='pending'&&allowWhatsApp)return '<td><button type="button" class="minix-status minix-status-pending minix-whatsapp-pending" onclick="minixOpenPendingWhatsApp(\''+encodeURIComponent(x.name)+'\',\''+encodeURIComponent(x.phone||'')+'\',\''+key+'\')" title="Open WhatsApp reminder">'+x.status.text+'</button><span class="minix-whatsapp-hint">🟢 Click to send WhatsApp reminder</span>'+aeBtn(x,key)+'</td>';
+    return '<td><span class="minix-status minix-status-'+x.status.cls+'">'+x.status.text+'</span>'+(x.adminEntry?'<div style="color:#c4b5fd;margin-top:4px;font-weight:700">✏️ Admin Entry</div>':'')+(allowWhatsApp&&(x.status.cls==='awaiting'||x.adminEntry)?aeBtn(x,key):'')+(x.submittedAt?'<div style="color:#93c5fd;margin-top:4px">Submitted: '+esc(x.submittedAt)+'</div>':'')+(x.reason?'<div style="color:#94a3b8;margin-top:3px">'+esc(x.reason)+'</div>':'')+'</td>';
   }
   window.minixOpenPendingWhatsApp=function(encodedName,encodedPhone,key){
     if(!canSendWhatsApp())return;
@@ -2910,6 +3481,7 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',start);else st
   };
   function render(){
     const {key,list}=build(),u=currentUser()||{},r=role(),manager=isManager(),allowWhatsApp=canSendWhatsApp();
+    if(typeof window.minixHolidayInfo==='function'&&window.minixHolidayInfo(key))return window.minixHolidayHtml(key)+'<div class="minix-push-actions"><button class="close" onclick="minixClosePushModal()">Close</button></div>';
     if(!list.length)return '<div class="minix-today-head"><h2>📊 Today’s Report</h2></div><p>No trader data is available for your login.</p>';
     const profit=list.filter(x=>x.net>0).length,loss=list.filter(x=>x.net<0).length;
     const noTrade=list.filter(x=>x.status.cls==='none').length,leave=list.filter(x=>x.status.cls==='leave'||x.status.cls==='sick').length;
@@ -2965,7 +3537,7 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',start);else st
   function report(){let rows=Array.isArray(window.preparedData)?window.preparedData:(Array.isArray(window.rawData)?window.rawData:[]);if(!rows.length)return null;const dates=rows.map(r=>r.dateLabel||r.Date||'').filter(Boolean).sort();const latest=dates[dates.length-1],d=rows.filter(r=>(r.dateLabel||r.Date||'')===latest),fund={};let utilized=0,fg=0,fc=0,cg=0,cc=0,mg=0,mc=0;d.forEach(r=>{const f=num(r.Fund||r.fund);if(f){const fk=(typeof fundDematKey==='function')?fundDematKey(r):((r['Trader Name']||'Unknown'));fund[fk]=f;}utilized+=num(r['Margin Utilized']||r['Total Utilized']||r.Utilized);fg+=num(r['FNO Gross']);fc+=num(r['FNO Gorv Chg']||r['FNO Total Charges']);cg+=num(r['Cash Gross']);cc+=num(r['Cash Gorv Chg']||r['Cash Total Charges']);mg+=num(r['MCX Gross']);mc+=num(r['MCX Gorv Chg']||r['MCX Total Charges'])});const totalMargin=Object.values(fund).reduce((a,b)=>a+b,0),gross=fg+cg+mg,charges=fc+cc+mc;return{date:latest,totalMargin,utilized,fg,fc,cg,cc,mg,mc,gross,charges,net:gross-charges}}
   window.minixShowTodayReportLegacy=function(){const r=report();if(!r)return modal('<h2>📊 Today’s Report</h2><p>No report data available.</p><div class="minix-push-actions"><button class="close" onclick="minixClosePushModal()">Close</button></div>');const items=[['Total Margin',r.totalMargin],['Margin Utilized',r.utilized],['F&O Gross',r.fg],['F&O Charges',r.fc],['Cash Gross',r.cg],['Cash Charges',r.cc],['MCX Gross',r.mg],['MCX Charges',r.mc],['Total Gross',r.gross],['Total Charges',r.charges],['Total Net P&L',r.net]];modal('<h2>📊 Minix Daily Report – '+r.date+'</h2><div class="minix-report-grid">'+items.map(x=>'<div class="minix-report-item"><span>'+x[0]+'</span><b style="color:'+(x[1]<0?'#f87171':'#34d399')+'">'+money(x[1])+'</b></div>').join('')+'</div><div class="minix-push-actions"><button onclick="minixTestNotification()">Test Notification</button><button class="close" onclick="minixClosePushModal()">Close</button></div>')};
   function promptIfNeeded(){const u=user();if(!u)return;ensureBar();if(Notification.permission!=='granted'&&localStorage.getItem('MINIX_PUSH_PROMPTED')!==new Date().toISOString().slice(0,10)){localStorage.setItem('MINIX_PUSH_PROMPTED',new Date().toISOString().slice(0,10));modal('<h2>🔔 Turn on daily report notifications</h2><p>To get the 4:00 PM report on mobile and laptop, press <b>Enable Notifications</b> once and choose <b>Allow</b> in the browser.</p><div class="minix-push-actions"><button onclick="minixEnableNotifications()">Enable Notifications</button><button class="close" onclick="minixClosePushModal()">Later</button></div>')}}
-  function fourPm(){const n=new Date(),day=n.toISOString().slice(0,10);if((n.getHours()>16||(n.getHours()===16&&n.getMinutes()>=0))&&localStorage.getItem('MINIX_4PM_POPUP')!==day){localStorage.setItem('MINIX_4PM_POPUP',day);minixShowTodayReport()}}
+  function fourPm(){if(typeof window.minixIsMarketDay==='function'&&!window.minixIsMarketDay())return;const n=new Date(),day=n.toISOString().slice(0,10);if((n.getHours()>16||(n.getHours()===16&&n.getMinutes()>=0))&&localStorage.getItem('MINIX_4PM_POPUP')!==day){localStorage.setItem('MINIX_4PM_POPUP',day);minixShowTodayReport()}}
   window.addEventListener('load',()=>{registration().catch(()=>{});let tries=0,t=setInterval(()=>{tries++;if(user()){clearInterval(t);promptIfNeeded();setTimeout(fourPm,2500)}else if(tries>180)clearInterval(t)},1000);setInterval(fourPm,60000)});
 })();
 </script>

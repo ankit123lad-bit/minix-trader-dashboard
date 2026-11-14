@@ -1054,11 +1054,11 @@ body.clean #mxExitClean{display:block}
       var r=(ex.data&&ex.data.length)?await c.from('minix_daily_trader_reports').update(p).eq('report_date',date).eq('trader_name',name)
                                      :await c.from('minix_daily_trader_reports').insert(p);
       if(r.error)throw r.error;
-      window.minixAEClose();
+      window.minixAEClose();if(window.minixToast)window.minixToast('✅ Admin Entry saved – '+name+' ('+dmy(date)+')');
       if(typeof window.__MINIX_V3_REFRESH__==='function')await window.__MINIX_V3_REFRESH__();
       var host=document.getElementById('mxRoleRep');if(host&&typeof window.minixRenderTodayInto==='function')window.minixRenderTodayInto(host);
       var pm=document.getElementById('minixPushModal');if(pm&&pm.style.display==='flex'&&typeof window.minixShowTodayReport==='function')window.minixShowTodayReport();
-    }catch(e){btn.disabled=false;btn.textContent='💾 Save';msg.textContent='Save failed: '+(e.message||e)+' (please check the database table permissions or columns)';}
+    }catch(e){btn.disabled=false;btn.textContent='💾 Save';msg.textContent='Save failed: '+(e.message||e)+' (please check the database table permissions or columns)';if(window.minixToast)window.minixToast('Admin Entry save failed: '+(e.message||e),true);}
   };
 
   /* ---------- 4. Login photo + welcome card ---------- */
@@ -1219,15 +1219,39 @@ body.clean #mxExitClean{display:block}
       var ex=await c.from('minix_daily_trader_reports').select('*').eq('report_date',date).eq('trader_name',name);if(ex.error)throw ex.error;
       var r=(ex.data&&ex.data.length)?await c.from('minix_daily_trader_reports').update(p).eq('report_date',date).eq('trader_name',name):await c.from('minix_daily_trader_reports').insert(p);
       if(r.error)throw r.error;
-      window.minixSelfClose();await paint();
+      window.minixSelfClose();if(window.minixToast)window.minixToast('✅ Report submitted – '+name+' ('+dmy(date)+')');await paint();
       if(typeof window.__MINIX_V3_REFRESH__==='function')window.__MINIX_V3_REFRESH__();
-    }catch(e){btn.disabled=false;btn.textContent='✅ Submit';msg.textContent='Submit failed: '+(e.message||e);}
+    }catch(e){btn.disabled=false;btn.textContent='✅ Submit';msg.textContent='Submit failed: '+(e.message||e);if(window.minixToast)window.minixToast('Report submit failed: '+(e.message||e),true);}
   };
   function boot(){
     new MutationObserver(function(){setTimeout(paint,1500);}).observe(document.body,{attributes:true,attributeFilter:['class']});
     setTimeout(paint,2500);setInterval(paint,120000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
+</script>
+<script>
+/* ===== Save pop-up messages (Nov-2026) ===== */
+(function(){
+  function kind(msg,err){if(err)return 'err';var m=String(msg||'');
+    if(/fail|error|could not|cannot|can't|denied|not saved|invalid|❌/i.test(m))return 'err';
+    if(/saved|success|uploaded|imported|deleted|replaced|updated|submitted|done|complete|✅/i.test(m))return 'ok';return 'info';}
+  window.minixToast=function(msg,err){
+    msg=String(msg||'').trim();if(!msg||!document.body)return;
+    var t=kind(msg,err),C={err:['#450a0a','#fecaca','#dc2626','❌'],ok:['#052e16','#bbf7d0','#16a34a','✅'],info:['#0c1a3a','#bfdbfe','#3b82f6','ℹ️']}[t];
+    var box=document.getElementById('mxToasts');
+    if(!box){box=document.createElement('div');box.id='mxToasts';box.style.cssText='position:fixed;top:18px;right:18px;z-index:2147483000;display:flex;flex-direction:column;gap:8px;max-width:min(440px,92vw);pointer-events:none';document.body.appendChild(box);}
+    if(box.lastChild&&box.lastChild.dataset.msg===msg)return;
+    var el=document.createElement('div');el.dataset.msg=msg;
+    el.style.cssText='pointer-events:auto;cursor:pointer;background:'+C[0]+';color:'+C[1]+';border:1px solid '+C[2]+';border-left:6px solid '+C[2]+';border-radius:12px;padding:12px 16px;font:600 14px/1.4 system-ui,Segoe UI,sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.45);opacity:0;transform:translateX(30px);transition:all .25s';
+    var icon=/^[\u2600-\u27BF\uD83C-\uDBFF]/.test(msg)?'':C[3]+' ';
+    el.textContent=icon+msg;el.title='Click to close';
+    el.onclick=function(){el.remove();};
+    box.appendChild(el);while(box.children.length>4)box.firstChild.remove();
+    requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='none';});
+    setTimeout(function(){el.style.opacity='0';setTimeout(function(){el.remove();},300);},t==='err'?9000:t==='ok'?4500:3500);
+  };
 })();
 
 </script>
@@ -1991,7 +2015,7 @@ function changed(keepOpen){
 MX.clearFilters=function(){FKEYS.forEach(function(k){F[k[0]].clear();});F.from='';F.to='';changed();};
 function setStatus(msg,err){var e=$('mxStatus');if(!e)return;if(msg){e.textContent=msg;e.className='mx-status'+(err?' err':'');return;}
   e.textContent='';e.className='mx-status';}
-window.showMessage=function(msg,err){setStatus(msg,err);if(!err)setTimeout(function(){setStatus();},4000);};
+window.showMessage=function(msg,err){setStatus(msg,err);if(!err)setTimeout(function(){setStatus();},4000);try{if(window.minixToast)window.minixToast(msg,err);}catch(te){}};
 
 /* ---------------- tooltip ---------------- */
 var tip=null;
@@ -2151,10 +2175,11 @@ function pk(kind,name){return esc(kind)+'|'+esc(name);}
 /* ---------- settings (photo, limit, target, note) ---------- */
 var SETTINGS={},DEFAULT_LIMIT=5;
 function sKey(kind,name){return kind+'|'+name;}
+function photoOverrides(){var P=window.MX_PHOTOS;if(!P)return;Object.keys(SETTINGS).forEach(function(k){var s=SETTINGS[k];if(!s||!s.name)return;var n=String(s.name);if(s.photo==='none'){delete P[n];}else if(s.photo&&/^data:image/.test(s.photo)&&String(s.kind)==='Trader'){P[n]=s.photo;}});}
 function setting(kind,name){return SETTINGS[sKey(kind,name)]||{};}
 function photoOf(name,kind){
   var order=kind?[kind,'Trader','Portfolio','Researcher']:['Trader','Portfolio','Researcher'];
-  for(var i=0;i<order.length;i++){var s=SETTINGS[sKey(order[i],name)];if(s&&s.photo)return s.photo;}
+  for(var i=0;i<order.length;i++){var s=SETTINGS[sKey(order[i],name)];if(s&&s.photo==='none')return null;if(s&&s.photo)return s.photo;}
   var P=window.MX_PHOTOS||{};return P[name]||P[String(name).replace(/\s*\(.*\)\s*/,'').trim()]||null;
 }
 function limitOf(name){var s=setting('Trader',name);var v=num(s.limit_pct);return v>0?v:DEFAULT_LIMIT;}
@@ -2168,14 +2193,17 @@ async function loadSettings(){
   try{var sb=window.MINIX_SB||(window.supabase&&window.MINIX_CONFIG?window.supabase.createClient(MINIX_CONFIG.supabaseUrl,MINIX_CONFIG.supabaseAnonKey):null);window.MINIX_SB=sb;if(!sb)return;
     var r=await sb.from('minix_trader_settings').select('*');var rows=(r&&r.data)||[];SETTINGS={};rows.forEach(function(x){if(x&&x.key)SETTINGS[x.key]=x;});
     try{if(typeof holApply==='function')holApply();}catch(he){}
+    try{if(typeof photoOverrides==='function')photoOverrides();}catch(pe){}
     var d=SETTINGS['Default|limit'];if(d&&num(d.limit_pct)>0)DEFAULT_LIMIT=num(d.limit_pct);
   }catch(e){console.warn('Settings not loaded',e);}
 }
 async function saveSettings(list){
   var sb=window.MINIX_SB;if(!sb)throw Error('No database connection');
   var u=loginUser()||{};list.forEach(function(x){x.updated_by=u.username||'';x.updated_at=new Date().toISOString();});
-  var r=await sb.from('minix_trader_settings').upsert(list,{onConflict:'key'});if(r&&r.error)throw Error(r.error.message||r.error);
+  var what=(function(){var k=list.map(function(x){return String(x.key||'');});if(k.some(function(x){return x==='Config|NSE_HOLIDAYS';}))return 'Holiday list';if(k.some(function(x){return /^Config\|DPL/i.test(x);}))return 'Today’s entry';if(k.some(function(x){return /^Config\|(MSG|WA|KANWAL)/i.test(x);}))return 'WhatsApp settings';if(k.some(function(x){return /photo/i.test(x);})||list.some(function(x){return x.photo;}))return 'Photo';return list.length>1?list.length+' settings':'Setting';})();
+  var r=await sb.from('minix_trader_settings').upsert(list,{onConflict:'key'});if(r&&r.error){if(window.minixToast)window.minixToast(what+' not saved: '+(r.error.message||r.error),true);throw Error(r.error.message||r.error);}
   list.forEach(function(x){SETTINGS[x.key]=Object.assign(SETTINGS[x.key]||{},x);});
+  if(window.minixToast){if(list.length===1&&list[0].photo==='none')window.minixToast('✅ Photo removed – '+list[0].name);else if(list.length===1&&list[0].photo)window.minixToast('✅ Photo saved – '+list[0].name);else window.minixToast('✅ '+what+' saved successfully');}
   dualSave(list);
 }
 
@@ -2356,14 +2384,17 @@ R.admin=function(el){
   var field=admKind==='Trader'?'trader':admKind==='Researcher'?'researcher':'portfolio';var names=uniq(ROWS.map(function(o){return o[field];})).filter(function(n){return n&&n!=='Not available';}).sort();
   var dates=ALL.map(function(o){return o.iso;}).sort(),lan=!!(window.MINIX_CONFIG&&window.MINIX_CONFIG.lanMode);
   body.innerHTML='<div class="card"><div class="card-h"><h2>Settings – photo'+(admKind==='Trader'?', loss limit, note':'')+'</h2><div class="tools">'+segBtns('admk',[['Trader','Trader'],['Researcher','Researcher'],['Portfolio','Portfolio']],admKind)+(admKind==='Trader'?'<label class="mx-date">Default limit <input type="number" step="0.5" min="0.5" id="admDef" value="'+DEFAULT_LIMIT+'" style="width:70px"> %</label>':'')+'<button class="btn primary sm" type="button" id="admSave">Save changes</button></div><p>Photos are resized to 200 × 200 and saved on the server, so everyone sees them. A new photo replaces the old one.</p></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Photo</th><th>Name</th><th></th>'+(admKind==='Trader'?'<th class="n">Limit %</th><th>Note</th>':'')+'</tr></thead><tbody>'+
-    names.map(function(n,i){var st=setting(admKind,n),d=admDirty[sKey(admKind,n)]||{},ph=d.photo!==undefined?d.photo:photoOf(n,admKind);return '<tr data-n="'+esc(n)+'"><td>'+(ph?'<img class="av" src="'+ph+'" alt="" style="width:34px;height:34px">':avatar(n,34,admKind))+'</td><td>'+esc(n)+'</td><td><label class="btn sm">'+(ph?'Change photo':'Upload photo')+'<input type="file" accept="image/*" data-up="'+i+'" hidden></label>'+(st.photo||d.photo?' <button class="btn sm danger" type="button" data-rm="'+i+'">Remove</button>':'')+'</td>'+
+    names.map(function(n,i){var st=setting(admKind,n),d=admDirty[sKey(admKind,n)]||{},ph=d.photo!==undefined?d.photo:photoOf(n,admKind);return '<tr data-n="'+esc(n)+'"><td>'+(ph?'<img class="av" src="'+ph+'" alt="" style="width:34px;height:34px">':avatar(n,34,admKind))+'</td><td>'+esc(n)+'</td><td>'+(ph?'<div class="mx-phm" style="position:relative;display:inline-block"><button class="btn sm" type="button" data-pm="'+i+'">📷 Photo ▾</button><div class="mx-phmenu" hidden style="position:absolute;left:0;top:calc(100% + 4px);z-index:60;background:var(--card,#0f172a);border:1px solid var(--line,#334155);border-radius:10px;padding:6px;min-width:180px;box-shadow:0 12px 28px rgba(0,0,0,.4)"><label class="btn sm" style="display:block;text-align:left;margin-bottom:4px">⬆ Change photo<input type="file" accept="image/*" data-up="'+i+'" hidden></label><button class="btn sm danger" type="button" data-rm="'+i+'" style="display:block;width:100%;text-align:left">🗑 Remove photo</button></div></div>':'<label class="btn sm">⬆ Upload<input type="file" accept="image/*" data-up="'+i+'" hidden></label>')+'</td>'+
       (admKind==='Trader'?'<td class="n"><input type="number" step="0.5" min="0" data-f="limit_pct" value="'+(d.limit_pct!==undefined?d.limit_pct:(st.limit_pct||''))+'" placeholder="'+DEFAULT_LIMIT+'" style="width:70px"></td><td><input type="text" data-f="note" value="'+esc(d.note!==undefined?d.note:(st.note||''))+'" style="width:240px"></td>':'')+'</tr>';}).join('')+'</tbody></table></div><p class="muted" id="admMsg" style="margin-top:8px;font-size:12px">'+esc(admMsg)+'</p></div>'+
     waAdminHtml();
   bindSeg(body,'admk',function(v){admKind=v;render();});
   var mark=function(n,f,v){var k=sKey(admKind,n);admDirty[k]=admDirty[k]||{};admDirty[k][f]=v;$('admMsg').textContent=Object.keys(admDirty).length+' unsaved change(s) – press Save changes.';};
   body.querySelectorAll('[data-f]').forEach(function(inp){inp.onchange=function(){mark(inp.closest('tr').dataset.n,inp.dataset.f,inp.dataset.f==='note'?inp.value:(inp.value===''?null:num(inp.value)));};});
-  body.querySelectorAll('[data-up]').forEach(function(inp){inp.onchange=async function(){var f=inp.files&&inp.files[0];if(!f)return;try{var url=await resizePhoto(f);mark(inp.closest('tr').dataset.n,'photo',url);render();}catch(e){alert('Could not read this image.');}};});
-  body.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){mark(b.closest('tr').dataset.n,'photo','');render();};});
+  var savePhoto=async function(n,val){var k=sKey(admKind,n);try{await saveSettings([{key:k,kind:admKind,name:n,photo:val}]);if(admDirty[k]){delete admDirty[k].photo;if(!Object.keys(admDirty[k]).length)delete admDirty[k];}photoOverrides();render();}catch(e){alert('Could not save the photo: '+(e.message||e));}};
+  body.querySelectorAll('[data-pm]').forEach(function(b){b.onclick=function(ev){ev.stopPropagation();var m=b.parentNode.querySelector('.mx-phmenu'),open=m.hidden;body.querySelectorAll('.mx-phmenu').forEach(function(x){x.hidden=true;});m.hidden=!open;};});
+  if(!window.__mxPhmClose){window.__mxPhmClose=1;D.addEventListener('click',function(e){if(!e.target.closest('.mx-phm'))D.querySelectorAll('.mx-phmenu').forEach(function(x){x.hidden=true;});});}
+  body.querySelectorAll('[data-up]').forEach(function(inp){inp.onchange=async function(){var f=inp.files&&inp.files[0];if(!f)return;var url;try{url=await resizePhoto(f);}catch(e){alert('Could not read this image.');return;}savePhoto(inp.closest('tr').dataset.n,url);};});
+  body.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){var n=b.closest('tr').dataset.n;if(!confirm('Remove photo of '+n+'?'))return;savePhoto(n,'none');};});
   var def=$('admDef');if(def)def.onchange=function(){admDirty['Default|limit']={limit_pct:num(def.value)};$('admMsg').textContent='Default limit changed – press Save changes.';};
   $('admSave').onclick=async function(){var list=Object.keys(admDirty).map(function(k){var p=k.split('|');return Object.assign({key:k,kind:p[0],name:p.slice(1).join('|')},SETTINGS[k]?{limit_pct:SETTINGS[k].limit_pct,monthly_target:SETTINGS[k].monthly_target,note:SETTINGS[k].note,photo:SETTINGS[k].photo}:{},admDirty[k]);});
     if(!list.length){$('admMsg').textContent='Nothing to save.';return;}$('admMsg').textContent='Saving…';
@@ -3193,23 +3224,42 @@ function holCard(host){
   if(!isPrivileged())return;
   var box=$('mxHolCard');if(!box){box=D.createElement('div');box.id='mxHolCard';host.appendChild(box);}
   if(!HOL_EDIT)HOL_EDIT=holList().map(function(x){return Object.assign({},x);});
-  var base=window.MINIX_NSE_HOLIDAYS||{},yr=new Date().getFullYear();
-  var builtIn=Object.keys(base).filter(function(d){return +d.slice(0,4)>=yr&&!HOL_EDIT.some(function(x){return x.d===d;});}).sort().map(function(d){return '<tr><td>'+dmy(d)+'</td><td>'+esc(base[d])+'</td><td class="muted">Built-in (Holiday)</td><td></td></tr>';}).join('');
-  var rowsH=HOL_EDIT.map(function(x,i){return '<tr><td><input class="wa-in" type="date" data-i="'+i+'" data-f="d" value="'+esc(x.d||'')+'"></td><td><input class="wa-in" data-i="'+i+'" data-f="name" value="'+esc(x.name||'')+'" placeholder="Name (e.g. Holi)"></td><td><select class="wa-in" data-i="'+i+'" data-f="type"><option value="H"'+(x.type!=='O'?' selected':'')+'>Holiday</option><option value="O"'+(x.type==='O'?' selected':'')+'>Market Open</option></select></td><td><button type="button" class="btn sm" data-del="'+i+'">✕</button></td></tr>';}).join('');
-  box.innerHTML='<div class="card" style="margin-top:12px"><div class="card-h"><h2>📅 Market Holiday List</h2><div class="tools"><input type="file" id="holFile" accept=".csv,text/csv" style="display:none"><button type="button" class="btn sm" id="holUp">⬆ Upload CSV</button><button type="button" class="btn sm" id="holAdd">+ Add</button><button type="button" class="btn sm primary" id="holSave">💾 Save</button></div>'+
+  var base=window.MINIX_NSE_HOLIDAYS||{},yr=new Date().getFullYear(),WDN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var dayOf=function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d||'')?WDN[new Date(d+'T00:00:00').getDay()]:'';};
+  var builtInDates=Object.keys(base).filter(function(d){return +d.slice(0,4)>=yr&&!HOL_EDIT.some(function(x){return x.d===d;});}).sort();
+  var badge=function(t){return t==='O'?'<span style="color:#34d399;font-weight:700">🟢 Market Open</span>':'<span style="color:#f87171;font-weight:700">🔴 Holiday</span>';};
+  var tools,body;
+  if(HOL_MODE!=='edit'){
+    tools='<input type="file" id="holFile" accept=".csv,text/csv" style="display:none"><button type="button" class="btn sm" id="holUp">⬆ Upload CSV</button><button type="button" class="btn sm primary" id="holEdit">✏️ Edit</button>';
+    var all=HOL_EDIT.map(function(x){return {d:x.d,name:x.name,type:x.type,src:''};}).concat(builtInDates.map(function(d){return {d:d,name:base[d],type:'H',src:'Built-in'};})).sort(function(a,b){return String(a.d).localeCompare(String(b.d));});
+    body='<table class="tbl"><thead><tr><th>Date</th><th>Day</th><th>Name</th><th>Type</th></tr></thead><tbody>'+
+      (all.map(function(x){return '<tr><td>'+dmy(x.d)+'</td><td>'+dayOf(x.d)+'</td><td>'+esc(x.name)+(x.src?' <small class="muted">('+x.src+')</small>':'')+'</td><td>'+badge(x.type)+'</td></tr>';}).join('')||'<tr><td colspan="4" class="muted">No dates added yet</td></tr>')+'</tbody></table>';
+  }else{
+    tools='<button type="button" class="btn sm" id="holAdd">+ Add</button><button type="button" class="btn sm" id="holCancel">Cancel</button><button type="button" class="btn sm primary" id="holSave">💾 Save</button>';
+    body='<table class="tbl"><thead><tr><th>Date</th><th>Name</th><th>Type</th><th></th></tr></thead><tbody>'+
+      (HOL_EDIT.map(function(x,i){return '<tr><td><input class="wa-in" type="date" data-i="'+i+'" data-f="d" value="'+esc(x.d||'')+'"></td><td><input class="wa-in" data-i="'+i+'" data-f="name" value="'+esc(x.name||'')+'" placeholder="Name (e.g. Holi)"></td><td><select class="wa-in" data-i="'+i+'" data-f="type"><option value="H"'+(x.type!=='O'?' selected':'')+'>Holiday</option><option value="O"'+(x.type==='O'?' selected':'')+'>Market Open</option></select></td><td><button type="button" class="btn sm" data-del="'+i+'" title="Delete">✕</button></td></tr>';}).join('')||'<tr><td colspan="4" class="muted">No dates added yet</td></tr>')+'</tbody></table>';
+  }
+  var keepMsg=$('holMsg')?$('holMsg').innerHTML:'';
+  box.innerHTML='<div class="card" style="margin-top:12px"><div class="card-h"><h2>📅 Market Holiday List</h2><div class="tools">'+tools+'</div>'+
     '<p>Add new holidays here, or upload the NSE holiday CSV (columns: DATE, DESCRIPTION). Manually added dates are kept. "Market Open" = market is open on a weekend or holiday (e.g. Muhurat Trading). This list is used by Today’s Report, the trader report box and reminders.</p></div>'+
-    '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Name</th><th>Type</th><th></th></tr></thead><tbody>'+rowsH+(rowsH?'':'<tr><td colspan="4" class="muted">No dates added yet</td></tr>')+builtIn+'</tbody></table></div><p class="muted" id="holMsg"></p></div>';
-  box.querySelectorAll('[data-f]').forEach(function(inp){inp.onchange=function(){HOL_EDIT[+inp.dataset.i][inp.dataset.f]=inp.value;};});
-  box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){HOL_EDIT.splice(+b.dataset.del,1);holCard(host);};});
-  $('holAdd').onclick=function(){HOL_EDIT.unshift({d:'',name:'',type:'H'});holCard(host);};
+    '<div class="tbl-wrap">'+body+'</div><div id="holMsg" style="margin-top:10px">'+keepMsg+'</div></div>';
+  if(HOL_MODE==='edit'){
+    box.querySelectorAll('[data-f]').forEach(function(inp){inp.onchange=function(){HOL_EDIT[+inp.dataset.i][inp.dataset.f]=inp.value;};});
+    box.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){var x=HOL_EDIT[+b.dataset.del]||{};if(!confirm('Delete '+(x.d?dmy(x.d):'this row')+(x.name?' '+x.name:'')+'?'))return;HOL_EDIT.splice(+b.dataset.del,1);holCard(host);};});
+    $('holAdd').onclick=function(){HOL_EDIT.unshift({d:'',name:'',type:'H'});holCard(host);};
+    $('holCancel').onclick=function(){HOL_EDIT=holList().map(function(x){return Object.assign({},x);});HOL_MODE='view';$('holMsg').innerHTML='';holCard(host);};
+    $('holSave').onclick=function(){holDoSave(host);};
+    return;
+  }
+  $('holEdit').onclick=function(){HOL_MODE='edit';$('holMsg').innerHTML='';holCard(host);};
   $('holUp').onclick=function(){$('holFile').value='';$('holFile').click();};
   $('holFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;var rd=new FileReader();rd.onload=async function(){
     var txt=String(rd.result||'').replace(/^\ufeff/,''),lines=txt.split(/\r?\n/).filter(function(l){return l.trim();});
     var split=function(l){var out=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(ch===','&&!q){out.push(cur);cur='';}else cur+=ch;}out.push(cur);return out.map(function(x){return x.trim();});};
-    if(!lines.length){$('holMsg').textContent='The CSV is empty.';return;}
+    if(!lines.length){$('holMsg').innerHTML='❌ The CSV is empty.';return;}
     var hd=split(lines[0]).map(function(h){return h.toLowerCase();});
     var di=hd.findIndex(function(h){return /date/.test(h);}),ni=hd.findIndex(function(h){return /desc|name|holiday|occasion/.test(h);}),ti=hd.findIndex(function(h){return /^type$|status/.test(h);});
-    if(di<0){$('holMsg').textContent='Could not find a DATE column in the CSV.';return;}
+    if(di<0){$('holMsg').innerHTML='❌ Could not find a DATE column in the CSV.';return;}
     var MO={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
     var pd=function(v){var m,t=String(v||'').trim();if(!t)return '';
       if(/^\d{5}$/.test(t)){var b=new Date(1899,11,30);b.setDate(b.getDate()+(+t));return rvcIso(b);}
@@ -3225,16 +3275,17 @@ function holCard(host){
       var ex=HOL_EDIT.find(function(x){return x.d===d;});
       if(ex){ex.name=name;ex.type=type;updated++;}else{HOL_EDIT.push({d:d,name:name,type:type});added++;}});
     HOL_EDIT.sort(function(a,b){return String(a.d).localeCompare(String(b.d));});
-    holCard(host);
-    try{await $('holSave').onclick();}catch(e){}
-    var m=$('holMsg');if(m)m.textContent='CSV imported: '+added+' added, '+updated+' updated'+(skipped?', '+skipped+' rows skipped (no valid date)':'')+'. '+m.textContent;
+    await holDoSave(host);
+    var m=$('holMsg');if(m)m.insertAdjacentHTML('afterbegin','<div style="color:#93c5fd;font-weight:700;margin-bottom:6px">📄 CSV imported: '+added+' added, '+updated+' updated'+(skipped?', '+skipped+' rows skipped (no valid date)':'')+'</div>');
   };rd.readAsText(f);};
-
-  $('holSave').onclick=async function(){
-    var clean=HOL_EDIT.filter(function(x){return /^\d{4}-\d{2}-\d{2}$/.test(x.d||'');}).map(function(x){return {d:x.d,name:String(x.name||'').trim()||'Holiday',type:x.type==='O'?'O':'H'};}).sort(function(a,b){return a.d.localeCompare(b.d);});
-    try{await saveSettings([{key:'Config|NSE_HOLIDAYS',kind:'Config',name:'NSE_HOLIDAYS',note:JSON.stringify({list:clean})}]);HOL_EDIT=clean.map(function(x){return Object.assign({},x);});holApply();holCard(host);$('holMsg').textContent='Saved '+new Date().toLocaleTimeString('en-IN')+' – '+clean.length+' dates.';}
-    catch(e){$('holMsg').textContent='Save failed: '+(e.message||e);}
-  };
+}
+var HOL_MODE='view';
+async function holDoSave(host){
+  var clean=HOL_EDIT.filter(function(x){return /^\d{4}-\d{2}-\d{2}$/.test(x.d||'');}).map(function(x){return {d:x.d,name:String(x.name||'').trim()||'Holiday',type:x.type==='O'?'O':'H'};}).sort(function(a,b){return a.d.localeCompare(b.d);});
+  try{await saveSettings([{key:'Config|NSE_HOLIDAYS',kind:'Config',name:'NSE_HOLIDAYS',note:JSON.stringify({list:clean})}]);
+    HOL_EDIT=clean.map(function(x){return Object.assign({},x);});HOL_MODE='view';holApply();holCard(host);
+    $('holMsg').innerHTML='<div style="background:#052e16;color:#86efac;border:1px solid #16a34a;border-radius:10px;padding:10px 12px;font-weight:800">✅ Holiday list saved on Office LAN – '+clean.length+' dates ('+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+')<div style="font-weight:500;font-size:12px;color:#bbf7d0;margin-top:3px">If a red “not on Online” message appears at the top, the list is still saved here on Office LAN. Only the online copy failed.</div></div>';}
+  catch(e){var m=$('holMsg');if(m)m.innerHTML='<div style="background:#450a0a;color:#fca5a5;border:1px solid #dc2626;border-radius:10px;padding:10px 12px;font-weight:800">❌ Save failed: '+esc(e.message||e)+'</div>';}
 }
 (function(){var orig=R.admin;R.admin=function(el){orig.apply(this,arguments);try{holCard(el);}catch(e){console.warn(e);}};})();
 

@@ -1,10 +1,11 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('MX_THEME')==='light'?'light':'dark');}catch(e){}</script><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Minix Admin Entry</title><meta name="theme-color" content="#2563eb"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Minix Trader"><link rel="manifest" href="/manifest.json"><link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><script defer src="/pwa-install.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
+<!DOCTYPE html>
+
+<html><head><meta charset="utf-8"/><script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('MX_THEME')==='light'?'light':'dark');}catch(e){}</script><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Minix Admin Entry</title><meta content="#0b1220" name="theme-color"/><meta content="yes" name="mobile-web-app-capable"/><meta content="yes" name="apple-mobile-web-app-capable"/><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/><meta content="Minix Trader" name="apple-mobile-web-app-title"/><link href="/icon-192.png" rel="icon" sizes="192x192" type="image/png"/><link href="/apple-touch-icon.png" rel="apple-touch-icon"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script>window.MINIX_SB_LIB_ONLINE=window.supabase||null;</script><script src="/lan-supabase-shim.js"></script><script src="/lan-sha256.js"></script><script src="config.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#07101f;color:#e5e7eb;font-family:Arial}.wrap{max-width:1500px;margin:auto;padding:18px}.card{background:#111827;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}input,select,button,textarea{width:100%;padding:10px;border-radius:9px;border:1px solid #475569;background:#020617;color:#fff}button{background:#2563eb;font-weight:800;cursor:pointer}.green{background:#059669}.red{background:#dc2626}.gray{background:#475569}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{width:auto}.msg{padding:10px;border-radius:9px;background:#172554;margin:10px 0}.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.field label{display:block;font-size:11px;color:#94a3b8;margin-bottom:4px}.tablewrap{overflow:auto;max-height:450px}table{border-collapse:collapse;width:100%;white-space:nowrap}th,td{padding:8px;border-bottom:1px solid #334155;font-size:12px}th{position:sticky;top:0;background:#0f172a}.hidden{display:none}.small{font-size:12px;color:#94a3b8}.progress{font-weight:800;color:#93c5fd}.push-summary{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px;margin:14px 0}.push-stat{padding:14px;border:1px solid #334155;border-radius:12px;background:#0b1220}.push-stat span{display:block;color:#94a3b8;font-size:12px}.push-stat b{display:block;margin-top:6px;font-size:24px}.push-enabled{color:#34d399;font-weight:800}.push-disabled{color:#f87171;font-weight:800}@media(max-width:800px){.grid,.fields,.push-summary{grid-template-columns:1fr}.wrap{padding:8px}}
-</style><style id="minix-admin-v3-css">
+</style><style id="minix-admin-embedded-spacing-cleanup">body.minix-admin-embedded .wrap{padding-top:14px!important}</style><link rel="stylesheet" href="/ux-enhancements.css" /><style id="minix-admin-v3-css">
 :root{--bg:#0b1220;--panel:#111a2b;--p2:#162238;--line:#22304a;--text:#e6edf7;--muted:#8ea0bd;--accent:#3b82f6;--gain:#22c07a;--loss:#ef5b6a;--warn:#f0a64b}
 html[data-theme=light]{--bg:#eef2f8;--panel:#ffffff;--p2:#f5f7fb;--line:#dbe3ee;--text:#111827;--muted:#64748b}
 body{background:var(--bg)!important;color:var(--text)!important;font-family:"Segoe UI",system-ui,Arial,sans-serif!important}
@@ -63,55 +64,81 @@ html[data-theme=light] .minix-ux-health,html[data-theme=light] .minix-ux-backup{
 @media(max-width:700px){.akpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
+<style id="minix-single-back-button-fix">body.minix-admin-embedded .wrap > h1{display:none!important}</style>
+<script id="minix-admin-embedded-detect">
+(function(){
+  function apply(){
+    try{ if(window.parent && window.parent!==window) document.body.classList.add('minix-admin-embedded'); }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',apply); else apply();
+})();
+</script>
 <style>.user-actions{display:flex;gap:6px}.user-actions button{width:auto;padding:7px 10px}.user-form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.user-form-actions button{width:auto;min-width:150px}.status-active{color:#34d399;font-weight:800}.status-inactive{color:#f87171;font-weight:800}</style>
 <body><div class="wrap"><h1>Minix Trader Dashboard V3 – Admin</h1>
-<div id="loginCard" class="card"><h2>Secure Login</h2><div class="grid"><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"><button id="loginBtn">Login</button></div><div id="loginMsg" class="msg">Use the Supabase Authentication email and password created for the admin user.</div></div>
-<div id="app" class="hidden">
-<div class="card tabs"><button onclick="showPanel('trader')">Trader Daily Entry</button><button onclick="showPanel('market')">Nifty / BankNifty Entry</button><button class="green" onclick="showPanel('users')">User Management</button><button class="green" onclick="showPanel('reminders')">📲 Pending / WhatsApp</button><button onclick="showPanel('push')">🔔 Push Notification Centre</button><button onclick="(window.top||window).location.href='dashboard.html'">← Back To Dashboard</button><button class="red" id="logoutBtn">Logout</button></div>
-<div id="status" class="msg">Ready.</div>
-<div id="traderPanel" class="card">
-<div class="grid"><button onclick="loadRows('trader_rows','traderTable')">Refresh List</button><input id="traderSearch" placeholder="Search" oninput="filterTable('traderTable',this.value)"></div>
-<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><p class="small">For a complete updated CSV, use <b>Replace Old Data &amp; Import</b>. It removes the previous trader rows first, preventing duplicate totals.</p><div class="grid" style="margin-top:8px"><input id="traderCsv" type="file" accept=".csv,text/csv"><button class="gray" onclick="importCsv('trader_rows','traderCsv')">Add / Import Traders CSV</button><button class="red" id="replaceTraderBtn" onclick="replaceTradersCsv()">Replace Old Data &amp; Import</button><div id="traderProgress" class="progress"></div></div></div>
+<div class="card" id="loginCard"><h2>Secure Login</h2><div class="grid"><input id="email" placeholder="Email" type="email"/><input id="password" placeholder="Password" type="password"/><button id="loginBtn">Login</button></div><div class="msg" id="loginMsg">Use your MINIX LAN username and password.</div></div>
+<div class="hidden" id="app">
+<div class="card tabs"><button onclick="showPanel('trader')">Trader Daily Entry</button><button onclick="showPanel('market')">Nifty / BankNifty Entry</button><button class="green" onclick="showPanel('users')">User Management</button><button class="green" onclick="showPanel('reminders')">📲 Pending / WhatsApp</button><button onclick="showPanel('push')">🔔 Push Notification Centre</button><button class="red" id="logoutBtn">Logout</button></div>
+<div class="msg" id="status">Ready.</div>
+<div class="card" id="onSyncCard" style="margin-top:14px"><b>🌐 Online copy (Supabase)</b><p class="small">Every upload here is saved in Office LAN first and then copied to the Online dashboard. Log in to Online once on this PC; it is remembered.</p>
+<div id="onSyncLogin" class="grid" style="margin-top:8px"><input id="onEmail" placeholder="Online admin email" type="email"/><input id="onPass" placeholder="Online admin password" type="password"/><button type="button" onclick="onlineLogin()">Login to Online</button></div>
+<div id="onSyncIn" class="grid hidden" style="margin-top:8px"><span id="onWho" class="small"></span><button type="button" onclick="mirrorTable('trader_rows')">Copy trader data to Online now</button><button type="button" onclick="mirrorTable('market_rows')">Copy Nifty data to Online now</button><button type="button" onclick="onlineLogout()">Logout Online</button></div>
+<div class="msg" id="onSyncMsg" style="margin-top:8px">Online copy: not checked yet.</div></div>
+<div class="card" id="traderPanel">
+<div class="grid"><button onclick="loadRows('trader_rows','traderTable')">Refresh List</button><input id="traderSearch" oninput="filterTable('traderTable',this.value)" placeholder="Search"/></div>
+<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><p class="small">For a complete updated CSV, use <b>Replace Old Data &amp; Import</b>. It removes the previous trader rows first, preventing duplicate totals.</p><div class="grid" style="margin-top:8px"><input accept=".csv,text/csv" id="traderCsv" type="file"/><button class="gray" onclick="importCsv('trader_rows','traderCsv')">Add / Import Traders CSV</button><button class="red" id="replaceTraderBtn" onclick="replaceTradersCsv()">Replace Old Data &amp; Import</button><div class="progress" id="traderProgress"></div></div></div>
 <div class="tablewrap"><table id="traderTable"></table></div></div>
-<div id="marketPanel" class="card hidden">
-<div class="grid"><button onclick="loadRows('market_rows','marketTable')">Refresh List</button><input id="marketSearch" placeholder="Search" oninput="filterTable('marketTable',this.value)"></div>
-<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><p class="small">For a complete updated CSV, use <b>Replace Old Market Data &amp; Import</b>. It removes the previous Nifty/BankNifty rows first.</p><div class="grid" style="margin-top:8px"><input id="marketCsv" type="file" accept=".csv,text/csv"><button class="gray" onclick="importCsv('market_rows','marketCsv')">Add / Import Nifty / BankNifty CSV</button><button class="red" id="replaceMarketBtn" onclick="replaceMarketCsv()">Replace Old Market Data &amp; Import</button><div id="marketProgress" class="progress"></div></div></div>
+<div class="card hidden" id="marketPanel">
+<div class="grid"><button onclick="loadRows('market_rows','marketTable')">Refresh List</button><input id="marketSearch" oninput="filterTable('marketTable',this.value)" placeholder="Search"/></div>
+<div class="card" style="margin-top:14px"><b>One-time / bulk import:</b><p class="small">For a complete updated CSV, use <b>Replace Old Market Data &amp; Import</b>. It removes the previous Nifty/BankNifty rows first.</p><div class="grid" style="margin-top:8px"><input accept=".csv,text/csv" id="marketCsv" type="file"/><button class="gray" onclick="importCsv('market_rows','marketCsv')">Add / Import Nifty / BankNifty CSV</button><button class="red" id="replaceMarketBtn" onclick="replaceMarketCsv()">Replace Old Market Data &amp; Import</button><div class="progress" id="marketProgress"></div></div></div>
 <div class="tablewrap"><table id="marketTable"></table></div></div>
-<div id="usersPanel" class="card hidden">
-  <h2>Admin User Management <span style="font-size:13px;color:#6ee7b7">• WhatsApp Ready</span></h2>
-  <p class="small">Create users, change roles/mappings, add WhatsApp mobile numbers, reset passwords, expiry dates and status.</p>
-  <input id="editUserId" type="hidden">
-  <div class="fields">
-    <div class="field"><label>Username *</label><input id="uUsername" placeholder="e.g. alay.patel"></div>
-    <div class="field"><label>Full Name *</label><input id="uFullName" placeholder="Full Name"></div>
-    <div class="field"><label>Role *</label><select id="uRole" onchange="userRoleChanged()"><option>Trader</option><option>Researcher</option><option>PM</option><option>Admin</option></select></div>
-    <div class="field"><label>New / Temporary Password</label><input id="uPassword" type="password" placeholder="Required for new user"></div>
-    <div class="field"><label>PM Name</label><input id="uPmName" list="pmNameList" placeholder="Assigned PM"></div>
-    <div class="field"><label>Researcher Name</label><input id="uResearcherName" list="researcherNameList" placeholder="Assigned Researcher"></div>
-    <div class="field"><label>Trader Name</label><input id="uTraderName" placeholder="Trader Name"></div>
-    <div class="field"><label>Mobile Number (WhatsApp)</label><input id="uMobile" inputmode="numeric" placeholder="e.g. 919876543210"></div>
-    <div class="field"><label>WhatsApp Reminder</label><select id="uWhatsapp"><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
-    <div class="field"><label>Expiry Date</label><input id="uExpiry" type="date" value="2099-12-31"></div>
-    <div class="field"><label>Status</label><select id="uActive"><option value="true">Active</option><option value="false">Inactive</option></select></div>
-  </div>
-  <datalist id="pmNameList"></datalist><datalist id="researcherNameList"></datalist>
-  <div class="user-form-actions"><button class="green" onclick="saveUser()" id="saveUserBtn">Create User</button><button class="gray" onclick="clearUserForm()">Clear / New</button><button onclick="loadUsers()">Refresh Users</button></div>
-  <div class="grid" style="margin-top:12px"><input id="userSearch" placeholder="Search user" oninput="filterTable('usersTable',this.value)"><div></div><div id="userCount" class="progress"></div></div>
-  <div class="tablewrap" style="max-height:520px"><table id="usersTable"></table></div>
+<div class="card hidden" id="usersPanel">
+<h2>Admin User Management <span style="font-size:13px;color:#6ee7b7">• WhatsApp Ready</span></h2>
+<p class="small">Create users, edit/shorten usernames, change roles/mappings, add WhatsApp mobile numbers, reset passwords, expiry dates and status.</p>
+<div class="progress" id="roleSummary" style="margin:10px 0 4px 0;font-weight:700">Role summary will appear after users load.</div>
+<input id="editUserId" type="hidden"/>
+<div class="fields">
+<div class="field"><label>Username / Login ID *</label><input id="uUsername" placeholder="e.g. Manoj"/><small style="color:#94a3b8">Editable for users; main admin login remains locked.</small></div>
+<div class="field"><label>Full Name *</label><input id="uFullName" placeholder="Full Name"/></div>
+<div class="field"><label>Primary Role *</label><select id="uRole" onchange="userRoleChanged()"><option>Trader</option><option>Researcher</option><option>PM</option><option>Admin</option></select></div>
+<div class="field"><label>All Roles (comma separated)</label><input id="uRoles" placeholder="e.g. Trader, Researcher, PM"/></div>
+<div class="field"><label>New / Temporary Password</label><input id="uPassword" placeholder="Required for new user" type="password"/></div>
+<div class="field"><label>PM Name</label><input id="uPmName" list="pmNameList" placeholder="Assigned PM"/></div>
+<div class="field"><label>Researcher Name</label><input id="uResearcherName" list="researcherNameList" placeholder="Assigned Researcher"/></div>
+<div class="field"><label>Trader Name</label><input id="uTraderName" placeholder="Trader Name"/></div>
+<div class="field"><label>Mobile Number (WhatsApp)</label><input id="uMobile" inputmode="numeric" placeholder="e.g. 919876543210"/></div>
+<div class="field"><label>WhatsApp Reminder</label><select id="uWhatsapp"><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
+<div class="field"><label>Expiry Date</label><input id="uExpiry" type="date" value="2099-12-31"/></div>
+<div class="field"><label>Status</label><select id="uActive"><option value="true">Active</option><option value="false">Inactive</option></select></div>
 </div>
-<div id="remindersPanel" class="card hidden">
-  <h2>📲 Pending Trader Reports / WhatsApp Reminder</h2>
-  <p class="small">4:15 PM સુધી report submit ન કરનાર traders. WhatsApp button message તૈયાર કરીને WhatsAppમાં ખોલશે; Adminએ Send દબાવવાનું રહેશે.</p>
-  <div class="grid"><button class="green" onclick="loadPendingReminders()">Refresh Pending List</button><div id="pendingReminderCount" class="progress"></div><div></div></div>
-  <div class="tablewrap" style="max-height:560px"><table id="pendingReminderTable"></table></div>
+<datalist id="pmNameList"></datalist><datalist id="researcherNameList"></datalist>
+<div class="user-form-actions"><button class="green" id="saveUserBtn" onclick="saveUser()">Create User</button><button class="gray" onclick="clearUserForm()">Clear / New</button><button onclick="loadUsers()">Refresh Users</button></div>
+<div class="grid" style="margin-top:12px"><input id="userSearch" oninput="filterTable('usersTable',this.value)" placeholder="Search user"/><div></div><div class="progress" id="userCount"></div></div>
+<div class="tablewrap" style="max-height:520px"><table id="usersTable"></table></div>
 </div>
-<div id="pushPanel" class="card hidden"><h2>🔔 Push Notification Centre</h2><p class="small">All active tradersની notification checklist, Mobile/Laptop status, sent history and Admin resend.</p><div class="grid"><button onclick="loadPushCentre()">Refresh Status</button><select id="pushUserSelect"><option value="">All Active Devices</option></select><button class="green" onclick="resendPush()">Resend Daily Report</button></div><div id="pushTraderSummary" class="push-summary"></div><h3>All Traders Notification Checklist</h3><div class="tablewrap" style="max-height:560px"><table id="pushTraderChecklistTable"></table></div><h3>Enabled Device Details</h3><div class="tablewrap"><table id="pushDevicesTable"></table></div><h3>Recent Notification History</h3><div class="tablewrap"><table id="pushHistoryTable"></table></div></div>
+<div class="card hidden" id="remindersPanel">
+<h2>📲 Pending Trader Reports / WhatsApp Reminder</h2>
+<p class="small">4:15 PM સુધી report submit ન કરનાર traders. WhatsApp button message તૈયાર કરીને WhatsAppમાં ખોલશે; Adminએ Send દબાવવાનું રહેશે.</p>
+<div class="grid"><button class="green" onclick="loadPendingReminders()">Refresh Pending List</button><div class="progress" id="pendingReminderCount"></div><div></div></div>
+<div class="tablewrap" style="max-height:560px"><table id="pendingReminderTable"></table></div>
+</div>
+<div class="card hidden" id="pushPanel"><h2>🔔 Push Notification Centre</h2><p class="small">All active tradersની notification checklist, Mobile/Laptop status, sent history and Admin resend.</p><div class="grid"><button onclick="loadPushCentre()">Refresh Status</button><select id="pushUserSelect"><option value="">All Active Devices</option></select><button class="green" onclick="resendPush()">Resend Daily Report</button></div><div class="push-summary" id="pushTraderSummary"></div><h3>All Traders Notification Checklist</h3><div class="tablewrap" style="max-height:560px"><table id="pushTraderChecklistTable"></table></div><h3>Enabled Device Details</h3><div class="tablewrap"><table id="pushDevicesTable"></table></div><h3>Recent Notification History</h3><div class="tablewrap"><table id="pushHistoryTable"></table></div></div>
 </div></div>
 <script>
 let sb=null,user=null,role=null;
 function el(id){return document.getElementById(id)}
+function minixReturnToDashboard(){
+  try{ sessionStorage.setItem('MINIX_ADMIN_RETURN','YES'); }catch(_e){}
+  try{
+    if(window.parent && window.parent!==window && window.parent.minixCloseAdminEntry){
+      window.parent.minixCloseAdminEntry(false);
+      return false;
+    }
+  }catch(_e){}
+  window.location.href='dashboard.html';
+  return false;
+}
 function cfgOk(){return window.MINIX_CONFIG&&!String(MINIX_CONFIG.supabaseUrl).includes('YOUR_')&&!String(MINIX_CONFIG.supabaseAnonKey).includes('YOUR_')}
-if(cfgOk()) sb=supabase.createClient(MINIX_CONFIG.supabaseUrl,MINIX_CONFIG.supabaseAnonKey); else el('loginMsg').textContent='First update config.js with Supabase URL and Publishable Key.';
+if(cfgOk()) sb=supabase.createClient(MINIX_CONFIG.supabaseUrl,MINIX_CONFIG.supabaseAnonKey); else el('loginMsg').textContent='LAN configuration could not be loaded.';
 async function verifyRole(){
 const {data,error}=await sb.from('profiles')
 .select('role,is_active')
@@ -128,16 +155,77 @@ role=data.role;
 }
 async function openApp(){await verifyRole();el('loginCard').classList.add('hidden');el('app').classList.remove('hidden');setStatus('Login successful ('+role+').');loadRows('trader_rows','traderTable')}
 el('loginBtn').onclick=async()=>{try{if(!sb)throw Error('config.js is not configured');const {data,error}=await sb.auth.signInWithPassword({email:el('email').value.trim(),password:el('password').value});if(error)throw error;user=data.user;await openApp()}catch(e){el('loginMsg').textContent=e.message}};
-el('logoutBtn').onclick=async()=>{await sb.auth.signOut();location.reload()};
+
+/* ===== Online copy: LAN upload → also Supabase ===== */
+const MINIX_ONLINE={"supabaseUrl": "https://jvekyykcsdkbfhvdzjjj.supabase.co", "supabaseAnonKey": "sb_publishable_49dlQ8zz90YQ7aX-A5I_YA_0eYpRReH"};
+let sbOn=null,onRetry=null;
+try{if(window.MINIX_SB_LIB_ONLINE)sbOn=window.MINIX_SB_LIB_ONLINE.createClient(MINIX_ONLINE.supabaseUrl,MINIX_ONLINE.supabaseAnonKey,{auth:{storageKey:'minix-online-admin-copy',persistSession:true}});}catch(e){sbOn=null}
+function onMsg(html,bad){const m=el('onSyncMsg');m.innerHTML=html;m.style.background=bad?'#450a0a':'#14532d'}
+async function onlineSession(){if(!sbOn)return null;try{return (await sbOn.auth.getSession()).data.session}catch(e){return null}}
+async function onlineUi(){const s=await onlineSession();el('onSyncLogin').classList.toggle('hidden',!!s);el('onSyncIn').classList.toggle('hidden',!s);if(s){el('onWho').textContent='Online: '+(s.user&&s.user.email||'logged in');}if(!sbOn)onMsg('Online library could not load. Check internet on this PC.',true);}
+async function onlineLogin(){try{if(!sbOn)throw Error('Online library not loaded (internet?)');const {error}=await sbOn.auth.signInWithPassword({email:el('onEmail').value.trim(),password:el('onPass').value});if(error)throw error;el('onPass').value='';onMsg('✔ Logged in to Online. Uploads will be copied automatically.');await onlineUi();}catch(e){onMsg('✖ Online login failed: '+(e.message||e),true)}}
+async function onlineLogout(){try{await sbOn.auth.signOut()}catch(e){}await onlineUi();onMsg('Logged out of Online. Uploads will stay only in Office LAN.',true)}
+async function lanAllPayloads(table){const r=await fetch(location.origin+'/rest/v1/'+table+'?select=payload&order=id.asc',{cache:'no-store'});if(!r.ok)throw Error('Could not read LAN '+table+': HTTP '+r.status);const a=await r.json();return a.map(x=>x&&Object.prototype.hasOwnProperty.call(x,'payload')?x.payload:x)}
+async function mirrorTable(table){
+  const name=table==='trader_rows'?'trader':'Nifty / BankNifty';
+  onRetry=()=>mirrorTable(table);
+  try{
+    if(!sbOn)throw Error('Online library not loaded (internet?)');
+    if(!(await onlineSession()))throw Error('Not logged in to Online. Login in the Online copy box above, then press Retry.');
+    onMsg('⏳ Copying '+name+' data to Online…');
+    const rows=(await lanAllPayloads(table)).map(p=>({payload:p}));
+    const {error:de}=await sbOn.from(table).delete().gte('id',0);if(de)throw de;
+    let done=0;for(let i=0;i<rows.length;i+=500){const {error}=await sbOn.from(table).insert(rows.slice(i,i+500));if(error)throw Error('Stopped after '+done+' rows: '+error.message);done+=Math.min(500,rows.length-i);onMsg('⏳ Copying '+name+' data to Online… '+done+' / '+rows.length)}
+    const {count,error:ce}=await sbOn.from(table).select('id',{count:'exact',head:true});if(ce)throw ce;
+    if(count!==rows.length)throw Error('Online has '+count+' rows, LAN has '+rows.length);
+    onRetry=null;onMsg('✔ LAN saved &nbsp;|&nbsp; ✔ Online saved ('+count+' '+name+' rows)');return true;
+  }catch(e){onMsg('✔ LAN saved &nbsp;|&nbsp; ✖ Online failed: '+esc2(e.message||String(e))+' <button type="button" onclick="onRetry&&onRetry()" style="margin-left:8px">Retry</button>',true);return false}
+}
+function esc2(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+document.addEventListener('DOMContentLoaded',()=>{onlineUi()});
+setTimeout(onlineUi,800);
+
+async function publishDashboardRefresh(){
+  const r=await fetch('/api/publish-refresh',{method:'POST',headers:{'content-type':'application/json'},cache:'no-store'});
+  if(!r.ok)throw Error('Could not publish dashboard refresh (HTTP '+r.status+').');
+  return await r.json();
+}
+el('logoutBtn').onclick=async()=>{
+  const b=el('logoutBtn');
+  try{
+    if(b){b.disabled=true;b.textContent='Saving & Publishing...';}
+    setStatus('Finalizing Admin changes. Dashboards will update after logout...');
+    // IMPORTANT: this is the ONLY action that changes the live-sync version.
+    await publishDashboardRefresh();
+    // Sign out only the Admin-panel API session. Do NOT destroy the main
+    // Share Market dashboard login stored in MINIX_AUTH/minixUser.
+    await sb.auth.signOut();
+    user=null; role=null;
+    el('app').classList.add('hidden');
+    el('loginCard').classList.remove('hidden');
+    el('password').value='';
+    el('loginMsg').textContent='Admin logout successful. Changes published. Click Back To Dashboard.';
+    if(b){b.disabled=false;b.textContent='Logout';}
+    try{
+      if(window.parent && window.parent!==window){
+        window.parent.postMessage({type:'MINIX_ADMIN_LOGOUT_COMMIT'},window.location.origin);
+      }
+    }catch(_e){}
+    // Stay on the Admin logout screen. The user chooses Back To Dashboard.
+  }catch(e){
+    setStatus('Logout/publish failed: '+(e.message||e),true);
+    if(b){b.disabled=false;b.textContent='Logout';}
+  }
+};
 function showPanel(x){el('traderPanel').classList.toggle('hidden',x!=='trader');el('marketPanel').classList.toggle('hidden',x!=='market');el('usersPanel').classList.toggle('hidden',x!=='users');el('remindersPanel').classList.toggle('hidden',x!=='reminders');el('pushPanel').classList.toggle('hidden',x!=='push');if(x==='market')loadRows('market_rows','marketTable');if(x==='users')loadUsers();if(x==='reminders')loadPendingReminders();if(x==='push')loadPushCentre()}
 function setStatus(s,bad){el('status').textContent=s;el('status').style.background=bad?'#450a0a':'#172554'}
 function filterTable(id,q){q=q.toLowerCase();document.querySelectorAll('#'+id+' tbody tr').forEach(r=>r.style.display=r.innerText.toLowerCase().includes(q)?'':'none')}
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function loadRows(table,tableId){try{const {data,error}=await sb.from(table).select('id,payload').order('id',{ascending:false}).limit(100);if(error)throw error;const keys=data[0]?Object.keys(unwrap(data[0].payload)):[];const headers=['ID',...keys,'Action'];el(tableId).innerHTML='<thead><tr>'+headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')+'</tr></thead><tbody>'+data.map(r=>{const p=unwrap(r.payload);return '<tr><td>'+r.id+'</td>'+keys.map(h=>'<td>'+escapeHtml(p[h]??'')+'</td>').join('')+`<td><button class="red" onclick="deleteRow('${table}',${r.id},'${tableId}')">Delete</button></td></tr>`}).join('')+'</tbody>'}catch(e){setStatus(e.message,true)}}
 function unwrap(v){for(let i=0;i<4;i++){if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){break}}if(v&&typeof v==='object'&&!Array.isArray(v)){const ks=Object.keys(v);if(ks.length===1&&['payload','data','row','record','json'].includes(ks[0])){v=v[ks[0]];continue}}break}return(v&&typeof v==='object'&&!Array.isArray(v))?v:{}}
-async function deleteRow(table,id,tableId){if(!confirm('Delete this row?'))return;const {error}=await sb.from(table).delete().eq('id',id);if(error)setStatus(error.message,true);else{setStatus('Deleted.');loadRows(table,tableId)}}
+async function deleteRow(table,id,tableId){if(!confirm('Delete this row?'))return;const {error}=await sb.from(table).delete().eq('id',id);if(error)setStatus(error.message,true);else{setStatus('Deleted.');loadRows(table,tableId);mirrorTable(table)}}
 function csvParse(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){cell+='"';i++}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(cell);cell='';if(row.some(x=>x!==''))rows.push(row);row=[]}else cell+=c}if(cell||row.length){row.push(cell);rows.push(row)}return rows}
-async function importCsv(table,inputId){try{const f=el(inputId).files[0];if(!f)throw Error('Choose a CSV file first.');const rows=csvParse(await f.text());if(rows.length<2)throw Error('CSV has no data rows.');const headers=rows[0].map(x=>x.replace(/^\uFEFF/,'').trim());const progress=el(table==='trader_rows'?'traderProgress':'marketProgress');let payloads=rows.slice(1).filter(r=>r.some(x=>String(x).trim()!=='')).map(r=>{const p={};headers.forEach((h,i)=>p[h]=String(r[i]??'').trim());return {payload:p}});let done=0;for(let i=0;i<payloads.length;i+=200){const chunk=payloads.slice(i,i+200);const {error}=await sb.from(table).insert(chunk);if(error)throw error;done+=chunk.length;progress.textContent=`Imported ${done} / ${payloads.length}`;}setStatus(`CSV import complete: ${done} rows.`);loadRows(table,table==='trader_rows'?'traderTable':'marketTable')}catch(e){setStatus(e.message,true)}}
+async function importCsv(table,inputId){try{const f=el(inputId).files[0];if(!f)throw Error('Choose a CSV file first.');const rows=csvParse(await f.text());if(rows.length<2)throw Error('CSV has no data rows.');const headers=rows[0].map(x=>x.replace(/^\uFEFF/,'').trim());const progress=el(table==='trader_rows'?'traderProgress':'marketProgress');let payloads=rows.slice(1).filter(r=>r.some(x=>String(x).trim()!=='')).map(r=>{const p={};headers.forEach((h,i)=>p[h]=String(r[i]??'').trim());return {payload:p}});let done=0;for(let i=0;i<payloads.length;i+=200){const chunk=payloads.slice(i,i+200);const {error}=await sb.from(table).insert(chunk);if(error)throw error;done+=chunk.length;progress.textContent=`Imported ${done} / ${payloads.length}`;}setStatus(`CSV import complete: ${done} rows.`);loadRows(table,table==='trader_rows'?'traderTable':'marketTable');mirrorTable(table)}catch(e){setStatus(e.message,true)}}
 
 async function replaceTradersCsv(){
   const button=el('replaceTraderBtn'),progress=el('traderProgress');
@@ -178,8 +266,9 @@ async function replaceTradersCsv(){
     if(finalError)throw finalError;
     if(finalCount!==payloads.length)throw Error(`Import count mismatch: expected ${payloads.length}, cloud has ${finalCount}.`);
 
-    setStatus(`Success: old data removed and exactly ${finalCount} trader rows imported. Open Dashboard and hard refresh.`);
+    setStatus(`Success: old data removed and exactly ${finalCount} trader rows imported. Changes saved. Continue Admin work; dashboards will refresh when you Logout.`);
     await loadRows('trader_rows','traderTable');
+    await mirrorTable('trader_rows');
   }catch(e){
     setStatus(e.message||String(e),true);
     progress.textContent='Replace/import failed. Please read the red status message.';
@@ -229,6 +318,7 @@ async function replaceMarketCsv(){
 
     setStatus(`Success: old market data removed and exactly ${finalCount} Nifty / BankNifty rows imported.`);
     await loadRows('market_rows','marketTable');
+    await mirrorTable('market_rows');
   }catch(e){
     setStatus(e.message||String(e),true);
     progress.textContent='Market replace/import failed. Please read the red status message.';
@@ -238,9 +328,10 @@ async function replaceMarketCsv(){
 }
 
 let minixUsersCache=[];
-async function sha256(text){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function sha256(text){return window.minixSha256(text)}
 function userRoleChanged(){
   const r=el('uRole').value,n=el('uFullName').value.trim();
+  if(!el('uRoles').value.trim())el('uRoles').value=r;
   if(!n)return;
   if(r==='PM'){el('uPmName').value=n;el('uResearcherName').value='';el('uTraderName').value=''}
   else if(r==='Researcher'){el('uResearcherName').value=n;el('uTraderName').value=''}
@@ -249,19 +340,25 @@ function userRoleChanged(){
 }
 el('uFullName').addEventListener('change',userRoleChanged);
 function clearUserForm(){
-  el('editUserId').value='';el('uUsername').value='';el('uUsername').disabled=false;el('uFullName').value='';el('uRole').value='Trader';el('uPassword').value='';el('uPmName').value='';el('uResearcherName').value='';el('uTraderName').value='';el('uMobile').value='';el('uWhatsapp').value='true';el('uExpiry').value='2099-12-31';el('uActive').value='true';el('saveUserBtn').textContent='Create User';
+  el('editUserId').value='';el('uUsername').value='';el('uUsername').disabled=false;el('uFullName').value='';el('uRole').value='Trader';el('uRoles').value='Trader';el('uPassword').value='';el('uPmName').value='';el('uResearcherName').value='';el('uTraderName').value='';el('uMobile').value='';el('uWhatsapp').value='true';el('uExpiry').value='2099-12-31';el('uActive').value='true';el('saveUserBtn').textContent='Create User';
 }
 function editUser(id){
   const u=minixUsersCache.find(x=>String(x.id)===String(id));if(!u)return;
-  el('editUserId').value=u.id;el('uUsername').value=u.username||'';el('uUsername').disabled=true;el('uFullName').value=u.full_name||'';el('uRole').value=u.role||'Trader';el('uPassword').value='';el('uPmName').value=u.pm_name||'';el('uResearcherName').value=u.researcher_name||'';el('uTraderName').value=u.trader_name||'';el('uMobile').value=u.mobile_number||'';el('uWhatsapp').value=String(u.whatsapp_enabled!==false);el('uExpiry').value=u.expiry_date||'2099-12-31';el('uActive').value=String(u.active!==false);el('saveUserBtn').textContent='Update User';window.scrollTo({top:0,behavior:'smooth'});
+  el('editUserId').value=u.id;el('uUsername').value=u.username||'';el('uUsername').disabled=String(u.username||'').toLowerCase()==='admin';el('uFullName').value=u.full_name||'';el('uRole').value=u.role||'Trader';el('uRoles').value=(Array.isArray(u.roles)&&u.roles.length?u.roles:[u.role||'Trader']).join(', ');el('uPassword').value='';el('uPmName').value=u.pm_name||'';el('uResearcherName').value=u.researcher_name||'';el('uTraderName').value=u.trader_name||'';el('uMobile').value=u.mobile_number||'';el('uWhatsapp').value=String(u.whatsapp_enabled!==false);el('uExpiry').value=u.expiry_date||'2099-12-31';el('uActive').value=String(u.active!==false);el('saveUserBtn').textContent='Update User';window.scrollTo({top:0,behavior:'smooth'});
 }
 async function saveUser(){try{
-  const id=el('editUserId').value,username=el('uUsername').value.trim().toLowerCase(),full=el('uFullName').value.trim(),password=el('uPassword').value;
+  const id=el('editUserId').value,username=el('uUsername').value.trim(),full=el('uFullName').value.trim(),password=el('uPassword').value;
   if(!username||!full)throw Error('Username and Full Name are required.');
+  if(!/^[A-Za-z0-9._-]+$/.test(username))throw Error('Username may contain only letters, numbers, dot, underscore or hyphen.');
   if(!id&&!password)throw Error('Temporary password is required for a new user.');
   if(password&&password.length<6)throw Error('Password must be at least 6 characters.');
   const mobile=el('uMobile').value.replace(/\D/g,'');if(mobile&&mobile.length<10)throw Error('Mobile number must contain at least 10 digits.');
-  const row={username,full_name:full,role:el('uRole').value,pm_name:el('uPmName').value.trim()||null,researcher_name:el('uResearcherName').value.trim()||null,trader_name:el('uTraderName').value.trim()||null,mobile_number:mobile||null,whatsapp_enabled:el('uWhatsapp').value==='true',active:el('uActive').value==='true',expiry_date:el('uExpiry').value||'2099-12-31'};
+  const allowedRoles=['Trader','Researcher','PM','Admin'];
+  let roles=el('uRoles').value.split(',').map(x=>x.trim()).filter(Boolean).map(x=>allowedRoles.find(a=>a.toLowerCase()===x.toLowerCase())||x).filter(x=>allowedRoles.includes(x));
+  if(!roles.length)roles=[el('uRole').value];
+  if(!roles.includes(el('uRole').value))roles.push(el('uRole').value);
+  roles=[...new Set(roles)];
+  const row={username,full_name:full,role:el('uRole').value,roles,pm_name:el('uPmName').value.trim()||null,researcher_name:el('uResearcherName').value.trim()||null,trader_name:el('uTraderName').value.trim()||null,mobile_number:mobile||null,whatsapp_enabled:el('uWhatsapp').value==='true',active:el('uActive').value==='true',expiry_date:el('uExpiry').value||'2099-12-31'};
   if(password)row.password_hash=await sha256(password);
   let q=id?sb.from('minix_users').update(row).eq('id',id):sb.from('minix_users').insert(row);const {error}=await q;if(error)throw error;
   setStatus(id?'User updated successfully.':'New user created successfully.');clearUserForm();await loadUsers();
@@ -277,9 +374,9 @@ async function toggleUser(id){
   const {error}=await sb.from('minix_users').update({active:!u.active}).eq('id',id);if(error)setStatus(error.message,true);else{setStatus((!u.active?'Activated ':'Deactivated ')+u.full_name+'.');loadUsers()}
 }
 async function loadUsers(){try{
-  const {data,error}=await sb.from('minix_users').select('id,username,full_name,role,pm_name,researcher_name,trader_name,mobile_number,whatsapp_enabled,active,expiry_date,updated_at').order('full_name');if(error)throw error;minixUsersCache=data||[];
-  const pms=[...new Set(minixUsersCache.filter(x=>x.role==='PM').map(x=>x.full_name))];const rs=[...new Set(minixUsersCache.filter(x=>x.role==='Researcher').map(x=>x.full_name))];el('pmNameList').innerHTML=pms.map(x=>'<option value="'+escapeHtml(x)+'">').join('');el('researcherNameList').innerHTML=rs.map(x=>'<option value="'+escapeHtml(x)+'">').join('');el('userCount').textContent=minixUsersCache.length+' users';
-  el('usersTable').innerHTML='<thead><tr><th>Username</th><th>Full Name</th><th>Role</th><th>PM</th><th>Researcher</th><th>Trader</th><th>Mobile</th><th>WhatsApp</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+minixUsersCache.map(u=>'<tr><td>'+escapeHtml(u.username)+'</td><td>'+escapeHtml(u.full_name)+'</td><td>'+escapeHtml(u.role)+'</td><td>'+escapeHtml(u.pm_name||'-')+'</td><td>'+escapeHtml(u.researcher_name||'-')+'</td><td>'+escapeHtml(u.trader_name||'-')+'</td><td>'+escapeHtml(u.mobile_number||'-')+'</td><td>'+(u.whatsapp_enabled!==false?'Enabled':'Disabled')+'</td><td>'+escapeHtml(u.expiry_date||'-')+'</td><td class="'+(u.active?'status-active':'status-inactive')+'">'+(u.active?'Active':'Inactive')+'</td><td><div class="user-actions"><button onclick="editUser('+u.id+')">Edit</button><button class="gray" onclick="resetUserPassword('+u.id+')">Reset Password</button><button class="'+(u.active?'red':'green')+'" onclick="toggleUser('+u.id+')">'+(u.active?'Deactivate':'Activate')+'</button></div></td></tr>').join('')+'</tbody>';
+  const {data,error}=await sb.from('minix_users').select('id,username,full_name,role,roles,pm_name,researcher_name,trader_name,mobile_number,whatsapp_enabled,active,expiry_date,updated_at,last_login_at').order('full_name');if(error)throw error;minixUsersCache=data||[];
+  const hasRole=(u,r)=>(Array.isArray(u.roles)?u.roles:[u.role]).some(x=>String(x).toLowerCase()===String(r).toLowerCase());const pms=[...new Set(minixUsersCache.filter(x=>hasRole(x,'PM')).map(x=>x.full_name))];const rs=[...new Set(minixUsersCache.filter(x=>hasRole(x,'Researcher')).map(x=>x.full_name))];el('pmNameList').innerHTML=pms.map(x=>'<option value="'+escapeHtml(x)+'">').join('');el('researcherNameList').innerHTML=rs.map(x=>'<option value="'+escapeHtml(x)+'">').join('');const roleCount=r=>minixUsersCache.filter(x=>hasRole(x,r)).length;el('userCount').textContent=minixUsersCache.length+' users';el('roleSummary').textContent='Total Login IDs: '+minixUsersCache.length+'  |  Trader: '+roleCount('Trader')+'  |  Researcher: '+roleCount('Researcher')+'  |  Portfolio/PM: '+roleCount('PM')+'  |  Admin: '+roleCount('Admin');
+  el('usersTable').innerHTML='<thead><tr><th>Username</th><th>Full Name</th><th>Roles</th><th>PM</th><th>Researcher</th><th>Trader</th><th>Mobile</th><th>WhatsApp</th><th>Expiry</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+minixUsersCache.map(u=>'<tr><td>'+escapeHtml(u.username)+'</td><td>'+escapeHtml(u.full_name)+'</td><td>'+escapeHtml((Array.isArray(u.roles)&&u.roles.length?u.roles:[u.role]).join(' + '))+'</td><td>'+escapeHtml(u.pm_name||'-')+'</td><td>'+escapeHtml(u.researcher_name||'-')+'</td><td>'+escapeHtml(u.trader_name||'-')+'</td><td>'+escapeHtml(u.mobile_number||'-')+'</td><td>'+(u.whatsapp_enabled!==false?'Enabled':'Disabled')+'</td><td>'+escapeHtml(u.expiry_date||'-')+'</td><td>'+escapeHtml(u.last_login_at?new Date(u.last_login_at).toLocaleString():'Never')+'</td><td class="'+(u.active?'status-active':'status-inactive')+'">'+(u.active?'Active':'Inactive')+'</td><td><div class="user-actions"><button onclick="editUser('+u.id+')">Edit</button><button class="gray" onclick="resetUserPassword('+u.id+')">Reset Password</button><button class="'+(u.active?'red':'green')+'" onclick="toggleUser('+u.id+')">'+(u.active?'Deactivate':'Activate')+'</button></div></td></tr>').join('')+'</tbody>';
 }catch(e){setStatus('Cannot load users: '+e.message,true)}}
 function istDate(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),x={};p.forEach(a=>x[a.type]=a.value);return x.year+'-'+x.month+'-'+x.day}
 function whatsappNumber(v){let n=String(v||'').replace(/\D/g,'');if(n.length===10)n='91'+n;return n}
@@ -294,10 +391,10 @@ function editMobileFromReminder(id){showPanel('users');editUser(id)}
 async function loadPendingReminders(){try{
   const day=istDate();
   const [{data:users,error:ue},{data:reports,error:re}]=await Promise.all([
-    sb.from('minix_users').select('id,username,full_name,role,pm_name,researcher_name,trader_name,mobile_number,whatsapp_enabled,active').eq('active',true).eq('role','Trader').order('full_name'),
+    sb.from('minix_users').select('id,username,full_name,role,roles,pm_name,researcher_name,trader_name,mobile_number,whatsapp_enabled,active').eq('active',true).order('full_name'),
     sb.from('minix_daily_trader_reports').select('trader_name,today_status,updated_at').eq('report_date',day)
   ]);
-  if(ue||re)throw ue||re;minixUsersCache=users||[];
+  if(ue||re)throw ue||re;minixUsersCache=(users||[]).filter(u=>(Array.isArray(u.roles)?u.roles:[u.role]).some(r=>String(r).toLowerCase()==='trader'));
   const done=new Set((reports||[]).map(x=>String(x.trader_name||'').trim().toLowerCase()));
   const pending=minixUsersCache.filter(u=>!done.has(String(u.trader_name||u.full_name||'').trim().toLowerCase()));
   el('pendingReminderCount').textContent='Date: '+day.split('-').reverse().join('-')+' | Pending: '+pending.length+' | Submitted: '+(reports||[]).length;
@@ -314,7 +411,7 @@ function pushDeviceType(label){
 function pushDate(v){if(!v)return '-';const d=new Date(v);return isNaN(d)?String(v):d.toLocaleString('en-IN')}
 function renderPushTraderChecklist(users,devices){
   const activeDevices=(devices||[]).filter(x=>x.active!==false);
-  const traders=(users||[]).filter(x=>x.active!==false&&String(x.role||'').toLowerCase()==='trader');
+  const traders=(users||[]).filter(x=>x.active!==false&&(Array.isArray(x.roles)?x.roles:[x.role]).some(r=>String(r||'').toLowerCase()==='trader'));
   const rows=traders.map(u=>{
     const keys=[u.username,u.full_name,u.trader_name].map(pushKey).filter(Boolean);
     const mine=activeDevices.filter(d=>keys.includes(pushKey(d.username)));
@@ -337,7 +434,7 @@ async function loadPushCentre(){try{
   const [{data:d,error:de},{data:h,error:he},{data:u,error:ue}]=await Promise.all([
     sb.from('minix_push_subscriptions').select('username,role,device_label,active,last_seen_at').order('id',{ascending:false}),
     sb.from('minix_notification_log').select('username,role,report_date,notification_type,status,error_message,sent_at').order('id',{ascending:false}).limit(300),
-    sb.from('minix_users').select('username,full_name,trader_name,role,active').eq('active',true).order('full_name')
+    sb.from('minix_users').select('username,full_name,trader_name,role,roles,active').eq('active',true).order('full_name')
   ]);
   if(de||he||ue)throw de||he||ue;
   renderPushTraderChecklist(u||[],d||[]);
@@ -345,11 +442,11 @@ async function loadPushCentre(){try{
   simpleTable('pushHistoryTable',h,[['sent_at','Sent Time'],['username','Username'],['role','Role'],['report_date','Report Date'],['notification_type','Type'],['status','Status'],['error_message','Error']]);
   const names=[...new Set((d||[]).filter(x=>x.active).map(x=>x.username))];
   el('pushUserSelect').innerHTML='<option value="">All Active Devices</option>'+names.map(x=>'<option value="'+escapeHtml(x)+'">'+escapeHtml(x)+'</option>').join('');
-  setStatus('Push status refreshed: '+(u||[]).filter(x=>String(x.role||'').toLowerCase()==='trader').length+' active traders checked.');
+  setStatus('Push status refreshed: '+(u||[]).filter(x=>(Array.isArray(x.roles)?x.roles:[x.role]).some(r=>String(r||'').toLowerCase()==='trader')).length+' active traders checked.');
 }catch(e){setStatus('Push Centre: '+e.message,true)}}
 async function resendPush(){try{const session=(await sb.auth.getSession()).data.session;if(!session)throw Error('Admin session expired. Login again.');const base=String(MINIX_CONFIG.supabaseUrl).replace(/\/$/,'');const r=await fetch(base+'/functions/v1/send-daily-reports',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+session.access_token},body:JSON.stringify({mode:'resend',username:el('pushUserSelect').value})});const out=await r.json();if(!r.ok)throw Error(out.error||'Resend failed');setStatus('Notification sent: '+out.sent+' | Failed: '+out.failed);loadPushCentre()}catch(e){setStatus('Resend failed: '+e.message,true)}}
 (async()=>{if(sb){await sb.auth.signOut();}})();
-</script><script id="minix-admin-v3">
+</script><script src="/ux-enhancements.js"></script><script id="minix-admin-v3">
 (function(){
 'use strict';
 var D=document,$=function(i){return D.getElementById(i);};
@@ -507,5 +604,30 @@ if(typeof window.importCsv==='function'){var oi=window.importCsv;window.importCs
 setup('market',{input:'marketCsv',btn:'replaceMarketBtn',table:'market_rows',orig:'replaceMarketCsv'});
 var hT=setInterval(function(){var app=$('app');if(app&&!app.classList.contains('hidden')){clearInterval(hT);renderHistory();}},800);
 })();
+</script>
+<script>
+/* ===== Save pop-up messages (Nov-2026) ===== */
+(function(){
+  function kind(msg,err){if(err)return 'err';var m=String(msg||'');
+    if(/fail|error|could not|cannot|can't|denied|not saved|invalid|❌/i.test(m))return 'err';
+    if(/saved|success|uploaded|imported|deleted|replaced|updated|submitted|done|complete|✅/i.test(m))return 'ok';return 'info';}
+  window.minixToast=function(msg,err){
+    msg=String(msg||'').trim();if(!msg||!document.body)return;
+    var t=kind(msg,err),C={err:['#450a0a','#fecaca','#dc2626','❌'],ok:['#052e16','#bbf7d0','#16a34a','✅'],info:['#0c1a3a','#bfdbfe','#3b82f6','ℹ️']}[t];
+    var box=document.getElementById('mxToasts');
+    if(!box){box=document.createElement('div');box.id='mxToasts';box.style.cssText='position:fixed;top:18px;right:18px;z-index:2147483000;display:flex;flex-direction:column;gap:8px;max-width:min(440px,92vw);pointer-events:none';document.body.appendChild(box);}
+    if(box.lastChild&&box.lastChild.dataset.msg===msg)return;
+    var el=document.createElement('div');el.dataset.msg=msg;
+    el.style.cssText='pointer-events:auto;cursor:pointer;background:'+C[0]+';color:'+C[1]+';border:1px solid '+C[2]+';border-left:6px solid '+C[2]+';border-radius:12px;padding:12px 16px;font:600 14px/1.4 system-ui,Segoe UI,sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.45);opacity:0;transform:translateX(30px);transition:all .25s';
+    var icon=/^[\u2600-\u27BF\uD83C-\uDBFF]/.test(msg)?'':C[3]+' ';
+    el.textContent=icon+msg;el.title='Click to close';
+    el.onclick=function(){el.remove();};
+    box.appendChild(el);while(box.children.length>4)box.firstChild.remove();
+    requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='none';});
+    setTimeout(function(){el.style.opacity='0';setTimeout(function(){el.remove();},300);},t==='err'?9000:t==='ok'?4500:3500);
+  };
+})();
+
+(function(){try{if(typeof setStatus==='function'){var _ss=setStatus;setStatus=function(s,bad){_ss(s,bad);try{window.minixToast(s,bad);}catch(e){}};}}catch(e){}})();
 </script>
 </body></html>

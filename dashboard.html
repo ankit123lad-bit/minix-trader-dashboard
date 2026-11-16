@@ -971,7 +971,7 @@ body.clean #mxExitClean{display:block}
       (info.missNames=info.missNames||{})[d]=missL.map(function(k){return {name:latest[k].name,company:String(latest[k].r['Company Name']||'')};});
       (info.repNames=info.repNames||{})[d]=active.filter(function(k){return seen[d+'|'+k];}).map(function(k){return {name:latest[k].name,company:String(latest[k].r['Company Name']||'')};});
     }
-    info.provDates.sort();
+    info.provDates.sort();window.MINIX_PROV_REPS=reps;
     setTimeout(window.minixShowProvBanner,600);
     return rows.concat(add);
   };
@@ -2764,9 +2764,12 @@ function waDaily(host){
   /* ---- left side ---- */
   var mini=function(list,title,useRoi){return '<div class="card" style="padding:10px 12px"><div class="card-h" style="margin-bottom:4px"><h2>'+title+'</h2></div><div class="tbl-wrap" style="max-height:220px"><table class="tbl"><thead><tr><th>#</th><th>Trader</th><th>Segment</th><th class="n">P&amp;L (₹)</th><th class="n">ROI</th></tr></thead><tbody>'+(list.map(function(p,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(p[0])+'</td><td>'+p[1]+'</td><td class="n '+cls(p[2])+'">'+inrS(p[2])+'</td><td class="n '+cls(p[3])+'">'+pctS(p[3])+'</td></tr>';}).join('')||'<tr><td colspan="5" class="empty">None</td></tr>')+'</tbody></table></div></div>';};
   var entH='';
-  if(!inCsv){var rowsH=people.map(function(p){var e=(waD.ent&&waD.ent[p.key])||{};var n=num(e.f)+num(e.e)+num(e.m);return '<tr data-pk="'+esc(p.key)+'"><td>'+esc(p.name)+'</td><td class="n">'+short(p.fund)+'</td>'+['f','e','m'].map(function(s){return '<td><input class="wa-in en" style="height:28px;font-size:12.5px;text-align:right;min-width:90px" inputmode="decimal" data-s="'+s+'" value="'+esc(e[s]||'')+'"></td>';}).join('')+'<td class="n en-net '+cls(n)+'">'+inrS(n)+'</td><td class="n en-roi '+cls(n)+'">'+pctS(roi(n,p.fund))+'</td></tr>';}).join('');
+  if(!inCsv){var enInp=function(s,e){return '<td><input class="wa-in en" style="height:28px;font-size:12.5px;text-align:right;min-width:90px" inputmode="decimal" data-s="'+s+'" value="'+esc(e[s]||'')+'"></td>';};
+    var enRep=function(p){var t=String(p.o&&p.o.trader||'').trim().toLowerCase(),x=(window.MINIX_PROV_REPS||[]).find(function(r){return String(r.report_date||'').slice(0,10)===d&&String(r.trader_name||'').trim().toLowerCase()===t;});if(!x)return null;var ch=num(x.fno_charges)+num(x.cash_charges)+num(x.mcx_charges),mg=num(x.margin_utilized);return {mg:mg?String(mg):'',ch:ch?String(Math.round(ch*100)/100):''};};
+    if(!waD.ent)waD.ent={};
+    var rowsH=people.map(function(p){var e=waD.ent[p.key]||(waD.ent[p.key]={});var rp=enRep(p);if(rp){if(e.mg===undefined)e.mg=rp.mg;if(e.ch===undefined)e.ch=rp.ch;}var n=num(e.f)+num(e.e)+num(e.m);return '<tr data-ek="'+esc(p.key)+'"><td>'+esc(p.name)+'</td><td class="n">'+short(p.fund)+'</td>'+enInp('mg',e)+['f','e','m'].map(function(s){return '<td><input class="wa-in en" style="height:28px;font-size:12.5px;text-align:right;min-width:90px" inputmode="decimal" data-s="'+s+'" value="'+esc(e[s]||'')+'"></td>';}).join('')+enInp('ch',e)+'<td class="n en-net '+cls(n)+'">'+inrS(n)+'</td><td class="n en-roi '+cls(n)+'">'+pctS(roi(n,p.fund))+'</td></tr>';}).join('');
     entH='<div class="card" style="padding:10px 12px;margin-bottom:8px;border-color:var(--warn)"><div class="card-h" style="margin-bottom:4px"><h2>Today’s entry – '+dmy(d)+'</h2><div class="tools"><button type="button" class="btn sm primary" id="enSave">Save</button><button type="button" class="btn sm" id="enClear">Clear</button></div><p>'+dmy(d)+' is not in the CSV yet. Write each trader’s Net (after charges). Total fund comes from the CSV ('+(lastCsv?dmy(lastCsv):'-')+'). Net Amt and ROI are automatic.</p></div>'+
-      '<div class="tbl-wrap" style="max-height:340px"><table class="tbl"><thead><tr><th>Trader</th><th class="n">Total fund</th><th class="n">FNO (₹)</th><th class="n">Equity (₹)</th><th class="n">MCX (₹)</th><th class="n">Net Amt</th><th class="n">ROI</th></tr></thead><tbody>'+rowsH+'</tbody><tfoot><tr><td><b>Total</b></td><td class="n"><b>'+short(sum(people,function(p){return p.fund;}))+'</b></td><td class="n" id="enTf"></td><td class="n" id="enTe"></td><td class="n" id="enTm"></td><td class="n" id="enTn"></td><td class="n" id="enTr"></td></tr></tfoot></table></div><p class="muted" id="enMsg" style="font-size:12px;margin-top:6px"></p></div>';}
+      '<div class="tbl-wrap" style="max-height:340px"><table class="tbl"><thead><tr><th>Trader</th><th class="n">Total fund</th><th class="n">Total Margin</th><th class="n">FNO (₹)</th><th class="n">Equity (₹)</th><th class="n">MCX (₹)</th><th class="n">Total Charges</th><th class="n">Net Amt</th><th class="n">ROI</th></tr></thead><tbody>'+rowsH+'</tbody><tfoot><tr><td><b>Total</b></td><td class="n"><b>'+short(sum(people,function(p){return p.fund;}))+'</b></td><td class="n" id="enTmg"></td><td class="n" id="enTf"></td><td class="n" id="enTe"></td><td class="n" id="enTm"></td><td class="n" id="enTch"></td><td class="n" id="enTn"></td><td class="n" id="enTr"></td></tr></tfoot></table></div><p class="muted" id="enMsg" style="font-size:12px;margin-top:6px"></p></div>';}
   var left='<div class="wa-ctl">'+waSel('waDCo',c.list,waD.co,'Company')+'<label>Date<input class="wa-in" type="date" id="waDDt" value="'+d+'"></label><label>Financial year<input class="wa-in" value="'+esc(fy)+' (YTD)" readonly></label>'+'</div>'+(typeof window.minixProvCardHtml==='function'?window.minixProvCardHtml(d,waD.co):'')+entH+
     '<div class="grid g3" style="gap:8px">'+
       '<div class="card" style="padding:10px 12px"><div class="card-h" style="margin-bottom:4px"><h2>Today’s summary ('+esc(coCode(waD.co))+')</h2></div>'+waRow('Total fund',short(TF))+waRow('Today’s P&amp;L',amt(td,rT),cls(td))+waRow('Total MTD',amt(tm,rM),cls(tm))+waRow('Total YTD',amt(ty,rY),cls(ty))+'</div>'+
@@ -2778,13 +2781,13 @@ function waDaily(host){
   $('waDCo').onchange=function(){waD.co=this.value;waD.date='';waD._k='';waDaily(host);};
   $('waDDt').onchange=function(){waD.date=this.value;waDaily(host);};
   if(!inCsv){
-    var tot=function(){var t={f:0,e:0,m:0};people.forEach(function(p){var e=waD.ent[p.key]||{};t.f+=num(e.f);t.e+=num(e.e);t.m+=num(e.m);});var n=t.f+t.e+t.m,F=sum(people,function(p){return p.fund;});
+    var tot=function(){var t={f:0,e:0,m:0,mg:0,ch:0};people.forEach(function(p){var e=waD.ent[p.key]||{};t.f+=num(e.f);t.e+=num(e.e);t.m+=num(e.m);t.mg+=num(e.mg);t.ch+=num(e.ch);});$('enTmg').innerHTML='<b>'+short(t.mg)+'</b>';$('enTch').innerHTML='<b>'+inrS(t.ch)+'</b>';var n=t.f+t.e+t.m,F=sum(people,function(p){return p.fund;});
       $('enTf').innerHTML='<b>'+inrS(t.f)+'</b>';$('enTe').innerHTML='<b>'+inrS(t.e)+'</b>';$('enTm').innerHTML='<b>'+inrS(t.m)+'</b>';$('enTn').innerHTML='<b class="'+cls(n)+'">'+inrS(n)+'</b>';$('enTr').innerHTML='<b class="'+cls(n)+'">'+pctS(roi(n,F))+'</b>';};
     tot();var rt=null;
-    host.querySelectorAll('input.en').forEach(function(x){x.oninput=function(){var tr=x.closest('tr'),k=tr.dataset.pk,e=waD.ent[k]||(waD.ent[k]={});e[x.dataset.s]=x.value.replace(/[^0-9.\-]/g,'');var n=num(e.f)+num(e.e)+num(e.m),p=people.find(function(q){return q.key===k;});
+    host.querySelectorAll('input.en').forEach(function(x){x.oninput=function(){var tr=x.closest('tr'),k=tr.dataset.ek,e=waD.ent[k]||(waD.ent[k]={});e[x.dataset.s]=x.value.replace(/[^0-9.\-]/g,'');var n=num(e.f)+num(e.e)+num(e.m),p=people.find(function(q){return q.key===k;});
       var nc=tr.querySelector('.en-net'),rc=tr.querySelector('.en-roi');nc.textContent=inrS(n);nc.className='n en-net '+cls(n);rc.textContent=pctS(roi(n,p?p.fund:0));rc.className='n en-roi '+cls(n);tot();
-      clearTimeout(rt);rt=setTimeout(function(){var ae=D.activeElement,pk=ae&&ae.closest&&ae.closest('tr')&&ae.closest('tr').dataset.pk,ps=ae&&ae.dataset&&ae.dataset.s,sc=host.querySelector('.tbl-wrap')?host.querySelector('.tbl-wrap').scrollTop:0;waDaily(host);var w=host.querySelector('.tbl-wrap');if(w)w.scrollTop=sc;if(pk){var f=host.querySelector('tr[data-pk="'+(window.CSS&&CSS.escape?CSS.escape(pk):pk)+'"] input[data-s="'+ps+'"]');if(f){f.focus();var L=f.value.length;try{f.setSelectionRange(L,L);}catch(e){}}}},700);};});
-    $('enSave').onclick=async function(){var clean={};Object.keys(waD.ent).forEach(function(k){var e=waD.ent[k];if(num(e.f)||num(e.e)||num(e.m))clean[k]={f:e.f||'',e:e.e||'',m:e.m||''};});$('enMsg').textContent='Saving…';
+      clearTimeout(rt);rt=setTimeout(function(){var ae=D.activeElement,pk=ae&&ae.closest&&ae.closest('tr')&&ae.closest('tr').dataset.ek,ps=ae&&ae.dataset&&ae.dataset.s,sc=host.querySelector('.tbl-wrap')?host.querySelector('.tbl-wrap').scrollTop:0;waDaily(host);var w=host.querySelector('.tbl-wrap');if(w)w.scrollTop=sc;if(pk){var f=host.querySelector('tr[data-ek="'+(window.CSS&&CSS.escape?CSS.escape(pk):pk)+'"] input[data-s="'+ps+'"]');if(f){f.focus();var L=f.value.length;try{f.setSelectionRange(L,L);}catch(e){}}}},700);};});
+    $('enSave').onclick=async function(){var clean={};Object.keys(waD.ent).forEach(function(k){var e=waD.ent[k];if(num(e.f)||num(e.e)||num(e.m)||num(e.mg)||num(e.ch))clean[k]={f:e.f||'',e:e.e||'',m:e.m||'',mg:e.mg||'',ch:e.ch||''};});$('enMsg').textContent='Saving…';
       try{await saveSettings([{key:'Config|'+dplName(waD.co,d),kind:'Config',name:dplName(waD.co,d),note:JSON.stringify({e:clean})}]);$('enMsg').textContent='Saved at '+new Date().toLocaleTimeString('en-IN')+'. Everyone sees this entry until the CSV for '+dmy(d)+' is uploaded.';}catch(e){$('enMsg').textContent='Could not save: '+e.message;}};
     $('enClear').onclick=function(){if(!confirm('Clear all numbers for '+dmy(d)+'?'))return;waD.ent={};waDaily(host);};}
 }
@@ -3289,6 +3292,47 @@ async function holDoSave(host){
 }
 (function(){var orig=R.admin;R.admin=function(el){orig.apply(this,arguments);try{holCard(el);}catch(e){console.warn(e);}};})();
 
+/* ===== FY-wise Trader Summary (All Traders Analysis) ===== */
+var FYTS={fy:'',view:'co'};
+function fytsCo(c){return String(c||'').replace(/^Minix\s+/i,'').replace(/\s+Pvt.*$/i,'').trim()||String(c||'');}
+function fytsMk(sub,name,kind,company){
+  var r={name:name,kind:kind,company:company||'',fno:0,eq:0,mcx:0,chg:0,net:0,days:0},ds={};
+  sub.forEach(function(o){var F=o.seg.FNO,C=o.seg.Cash,M=o.seg.MCX;
+    r.fno+=num(F.net);r.eq+=num(C.net);r.mcx+=num(M.net);r.chg+=num(F.chg)+num(C.chg)+num(M.chg);
+    if(F.net||C.net||M.net||F.gross||C.gross||M.gross||F.chg||C.chg||M.chg)ds[o.iso]=1;});
+  r.net=r.fno+r.eq+r.mcx;r.days=Object.keys(ds).length;return r;}
+function fytsRender(box,rows){
+  var fys=uniq(rows.map(function(o){return o.fy;}).filter(Boolean)).sort();
+  if(!FYTS.fy||(FYTS.fy!=='ALL'&&fys.indexOf(FYTS.fy)<0))FYTS.fy=fys.length?fys[fys.length-1]:'ALL';
+  var list=FYTS.fy==='ALL'?rows:rows.filter(function(o){return o.fy===FYTS.fy;});
+  var lbl=FYTS.fy==='ALL'?(fys.length?fys[0]+' to '+fys[fys.length-1]:''):FYTS.fy;
+  box.innerHTML='<div class="card"><div class="card-h"><h2>FY-wise Trader Summary</h2><div class="tools">'+
+    segBtns('fytsFy',fys.map(function(f){return [f,'FY '+f];}).concat([['ALL','Both']]),FYTS.fy)+
+    segBtns('fytsView',[['co','Company-wise'],['all','All Traders']],FYTS.view)+
+    '</div><p>Amount in ₹ | Net = Gross − Charges | Equity = Cash | Days = days the trader traded in this period. Only traders who traded are shown.</p></div><div id="fytsTbl"></div></div>';
+  bindSeg(box,'fytsFy',function(v){FYTS.fy=v;fytsRender(box,rows);});
+  bindSeg(box,'fytsView',function(v){FYTS.view=v;fytsRender(box,rows);});
+  var traded=function(r){return r.days>0;};
+  var nameC={key:'name',label:FYTS.view==='co'?'Company → Trader':'Trader Name',render:function(v,r){return r.kind?who(v,r.kind):'<b>'+esc(v)+'</b>';}};
+  var cols=[nameC];
+  if(FYTS.view==='all')cols.push({key:'company',label:'Company'});
+  cols=cols.concat([{key:'fno',label:'FNO Net',type:'money'},{key:'eq',label:'Equity Net',type:'money'},{key:'mcx',label:'MCX Net',type:'money'},{key:'chg',label:'Total Charges',type:'money',plain:1},{key:'net',label:'Total Net',type:'money'},{key:'days',label:'Days',type:'int'}]);
+  var tot=fytsMk(list,'GRAND TOTAL '+lbl,null);delete tot.days;tot.days='';
+  var opt={id:'fyts-'+FYTS.view,title:'FY-wise Trader Summary '+lbl,defaultSort:{key:'net',dir:-1},columns:cols,total:tot};
+  if(FYTS.view==='co'){
+    var tree=[];groupBy(list,function(o){return o.company;}).forEach(function(sub,co){
+      var kids=[];groupBy(sub,function(o){return o.trader;}).forEach(function(ts,t){var r=fytsMk(ts,t,'Trader',fytsCo(co));if(traded(r))kids.push({row:r});});
+      if(kids.length){var cr=fytsMk(sub,co,null,fytsCo(co));delete cr.days;cr.days='';tree.push({row:cr,children:kids});}});
+    var st=tableState[opt.id]||(tableState[opt.id]={key:'net',dir:-1,q:'',open:{},all:false});if(!st._fytsInit){st._fytsInit=1;tree.forEach(function(nd){st.open['\u0001'+nd.row.name]=true;});}
+    opt.tree=tree;
+  }else{
+    var rs=[];groupBy(list,function(o){return o.company+'\u0001'+o.trader;}).forEach(function(ts,k){var p=k.split('\u0001');var r=fytsMk(ts,p[1],'Trader',fytsCo(p[0]));if(traded(r))rs.push(r);});
+    opt.rows=rs;
+  }
+  table($('fytsTbl'),opt);
+}
+(function(){var orig=R.people;R.people=function(el,rows){orig.apply(this,arguments);try{var b=D.createElement('div');b.id='fytsBox';el.appendChild(b);fytsRender(b,segRows(rows));}catch(e){console.warn('FY-wise Trader Summary:',e);}};})();
+
 var PAGES=[
  {id:'overview',title:'Dashboard',sub:'Everything at a glance',icon:'<path d="M3 13h4v8H3zM10 9h4v12h-4zM17 4h4v17h-4z"/>'},
  {id:'traders',title:'Weekly & Monthly Performance',sub:'Rankings, weekly, heatmap, calendar, drawdown',icon:'<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/>'},
@@ -3303,7 +3347,7 @@ var PAGES=[
  {id:'admin',title:'Admin Settings',sub:'Photos, limits, notes, data',icon:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'}];
 var SECS={overview:[['Net P&L and fund summary','Net P&L after charges'],['KPI cards','Total fund'],['Market cards','NIFTY 50'],['Win ratio summary','Win ratio'],['Trader × month heatmap','Trader × month'],['Top 5 traders','Top 5'],['Fund flow','Fund flow'],['Charges breakup','Charges breakup'],['Strategy-wise','Strategy-wise'],['Broker / demat comparison','Broker / demat'],['Trading P&L calendar','Trading P&L calendar']],
  traders:[['Weekly ranking','Weekly ranking'],['Monthly ranking','Monthly ranking'],['Weekly net P&L','Weekly net P&L'],['P&L Heatmap','P&L Heatmap'],['Trading Calendar','Trading Calendar'],['Drawdown','Drawdown table']],
- people:[['All traders','All traders'],['Charges by trader & efficiency','Charges by trader'],['Date wise','date wise']],
+ people:[['All traders','All traders'],['Charges by trader & efficiency','Charges by trader'],['Date wise','date wise'],['FY-wise Trader Summary','FY-wise Trader Summary']],
  fy:[['FY vs FY','FY vs FY'],['Company → Segment → Portfolio → Trader','Company → segment'],['Company → Combination → Trader','Company → combination'],['Minix vs Index','Minix vs Index']],
  index:[['Index cards','NIFTY'],['Firm daily net vs Nifty 50','Firm daily net'],['Nifty 50 chart','Nifty 50'],['Bank Nifty chart','Nifty Bank'],['Monthly Minix vs index','Monthly'],['Index data table','Index data']],
  fund:[['Fund transfer alerts','Fund transfer alerts'],['Fund flow','Fund flow'],['Fund flow by month','Fund flow by month']],

@@ -3308,12 +3308,12 @@ function fytsRender(box,rows){
   var lbl=FYTS.fy==='ALL'?(fys.length?fys[0]+' to '+fys[fys.length-1]:''):FYTS.fy;
   box.innerHTML='<div class="card"><div class="card-h"><h2>FY-wise Trader Summary</h2><div class="tools">'+
     segBtns('fytsFy',fys.map(function(f){return [f,'FY '+f];}).concat([['ALL','Both']]),FYTS.fy)+
-    segBtns('fytsView',[['co','Company-wise'],['all','All Traders']],FYTS.view)+
-    '</div><p>Amount in ₹ | Net = Gross − Charges | Equity = Cash | Days = days the trader traded in this period. Only traders who traded are shown.</p></div><div id="fytsTbl"></div></div>';
+    segBtns('fytsView',[['co','Company-wise'],['mo','Company → Month'],['all','All Traders']],FYTS.view)+
+    '</div><p>Amount in ₹ | Net = Gross − Charges | Equity = Cash | Days = trading days in this period. Company → Month shows months in calendar order. Only traders/months with trades are shown.</p></div><div id="fytsTbl"></div></div>';
   bindSeg(box,'fytsFy',function(v){FYTS.fy=v;fytsRender(box,rows);});
   bindSeg(box,'fytsView',function(v){FYTS.view=v;fytsRender(box,rows);});
   var traded=function(r){return r.days>0;};
-  var nameC={key:'name',label:FYTS.view==='co'?'Company → Trader':'Trader Name',render:function(v,r){return r.kind?who(v,r.kind):'<b>'+esc(v)+'</b>';}};
+  var nameC={key:'name',label:FYTS.view==='co'?'Company → Trader':(FYTS.view==='mo'?'Company → Month':'Trader Name'),render:function(v,r){return r._m?esc(v):(r.kind?who(v,r.kind):'<b>'+esc(v)+'</b>');}};
   var cols=[nameC];
   if(FYTS.view==='all')cols.push({key:'company',label:'Company'});
   cols=cols.concat([{key:'fno',label:'FNO Net',type:'money'},{key:'eq',label:'Equity Net',type:'money'},{key:'mcx',label:'MCX Net',type:'money'},{key:'chg',label:'Total Charges',type:'money',plain:1},{key:'net',label:'Total Net',type:'money'},{key:'days',label:'Days',type:'int'}]);
@@ -3325,6 +3325,14 @@ function fytsRender(box,rows){
       if(kids.length){var cr=fytsMk(sub,co,null,fytsCo(co));delete cr.days;cr.days='';tree.push({row:cr,children:kids});}});
     var st=tableState[opt.id]||(tableState[opt.id]={key:'net',dir:-1,q:'',open:{},all:false});if(!st._fytsInit){st._fytsInit=1;tree.forEach(function(nd){st.open['\u0001'+nd.row.name]=true;});}
     opt.tree=tree;
+  }else if(FYTS.view==='mo'){
+    var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var mtree=[];groupBy(list,function(o){return o.company;}).forEach(function(sub,co){
+      var kids=[];groupBy(sub,function(o){return String(o.iso||'').slice(0,7);}).forEach(function(ms,mk){if(!mk)return;var r=fytsMk(ms,MN[+mk.slice(5,7)-1]+' '+mk.slice(0,4),null,fytsCo(co));r._m=1;r.ord=mk;if(r.days>0)kids.push({row:r});});
+      if(kids.length){var cr=fytsMk(sub,co,null,fytsCo(co));cr.ord=String(co);delete cr.days;cr.days='';mtree.push({row:cr,children:kids});}});
+    opt.defaultSort={key:'ord',dir:1};
+    var mst=tableState[opt.id]||(tableState[opt.id]={key:'ord',dir:1,q:'',open:{},all:false});if(!mst._fytsInit){mst._fytsInit=1;mtree.forEach(function(nd){mst.open['\u0001'+nd.row.name]=true;});}
+    opt.tree=mtree;
   }else{
     var rs=[];groupBy(list,function(o){return o.company+'\u0001'+o.trader;}).forEach(function(ts,k){var p=k.split('\u0001');var r=fytsMk(ts,p[1],'Trader',fytsCo(p[0]));if(traded(r))rs.push(r);});
     opt.rows=rs;

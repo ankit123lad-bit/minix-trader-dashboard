@@ -630,4 +630,34 @@ var hT=setInterval(function(){var app=$('app');if(app&&!app.classList.contains('
 
 (function(){try{if(typeof setStatus==='function'){var _ss=setStatus;setStatus=function(s,bad){_ss(s,bad);try{window.minixToast(s,bad);}catch(e){}};}}catch(e){}})();
 </script>
+<style id="mx-active-tab">
+#app .tabs button[data-mxtab]{transition:opacity .15s}
+#app .tabs.mx-has-on button[data-mxtab]:not(.mx-tab-on){opacity:.55}
+#app .tabs.mx-has-on button[data-mxtab]:not(.mx-tab-on):hover{opacity:.85}
+#app .tabs button.mx-tab-on{opacity:1;box-shadow:0 0 0 2px var(--bg,#0b1220),0 0 0 4px #facc15!important}
+#app .tabs button.mx-tab-on::before{content:"✔ ";}
+.mx-here{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 0;padding:9px 14px;border-radius:10px;border:1px solid var(--line,#334155);border-left:4px solid #facc15;background:var(--p2,#111827);color:var(--text,#e5e7eb);font-size:14px}
+.mx-here b{font-weight:800}.mx-here small{color:var(--muted,#94a3b8);font-size:12px}
+</style>
+<script id="mx-active-tab-js">
+/* Nov-2026: show which Admin tab is open, remember it after refresh, log "Opened: ..." in Admin Activity Log */
+(function(){
+  var NAMES={trader:'Trader Daily Entry',market:'Nifty / BankNifty Entry',users:'User Management',reminders:'Pending / WhatsApp',push:'Push Notification Centre'};
+  var KEY='MX_ADMIN_TAB',LOGKEY='MX_ADMIN_TAB_LOGGED';
+  function tabsBox(){return document.querySelector('#app .tabs');}
+  function tagButtons(){var box=tabsBox();if(!box)return;box.querySelectorAll('button').forEach(function(b){var m=String(b.getAttribute('onclick')||'').match(/showPanel\('(\w+)'\)/);if(m)b.setAttribute('data-mxtab',m[1]);});}
+  function strip(){var s=document.getElementById('mxHere');if(!s){var box=tabsBox();if(!box)return null;s=document.createElement('div');s.id='mxHere';s.className='mx-here';box.parentNode.insertBefore(s,box.nextSibling);}return s;}
+  function mark(x){tagButtons();var box=tabsBox();if(!box)return;box.classList.add('mx-has-on');box.querySelectorAll('button[data-mxtab]').forEach(function(b){b.classList.toggle('mx-tab-on',b.getAttribute('data-mxtab')===x);});
+    var s=strip();if(s)s.innerHTML='📍 You are in: <b>'+(NAMES[x]||x)+'</b><small>· Opened '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</small>';}
+  function logOpen(x){var last='';try{last=sessionStorage.getItem(LOGKEY)||'';}catch(e){}if(last===x)return;try{sessionStorage.setItem(LOGKEY,x);}catch(e){}
+    var U=window.MINIX_UX;if(U&&U.logActivity){U.logActivity('Opened: '+(NAMES[x]||x));if(U.loadActivity)setTimeout(U.loadActivity,400);}}
+  var orig=window.showPanel;if(typeof orig!=='function')return;
+  window.showPanel=function(x){var r=orig.apply(this,arguments);try{localStorage.setItem(KEY,x);}catch(e){}mark(x);logOpen(x);return r;};
+  var origOpen=window.openApp;
+  if(typeof origOpen==='function'){window.openApp=async function(){var r=await origOpen.apply(this,arguments);var saved='';try{saved=localStorage.getItem(KEY)||'';}catch(e){}
+    if(saved&&NAMES[saved]&&saved!=='trader'){try{orig(saved);}catch(e){saved='trader';}}else saved='trader';
+    try{sessionStorage.setItem(LOGKEY,saved);}catch(e){}mark(saved);return r;};}
+  var out=document.getElementById('logoutBtn');if(out)out.addEventListener('click',function(){try{sessionStorage.removeItem(LOGKEY);}catch(e){}});
+})();
+</script>
 </body></html>

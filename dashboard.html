@@ -339,6 +339,10 @@ input.search{height:30px;border:1px solid var(--line);border-radius:8px;backgrou
 .hero-l .big{font-size:40px;font-weight:600;letter-spacing:-.02em;line-height:1.05}
 .hero-l .sub{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:4px}
 .hero-l .meta{margin-top:auto;font-size:12px;color:var(--muted)}
+.co-lines{display:flex;flex-direction:column;gap:5px;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.co-line{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;font-size:12.5px;align-items:baseline}
+.co-line .co-n{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.co-line .co-m{grid-column:1/-1;font-size:11.5px;color:var(--muted)}
 .hero-r{padding:14px 16px 8px;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
@@ -918,6 +922,33 @@ body.clean #mxExitClean{display:block}
 #page-charts .ovg .hero-l .meta{margin-top:2px}
 /* v14 */
 #page-charts #ovMkt .mkt-t td,#page-charts #ovMkt .mkt-t th{padding:7px 8px}
+/* v23 */
+#page-charts .cx-nav{align-items:center}
+#page-charts .cx-sp{flex:1}
+#page-charts .cx-upd{font-size:12px;color:var(--muted);margin-right:6px}
+#page-charts .cxac{padding:2px 8px;font-size:11.5px}
+#page-charts .cxmom{display:block;font-size:11.5px;font-weight:400;margin:2px 0 0;line-height:1.3}
+#page-charts .card-h{flex-wrap:wrap}
+#page-charts .card.cxlbl-off svg text[style*="paint-order"]{display:none}
+#page-charts .lvk{font-size:11.5px;color:var(--muted);margin-left:4px}
+.cx-pop{position:fixed;inset:0;z-index:9500;background:rgba(10,15,25,.5);display:flex;align-items:flex-start;justify-content:center;padding:60px 16px}
+.cx-pop-in{background:var(--panel);color:var(--text);border-radius:12px;padding:14px 16px;width:min(760px,100%);max-height:calc(100vh - 120px);overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+/* v22 */
+#page-charts #ovCUt,#page-charts .chg-full{display:none!important}
+#page-charts #ovPL>.grid{grid-template-columns:minmax(0,1fr)!important}
+#page-charts #ovPL>.grid>:not(#ovPLd){display:none!important}
+#page-charts .cxg>.card{padding:10px 12px}
+#page-charts .cxg>.card .card-h h2{font-size:13px}
+#page-charts .cxg>.card .card-h p{display:none}
+#page-charts .cxg .legend{margin-top:2px;font-size:11px}
+#page-charts .cxg>.card.sp3 .tools{flex-wrap:wrap;gap:4px}
+/* v21 */
+.ovg>.card.cfull{inset:var(--cft,16px) 14px 14px 14px!important}
+body.cfull-on::before{top:var(--cft,0px)!important}
+body.cfull-on .mx-filters,body.cfull-on .mx-top{z-index:9100!important}
+.ovg>.card.cfull svg.mxc{width:100%!important;height:auto!important;max-height:none!important}
+#page-charts .seg[data-seg="ovch"],#page-charts #ovMiBtns,#page-charts .seg[data-seg="ovser"]{display:none!important}
+#page-overview #ovCmbBtns .seg,#page-charts #ovCmbBtns .seg{display:inline-flex}
 /* v20 charts & insights */
 #page-charts .cx-nav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
 #page-charts .cx-sec{margin:16px 2px 8px;font-size:15px;font-weight:600}
@@ -936,6 +967,33 @@ body.clean #mxExitClean{display:block}
 #page-charts .dd-t .chip{white-space:nowrap}
 #page-charts .chg-full{margin-top:8px;font-size:11px}
 #page-charts .chg-full tr.tot td{border-top:1px solid var(--line-2)}
+/* v23 */
+#page-charts .cx-nav{align-items:center}
+#page-charts .cx-sp{flex:1}
+#page-charts .cx-upd{font-size:12px;color:var(--muted);margin-right:6px}
+#page-charts .cxac{padding:2px 8px;font-size:11.5px}
+#page-charts .cxmom{display:block;font-size:11.5px;font-weight:400;margin:2px 0 0;line-height:1.3}
+#page-charts .card-h{flex-wrap:wrap}
+#page-charts .card.cxlbl-off svg text[style*="paint-order"]{display:none}
+#page-charts .lvk{font-size:11.5px;color:var(--muted);margin-left:4px}
+.cx-pop{position:fixed;inset:0;z-index:9500;background:rgba(10,15,25,.5);display:flex;align-items:flex-start;justify-content:center;padding:60px 16px}
+.cx-pop-in{background:var(--panel);color:var(--text);border-radius:12px;padding:14px 16px;width:min(760px,100%);max-height:calc(100vh - 120px);overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+/* v22 */
+#page-charts #ovCUt,#page-charts .chg-full{display:none!important}
+#page-charts #ovPL>.grid{grid-template-columns:minmax(0,1fr)!important}
+#page-charts #ovPL>.grid>:not(#ovPLd){display:none!important}
+#page-charts .cxg>.card{padding:10px 12px}
+#page-charts .cxg>.card .card-h h2{font-size:13px}
+#page-charts .cxg>.card .card-h p{display:none}
+#page-charts .cxg .legend{margin-top:2px;font-size:11px}
+#page-charts .cxg>.card.sp3 .tools{flex-wrap:wrap;gap:4px}
+/* v21 */
+.ovg>.card.cfull{inset:var(--cft,16px) 14px 14px 14px!important}
+body.cfull-on::before{top:var(--cft,0px)!important}
+body.cfull-on .mx-filters,body.cfull-on .mx-top{z-index:9100!important}
+.ovg>.card.cfull svg.mxc{width:100%!important;height:auto!important;max-height:none!important}
+#page-charts .seg[data-seg="ovch"],#page-charts #ovMiBtns,#page-charts .seg[data-seg="ovser"]{display:none!important}
+#page-overview #ovCmbBtns .seg,#page-charts #ovCmbBtns .seg{display:inline-flex}
 /* v20 charts & insights */
 #page-charts .cx-nav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
 #page-charts .cx-sec{margin:16px 2px 8px;font-size:15px;font-weight:600}
@@ -948,7 +1006,19 @@ body.clean #mxExitClean{display:block}
 #page-overview #ovCUc,#page-overview #ovPLd{display:none!important}
 #page-overview #ovPL>.grid{grid-template-columns:minmax(0,1fr)!important}
 #page-charts .tbl-wrap{max-height:none!important;overflow:hidden!important}
-.ctb{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.ctb{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle;align-items:center}
+.ctdl{position:relative;display:inline-flex}
+.ctdm{position:absolute;right:0;top:calc(100% + 4px);z-index:70;display:flex;flex-direction:column;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px;box-shadow:var(--shadow)}
+.ctdm[hidden],.cxddp[hidden]{display:none!important}
+.ctdm .btn{text-align:left;white-space:nowrap}
+.cxdd{position:relative;display:inline-flex}
+.cxddp{position:absolute;left:0;top:calc(100% + 4px);z-index:70;display:flex;flex-direction:column;gap:5px;min-width:190px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;box-shadow:var(--shadow)}
+.cxddp .cxddac{display:flex;gap:6px;margin-top:4px;padding-top:6px;border-top:1px solid var(--line)}
+#page-charts .cxg>.card .card-h .tools{gap:4px}
+#page-charts .cxo{gap:4px}
+#page-charts .cxo .lvl{gap:3px;white-space:nowrap}
+#page-charts .ctb{margin-left:2px}
+#page-charts .ctb .btn,#page-charts .cxac{padding:2px 7px;font-size:11.5px}
 .ctb .btn{padding:3px 8px;font-size:11.5px;line-height:1.2}
 body.cfull-on::before{content:"";position:fixed;inset:0;background:rgba(10,15,25,.55);z-index:8999}
 .ovg>.card.cfull{position:fixed!important;inset:16px;z-index:9000;overflow:auto!important;max-height:none!important;display:block}
@@ -1452,6 +1522,7 @@ body .mx-mega{max-height:calc(100vh - 80px)}
     <div class="mx-content">
       <section class="page" id="page-overview"></section>
       <section class="page" id="page-charts"></section>
+      <section class="page" id="page-cal"></section>
       <section class="page" id="page-traders"></section>
       <section class="page" id="page-people"></section>
       <section class="page" id="page-index"></section>
@@ -2042,11 +2113,11 @@ function V(o,seg,f){return seg?o.seg[seg][f]:o[f];}
    Pool = trader + demat + researcher + company + portfolio + strategy. Zero values are skipped;
    if one pool has two rows on the same day, the larger value is kept. (Same rule as Sep-2026 fix.) */
 function capAvg(rows,seg,field){
-  var cell={},day={};
-  for(var i=0;i<rows.length;i++){var o=rows[i];if(!segMatch(o,seg))continue;var a=field==='util'?o.util:o.fund;if(!a)continue;
-    var k=o.trader+'|'+o.demat+'|'+o.researcher+'|'+o.company+'|'+o.portfolio+'|'+o.sk+'||'+o.iso;var p=cell[k];
-    if(p===undefined){day[o.iso]=(day[o.iso]||0)+a;cell[k]=a;}else if(a>p){day[o.iso]+=a-p;cell[k]=a;}}
-  var ks=Object.keys(day);if(!ks.length)return 0;return sum(ks,function(x){return day[x];})/ks.length;
+  /* Nov-2026 (same as Excel): add the fund of EVERY row (rows are not merged, zero rows count as 0),
+     then divide by the number of trading days (all dates in the rows). */
+  var day={},tot=0;
+  for(var i=0;i<rows.length;i++){var o=rows[i];day[o.iso]=1;if(!segMatch(o,seg))continue;tot+=(field==='util'?o.util:o.fund)||0;}
+  var n=Object.keys(day).length;return n?tot/n:0;
 }
 function dayNet(rows,seg){var m={};rows.forEach(function(o){m[o.iso]=(m[o.iso]||0)+V(o,seg,'net');});return m;}
 /* Win / loss days: one day per trader per date (matches old Accuracy rule). */
@@ -2154,10 +2225,12 @@ D.addEventListener('mousemove',function(e){tip=tip||$('mxTip');if(!tip)return;va
 /* ---------------- charts (plain SVG, no library) ---------------- */
 function niceTicks(min,max,n){if(min===max){max=min+1;min=min-1;}var span=max-min,step=Math.pow(10,Math.floor(Math.log10(span/n))),err=span/n/step;if(err>=7.5)step*=10;else if(err>=3)step*=5;else if(err>=1.5)step*=2;var lo=Math.floor(min/step)*step,hi=Math.ceil(max/step)*step,t=[];for(var v=lo;v<=hi+step/2;v+=step)t.push(Math.abs(v)<step/1e6?0:v);return t;}
 function axisShort(v){var a=Math.abs(v),s=v<0?'-':'';if(a>=1e7)return s+trimDec(a/1e7)+'Cr';if(a>=1e5)return s+trimDec(a/1e5)+'L';if(a>=1e3)return s+trimDec(a/1e3)+'K';return s+Math.round(a);}
-function chartWidth(el){var c=el&&el.closest?el.closest('.cfull'):null;if(c&&c.dataset.nw)return Math.max(280,Math.floor(+c.dataset.nw-34));return Math.max(280,Math.floor(el.clientWidth||el.parentNode.clientWidth||600));}
+function chartWidth(el){var c=el&&el.closest?el.closest('.cfull'):null;if(c)return Math.max(280,Math.floor((el.clientWidth||c.clientWidth-40)/1.35));return Math.max(280,Math.floor(el.clientWidth||el.parentNode.clientWidth||600));}
+function fsH(el,def){var c=el&&el.closest?el.closest('.cfull'):null;if(!c){var pc=el&&el.closest&&el.closest('#page-charts');if(!pc)return def;var cd=el.closest('.card');return cd&&cd.classList.contains('sp12')?Math.min(def,240):Math.min(def,185);}var hd=c.querySelector('.card-h'),av=(c.clientHeight-(hd?hd.offsetHeight:0)-80)/1.35;return Math.max(def,Math.round(av));}
+function cxTop(){var fb=D.querySelector('.mx-filters'),b=fb?fb.getBoundingClientRect().bottom:10;D.body.style.setProperty('--cft',Math.max(8,Math.round(b+6))+'px');}
 /* Bar chart: items [{label, value, tip}] — green above zero, red below. */
 function barChart(el,items,o){
-  o=o||{};if(el&&el.closest&&el.closest('#page-charts')&&items.length&&items.length<=40)return col3d(el,items,{h:o.h||240,vfmt:o.vfmt||null});var W=chartWidth(el),H=o.h||240,L=52,R=10,T=20,B=o.rot?54:26;
+  o=o||{};if(!o.flat&&el&&el.closest&&el.closest('#page-charts')&&items.length&&items.length<=40)return col3d(el,items,{h:o.h||240,vfmt:o.vfmt||null});var W=chartWidth(el),H=fsH(el,o.h||240),L=52,R=10,T=20,B=o.rot?54:26;
   if(!items.length){el.innerHTML='<div class="empty">No data for this selection</div>';return;}
   var vals=items.map(function(i){return i.value;}),mn=Math.min(0,Math.min.apply(null,vals)),mx=Math.max(0,Math.max.apply(null,vals)),vMx=mx,vMn=mn;mn=mn*1.12;mx=mx*1.12;
   var ticks=niceTicks(mn,mx,4),lo=ticks[0],hi=ticks[ticks.length-1];var y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));};
@@ -2185,7 +2258,7 @@ function hbarChart(el,items,o){
 }
 /* Line chart: series [{name,color,points:[{x,y}]}] sharing x labels. */
 function lineChart(el,series,o){
-  o=o||{};var W=chartWidth(el),H=o.h||230,L=56,R=12,T=20,B=24;
+  o=o||{};var W=chartWidth(el),H=fsH(el,o.h||230),L=56,R=12,T=20,B=24;
   var xs=uniq([].concat.apply([],series.map(function(s){return s.points.map(function(p){return p.x;});}))).sort();
   if(!xs.length){el.innerHTML='<div class="empty">No data for this selection</div>';return;}
   var all=[].concat.apply([],series.map(function(s){return s.points.map(function(p){return p.y;});}));
@@ -2200,7 +2273,7 @@ function lineChart(el,series,o){
     if(o.area){var base=Y(Math.max(lo,Math.min(0,hi)));g+='<path d="'+d+'L'+pts[pts.length-1][0].toFixed(1)+','+base+'L'+pts[0][0].toFixed(1)+','+base+'Z" style="fill:'+s.color+'" opacity=".12"/>';}
     g+='<path d="'+d+'" fill="none" style="stroke:'+s.color+'" stroke-width="2" stroke-linejoin="round"/>';
     var ys=s.points.map(function(p){return p.y;}),ix={};ix[ys.indexOf(Math.max.apply(null,ys))]='t';ix[ys.indexOf(Math.min.apply(null,ys))]='b';ix[ys.length-1]=ix[ys.length-1]||(ys[ys.length-1]>=0?'t':'b');
-    Object.keys(ix).forEach(function(k){var p=pts[k],v=ys[k];if(!p)return;var lst=+k===pts.length-1,an=lst?'end':(+k===0?'start':'middle');g+='<text x="'+(lst?p[0]-4:p[0]).toFixed(1)+'" y="'+(ix[k]==='t'?p[1]-6:p[1]+13).toFixed(1)+'" text-anchor="'+an+'" style="fill:'+s.color+';paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700">'+(o.tipfmt?o.tipfmt(v):short(v))+'</text>';});});
+    Object.keys(ix).forEach(function(k){var p=pts[k],v=ys[k];if(!p)return;var lst=+k===pts.length-1,an=lst?'end':(+k===0?'start':'middle');g+='<text x="'+(lst?p[0]-4:p[0]).toFixed(1)+'" y="'+(ix[k]==='t'?p[1]-6:p[1]+13).toFixed(1)+'" text-anchor="'+an+'" style="fill:'+(o.hero?(v>=0?'var(--vlp)':'var(--vln)'):s.color)+';paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700">'+(o.tipfmt?o.tipfmt(v):short(v))+(o.hero?(+k===pts.length-1?' (now)':v===Math.max.apply(null,ys)?' (max)':' (min)'):'')+'</text>';});});
   /* invisible hover columns */
   var cw=(W-L-R)/Math.max(1,xs.length-1);
   xs.forEach(function(x,i){var t=(o.xfmt?o.xfmt(x):dmy(x));series.forEach(function(s){var p=s.points.find(function(q){return q.x===x;});if(p)t+='\n'+s.name+': '+(o.tipfmt?o.tipfmt(p.y):money(p.y));});
@@ -2209,7 +2282,7 @@ function lineChart(el,series,o){
 }
 /* Stacked bars (positive values only) for charge breakup. */
 function stackChart(el,labels,series,o){
-  o=o||{};var W=chartWidth(el),H=o.h||240,L=52,R=10,T=20,B=26;
+  o=o||{};var W=chartWidth(el),H=fsH(el,o.h||240),L=52,R=10,T=20,B=26;
   if(!labels.length){el.innerHTML='<div class="empty">No data for this selection</div>';return;}
   var tot=labels.map(function(_,i){return sum(series,function(s){return Math.max(0,s.values[i]);});});
   var ticks=niceTicks(0,Math.max.apply(null,tot)||1,4),hi=ticks[ticks.length-1];var Y=function(v){return T+(H-T-B)*(1-v/hi);};
@@ -2352,12 +2425,31 @@ function fiGk(o){return o.company+'|'+o.trader+'|'+o.demat+'|'+mxb(o);}
 var LASTC={r:null,m:{}},FI_CTX=null;
 function withCtx(rows,fn){var p=FI_CTX;FI_CTX=rangeOf(rows)[1]||null;try{return fn();}finally{FI_CTX=p;}}
 function lastMap(up){if(LASTC.r!==ROWS)LASTC={r:ROWS,m:{}};var k=up||'~';if(LASTC.m[k])return LASTC.m[k];var L={};ROWS.forEach(function(o){if(up&&o.iso>up)return;var g=fiGk(o);if(!L[g]||o.iso>L[g])L[g]=o.iso;});return LASTC.m[k]=L;}
+/* Nov-2026 current fund (same as Excel Dashboard):
+   - Only Active traders: last trade within FUND_ACTIVE_DAYS of the latest date, and fund on his last date is not 0.
+   - Trader = company + portfolio + trader. All fund rows on his last trading day are added (no merging).
+   - POOL_COS (Minix Holding): each demat + strategy pool's fund on its own last day, if that day is within
+     FUND_ACTIVE_DAYS of the trader's last date. */
+var FUND_ACTIVE_DAYS=30,POOL_COS={'Minix Holding Pvt Ltd':1},FIC={r:null,m:{}};
+function fiTk(o){return o.company+'|'+o.portfolio+'|'+o.trader;}
+function fiPk(o){return fiTk(o)+'|'+o.demat+'|'+o.sk;}
+function maxIso(a){var m='';for(var i=0;i<a.length;i++)if(a[i].iso>m)m=a[i].iso;return m;}
+function isoAdd(x,n){var d=new Date(+x.slice(0,4),+x.slice(5,7)-1,+x.slice(8,10));d.setDate(d.getDate()+n);return iso(d);}
+function fiMap(up){if(FIC.r!==ROWS)FIC={r:ROWS,m:{}};var k=up||'~';if(FIC.m[k])return FIC.m[k];
+  var T={},P={};ROWS.forEach(function(o){if(up&&o.iso>up)return;var t=fiTk(o);if(!T[t]||o.iso>T[t].last)T[t]={last:o.iso,f:0};var q=fiPk(o);if(!P[q]||o.iso>P[q])P[q]=o.iso;});
+  ROWS.forEach(function(o){if(up&&o.iso>up)return;var t=T[fiTk(o)];if(o.iso===t.last)t.f+=o.fund||0;});
+  return FIC.m[k]={T:T,P:P};}
 function fundInfo(rows,seg,upto){
-  var ok=function(o){return !upto||o.iso<=upto;},gk=fiGk;
-  var up=upto||FI_CTX||rows.reduce(function(m,o){return o.iso>m?o.iso:m;},''),last=lastMap(up);
-  var pools={};rows.forEach(function(o){if(!ok(o))return;var g=gk(o);if(o.iso!==last[g])return;var p=g+'|'+o.researcher+'|'+o.portfolio+'|'+o.sk;if(!pools[p]||o.fund>pools[p].fund)pools[p]={fund:o.fund,o:o};});
+  var up=upto||FI_CTX||maxIso(rows);
+  var ref=upto||(function(){var f=(FILTERED&&FILTERED.length)?maxIso(FILTERED):'';return f>up?f:up;})();
+  var cut=ref?isoAdd(ref,-FUND_ACTIVE_DAYS):'',M=fiMap(up);
   var out={total:0,byCompany:{},byTrader:{},byBucket:{FNO:0,Cash:0,MCX:0,Mixed:0,Other:0},companyDate:{}};
-  Object.keys(pools).forEach(function(k){var p=pools[k],o=p.o;if(!p.fund||(seg&&!segMatch(o,seg)))return;out.total+=p.fund;out.byCompany[o.company]=(out.byCompany[o.company]||0)+p.fund;out.byTrader[o.trader]=(out.byTrader[o.trader]||0)+p.fund;out.byBucket[bucketOf(o)]+=p.fund;if(!out.companyDate[o.company]||o.iso>out.companyDate[o.company])out.companyDate[o.company]=o.iso;});
+  rows.forEach(function(o){if(up&&o.iso>up)return;if(!o.fund)return;if(seg&&!segMatch(o,seg))return;
+    var t=M.T[fiTk(o)];if(!t||t.last<cut||!t.f)return;
+    if(POOL_COS[o.company]){var pl=M.P[fiPk(o)];if(o.iso!==pl||pl<isoAdd(t.last,-FUND_ACTIVE_DAYS))return;}
+    else if(o.iso!==t.last)return;
+    out.total+=o.fund;out.byCompany[o.company]=(out.byCompany[o.company]||0)+o.fund;out.byTrader[o.trader]=(out.byTrader[o.trader]||0)+o.fund;out.byBucket[bucketOf(o)]+=o.fund;
+    if(!out.companyDate[o.company]||o.iso>out.companyDate[o.company])out.companyDate[o.company]=o.iso;});
   return out;
 }
 function tfOf(rows){return fundInfo(rows,GSEG).total;}
@@ -2405,22 +2497,23 @@ function pairBars(el,items){
   el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="legend"><span><i style="background:var(--gain)"></i>Total of profit days</span><span><i style="background:var(--loss)"></i>Total of loss days</span></div>';
 }
 /* Monthly bars + cumulative line. */
-function barLine(el,items){
+function barLine(el,items){var _bh=fsH(el,240);if(el.closest&&el.closest('#page-charts')&&CX.c1b===0&&CX.c1l===0&&items.length){el._bl=items;el.innerHTML='<div class="empty">Nothing selected – tick at least one box</div>';return;}
   if(!items.length){el.innerHTML='<div class="empty">No data</div>';return;}
-  var c=0;items.forEach(function(i){c+=i.value;i.cum=c;});var all=[].concat.apply([],items.map(function(i){return [i.value,i.cum];}));
-  var W=chartWidth(el),H=240,L=52,B=26,T=30;var _mn=Math.min(0,Math.min.apply(null,all)),_mx=Math.max(0,Math.max.apply(null,all)),_pd=(_mx-_mn)*0.08;var ticks=niceTicks(_mn-(_mn<0?_pd:0),_mx+_pd,4),lo=ticks[0],hi=ticks[ticks.length-1];var Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));};
-  var bw=(W-L-8)/items.length,g='';ticks.forEach(function(t){g+='<line x1="'+L+'" x2="'+(W-8)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" style="stroke:var(--line)" '+(t?'stroke-dasharray="2 4"':'')+'/><text x="'+(L-6)+'" y="'+(Y(t)+3.5)+'" text-anchor="end">'+axisShort(t)+'</text>';});
-  items.forEach(function(it,i){var x=L+i*bw;g+='<rect x="'+(x+bw*0.2)+'" y="'+Math.min(Y(0),Y(it.value))+'" width="'+(bw*0.6)+'" height="'+Math.max(1,Math.abs(Y(it.value)-Y(0)))+'" rx="2" style="fill:'+(it.value>=0?'var(--gain)':'var(--loss)')+'" data-tip="'+esc(it.label+'\nNet: '+money(it.value)+'\nCumulative: '+money(it.cum))+'"/><text x="'+(x+bw/2)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(it.label)+'</text>';});
-  g+='<polyline fill="none" style="stroke:var(--accent)" stroke-width="2" points="'+items.map(function(it,i){return (L+i*bw+bw/2).toFixed(1)+','+Y(it.cum).toFixed(1);}).join(' ')+'"/>';
+  el._bl=items;var onC=el.closest&&el.closest('#page-charts'),SB=!onC||CX.c1b!==0,SL=!onC||CX.c1l!==0;
+  var c=0;items.forEach(function(i){c+=i.value;i.cum=c;});var all=[0];items.forEach(function(i){if(SB)all.push(i.value);if(SL)all.push(i.cum);});
+  var W=chartWidth(el),H=_bh,L=52,B=26,T=30;var _mn=Math.min.apply(null,all),_mx=Math.max.apply(null,all),_pd=((_mx-_mn)||1)*0.1;var ticks=niceTicks(_mn-(_mn<0?_pd:0),_mx+_pd,4),lo=ticks[0],hi=ticks[ticks.length-1];var Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));};
+  var bw=(W-L-8)/items.length,g='',HL='paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700';ticks.forEach(function(t){g+='<line x1="'+L+'" x2="'+(W-8)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" style="stroke:var(--line)" '+(t?'stroke-dasharray="2 4"':'')+'/><text x="'+(L-6)+'" y="'+(Y(t)+3.5)+'" text-anchor="end">'+axisShort(t)+'</text>';});
+  items.forEach(function(it,i){var x=L+i*bw;if(SB)g+='<rect x="'+(x+bw*0.2)+'" y="'+Math.min(Y(0),Y(it.value))+'" width="'+(bw*0.6)+'" height="'+Math.max(1,Math.abs(Y(it.value)-Y(0)))+'" rx="2" style="fill:'+(it.value>=0?'var(--gain)':'var(--loss)')+'" data-tip="'+esc(it.label+'\nNet: '+money(it.value)+'\nCumulative: '+money(it.cum))+'"/>';if(i%lblK(bw,String(it.label).length)===0)g+='<text x="'+(x+bw/2)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(it.label)+'</text>';});
+  if(SL)g+='<polyline fill="none" style="stroke:var(--accent)" stroke-width="2" points="'+items.map(function(it,i){return (L+i*bw+bw/2).toFixed(1)+','+Y(it.cum).toFixed(1);}).join(' ')+'"/>';
   var many=items.length>24,mxI=0,mnI=0;items.forEach(function(it,i){if(it.value>items[mxI].value)mxI=i;if(it.value<items[mnI].value)mnI=i;});
-  items.forEach(function(it,i){var cx=L+i*bw+bw/2,yb=Y(it.value),yc=Y(it.cum),show=!many||i===mxI||i===mnI||i===items.length-1;g+='<circle cx="'+cx.toFixed(1)+'" cy="'+yc.toFixed(1)+'" r="3" style="fill:var(--accent)"/>';if(!show)return;
-    var bl=it.value>=0?yb-5:yb+15,cl=yc-8;if(Math.abs(cl-bl)<14)cl=(yc<=bl)?Math.min(cl,bl-14):yc+16;
-    g+='<text x="'+cx.toFixed(1)+'" y="'+bl.toFixed(1)+'" text-anchor="middle" style="fill:'+(it.value>=0?'var(--vlp)':'var(--vln)')+';paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700">'+short(it.value)+'</text>';
-    g+='<text x="'+cx.toFixed(1)+'" y="'+cl.toFixed(1)+'" text-anchor="middle" style="fill:var(--accent);paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700">'+short(it.cum)+'</text>';});
-  el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="legend"><span><i style="background:var(--gain)"></i>Month net</span><span><i style="background:var(--accent);height:3px"></i>Cumulative</span></div>';
+  items.forEach(function(it,i){var cx=L+i*bw+bw/2,y0=Y(0),yb=Y(it.value),yc=Y(it.cum),show=!many||i===mxI||i===mnI||i===items.length-1;if(SL)g+='<circle cx="'+cx.toFixed(1)+'" cy="'+yc.toFixed(1)+'" r="3" style="fill:var(--accent)"/>';if(!show)return;
+    var bl=it.value>=0?yb-6:yb+16,bTop=Math.min(y0,yb),bBot=Math.max(y0,yb),cl=yc-9;
+    if(SB&&SL){/* keep the cumulative label off the bar label and off the bar body */
+      if(Math.abs(cl-bl)<18)cl=yc<bl?bl-18:bl+18;if(cl>bTop-4&&cl<bBot+14){cl=(yc<(bTop+bBot)/2)?Math.min(cl,bTop-(it.value>=0?24:6)):Math.max(cl,bBot+(it.value<0?30:16));}}
+    if(SB)g+='<text x="'+cx.toFixed(1)+'" y="'+bl.toFixed(1)+'" text-anchor="middle" style="fill:'+(it.value>=0?'var(--vlp)':'var(--vln)')+';'+HL+'">'+short(it.value)+'</text>';
+    if(SL)g+='<text x="'+cx.toFixed(1)+'" y="'+Math.max(T-6,Math.min(H-B-2,cl)).toFixed(1)+'" text-anchor="middle" style="fill:var(--accent);'+HL+'">'+short(it.cum)+'</text>';});
+  el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="legend">'+(SB?'<span><i style="background:var(--gain)"></i>Month net</span>':'')+(SL?'<span><i style="background:var(--accent);height:3px"></i>Cumulative</span>':'')+'</div>';
 }
-
-/* ---------- people helpers ---------- */
 function rankBy(rows,field){return Array.from(groupBy(rows,function(o){return o[field];}).entries()).map(function(e){var f=capAvg(e[1],GSEG,'fund'),n=netOf(e[1]);return {name:e[0],net:n,roi:f?n/f*100:0,port:e[1][0].portfolio,count:uniq(e[1].map(function(o){return o.trader;})).length};}).sort(function(a,b){return b.net-a.net;});}
 function lbList(list,kind,sub){if(!list.length)return '<div class="empty">Nobody in this group for the selected period</div>';
   return '<div class="lb">'+list.map(function(x,i){return '<div class="lb-row pk" data-pk="'+pk(kind,x.name)+'"><span class="rk">'+(i+1)+'</span>'+avatar(x.name,0,kind)+'<div style="min-width:0"><div class="nm">'+esc(x.name)+'</div><div class="sb">'+esc(kind==='Trader'?(x.port||''):plural(x.count,'trader'))+'</div></div><div class="am num '+cls(x.net)+'">'+short(x.net)+'<small>ROI '+pct(x.roi)+'</small></div></div>';}).join('')+'</div>';}
@@ -2568,7 +2661,7 @@ function comboSort(a,b){var x=COMBO_ORDER.indexOf(a),y=COMBO_ORDER.indexOf(b);re
 var CSEG={'FNO':'FNO','Equity':'Cash','MCX':'MCX'};
 function comboSegs(name){return String(name).replace(' only','').split(' + ').map(function(x){return CSEG[x];}).filter(Boolean);}
 function comboParts(list,name){var ss=comboSegs(name);if(ss.length<2)return [];return ss.map(function(S){return {name:'↳ '+SEGNAME[S]+' part',seg:S,_pin:1,_part:1,gross:sum(list,function(o){return o.seg[S].gross;}),chg:sum(list,function(o){return o.seg[S].chg;}),net:sum(list,function(o){return o.seg[S].net;})};});}
-function comboRows(list,upto){var fi={};var g=groupBy(list,function(o){return o.combo;});return Array.from(g.keys()).sort(comboSort).map(function(k){var l=g.get(k);return {name:k,parts:comboParts(l,k),traders:uniq(l.map(function(o){return o.trader;})).length,tfund:fundInfo(l,null,upto).total,fund:capAvg(l,null,'fund'),gross:sum(l,function(o){return o.gross;}),chg:sum(l,function(o){return o.chg;}),net:sum(l,function(o){return o.net;}),_l:l};}).map(function(r){var st=stats(r._l,GSEG);r.pos=st.pos;r.neg=st.neg;delete r._l;r.roi=r.fund?r.net/r.fund*100:0;return r;});}
+function comboRows(list,upto){var fi={};var g=groupBy(list,function(o){return o.combo;});return Array.from(g.keys()).sort(comboSort).map(function(k){var l=g.get(k);var t0=fundInfo(l,null,upto).total,tfd=null;if(!t0){var ld=rangeOf(l)[1],t1=ld?fundInfo(l,null,ld).total:0;if(t1){t0=t1;tfd=ld;}}return {name:k,parts:comboParts(l,k),traders:uniq(l.map(function(o){return o.trader;})).length,tfund:t0,tfd:tfd,fund:capAvg(l,null,'fund'),gross:sum(l,function(o){return o.gross;}),chg:sum(l,function(o){return o.chg;}),net:sum(l,function(o){return o.net;}),_l:l};}).map(function(r){var st=stats(r._l,GSEG);r.pos=st.pos;r.neg=st.neg;delete r._l;r.roi=r.fund?r.net/r.fund*100:0;return r;});}
 function buildTMain(rows){buildCombo(rows);var c={};rows.forEach(function(o){delete o._fs;if(/FUNDTRANSFER/.test(o.sk))return;var p=primSeg(o.sk);if(!p)return;var m=c[o.trader]||(c[o.trader]={});m[p]=(m[p]||0)+1;});TMAIN={};Object.keys(c).forEach(function(t){var m=c[t];TMAIN[t]=Object.keys(m).sort(function(a,b){return m[b]-m[a];})[0];});}
 function lvOpen(id,tree,lv){var st=tableState[id]||(tableState[id]={key:'net',dir:-1,q:'',open:{},all:false});st.open={};st.all=false;
   (function rec(nodes,dep,path){(nodes||[]).forEach(function(n){var k=path+'\u0001'+n.row.name;if(n.children&&n.children.length&&dep<lv-1){st.open[k]=true;rec(n.children,dep+1,k);}});})(tree,0,'');}
@@ -2625,16 +2718,17 @@ MX.notifToggle=async function(on){var m=$('mxUserMenu');if(m)m.classList.remove(
 
 /* ---- 3D column chart ---- */
 function col3d(el,items,o){o=o||{};if(!el)return;if(!items.length){el.innerHTML='<div class="empty">No data for this selection</div>';return;}
-  var W=chartWidth(el),H=o.h||220,L=52,R=16,T=26,rot=items.length>6,B=rot?70:30;
+  var W=chartWidth(el),H=fsH(el,o.h||220),L=52,R=16,T=26,rot=items.length>6,B=rot?70:30;
   var vals=items.map(function(i){return i.value;}),mn=Math.min(0,Math.min.apply(null,vals)),mx=Math.max(0,Math.max.apply(null,vals));
   var ticks=niceTicks(mn,mx,4),lo=ticks[0],hi=ticks[ticks.length-1],Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));};
   var bw=(W-L-R)/items.length,g='';
-  ticks.forEach(function(t){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" style="stroke:var(--line)" '+(t===0?'':'stroke-dasharray="2 4"')+'/><text x="'+(L-6)+'" y="'+(Y(t)+3.5)+'" text-anchor="end">'+axisShort(t)+'</text>';});
+  ticks.forEach(function(t){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" style="stroke:var(--line)" '+(t===0?'':'stroke-dasharray="2 4"')+'/><text x="'+(L-6)+'" y="'+(Y(t)+3.5)+'" text-anchor="end">'+(o.vfmt?o.vfmt(t):axisShort(t))+'</text>';});
+  var _lt=items.map(function(it){return o.vfmt?o.vfmt(it.value):short(it.value);}),_lk=lblK(bw,Math.max.apply(null,_lt.map(function(t){return String(t).length;}))),_mxI=0,_mnI=0;items.forEach(function(it,i){if(it.value>items[_mxI].value)_mxI=i;if(it.value<items[_mnI].value)_mnI=i;});
   items.forEach(function(it,i){var w=Math.max(4,bw*0.52),d=Math.max(3,Math.min(10,w*0.32)),x=L+i*bw+(bw-w-d)/2,y0=Y(0),y1=Y(it.value),top=Math.min(y0,y1),hh=Math.max(1.5,Math.abs(y1-y0)),c=it.color||(it.value>=0?'var(--gain)':'var(--loss)'),tp=esc(it.tip||(it.label+'\n'+(o.vfmt?o.vfmt(it.value):money(it.value))));
     g+='<polygon points="'+svgPts([[x+w,top],[x+w+d,top-d],[x+w+d,top+hh-d],[x+w,top+hh]])+'" style="fill:color-mix(in srgb,'+c+' 62%,#000)" data-tip="'+tp+'"/>';
     g+='<polygon points="'+svgPts([[x,top],[x+d,top-d],[x+w+d,top-d],[x+w,top]])+'" style="fill:color-mix(in srgb,'+c+' 70%,#fff)" data-tip="'+tp+'"/>';
     g+='<rect x="'+x.toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+hh.toFixed(1)+'" style="fill:'+c+'" data-tip="'+tp+'"/>';
-    if(items.length<=24)g+='<text x="'+(x+w/2+d/2).toFixed(1)+'" y="'+(it.value>=0?top-d-4:top+hh+14).toFixed(1)+'" text-anchor="middle" style="fill:'+(it.color?'var(--text)':it.value>=0?'var(--vlp)':'var(--vln)')+';paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700">'+(o.vfmt?o.vfmt(it.value):short(it.value))+'</text>';
+    if(i%_lk===0||i===_mxI||i===_mnI||i===items.length-1)g+='<text x="'+(x+w/2+d/2).toFixed(1)+'" y="'+(it.value>=0?top-d-4:top+hh+14).toFixed(1)+'" text-anchor="middle" style="fill:'+(it.color?'var(--text)':it.value>=0?'var(--vlp)':'var(--vln)')+';paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700">'+(o.vfmt?o.vfmt(it.value):short(it.value))+'</text>';
     var lb=it.label.length>16?it.label.slice(0,15)+'…':it.label,lx=x+w/2;
     g+=rot?'<text transform="translate('+lx.toFixed(1)+','+(H-B+12)+') rotate(-35)" text-anchor="end">'+esc(lb)+'</text>':'<text x="'+lx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
   el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.aria||'3D column chart')+'">'+g+'</svg>';}
@@ -2680,17 +2774,19 @@ function bigCal(el,rows){if(!el)return;var S=calS,seg=S.sg||GSEG;
   bindSeg(el,'calv',function(v){S.v=v;bigCal(el,rows);});bindSeg(el,'calm',function(v){S.mode=v;bigCal(el,rows);});}
 
 /* ---- 4-level grouping ---- */
-var LV_OPTS={tr:[['company','Company'],['portfolio','Portfolio'],['researcher','Research'],['trader','Trader'],['mkey','Month'],['seg','Segment'],['combo','Combination'],['demat','Broker']],
+var LV_OPTS={tr:[['fy','Financial year'],['company','Company'],['portfolio','Portfolio'],['researcher','Research'],['trader','Trader'],['mkey','Month'],['seg','Segment'],['combo','Combination'],['demat','Broker']],
   ft:[['fy','FY'],['mkey','Month'],['company','Company'],['portfolio','Portfolio'],['trader','Trader'],['demat','Demat'],['segment','Segment'],['combo','Combination']]};
 var LVKIND={trader:'Trader',portfolio:'Portfolio',researcher:'Researcher'};
 var LV={};
 function lvGet(id,def){return LV[id]||(LV[id]=def.slice());}
 function lvName(set,k){var x=LV_OPTS[set].find(function(y){return y[0]===k;});return x?x[1]:k;}
-function lvBar(id,set,levels,shortcuts){var h='<div class="lvbar" data-lv="'+id+'"><span class="lvk">Group by</span>';
-  for(var i=0;i<4;i++){h+='<label class="lvl">Level '+(i+1)+' <select class="sel" data-i="'+i+'"><option value="">Off</option>'+LV_OPTS[set].map(function(x){var used=levels.indexOf(x[0])>=0&&levels[i]!==x[0];return '<option value="'+x[0]+'"'+(levels[i]===x[0]?' selected':'')+(used?' disabled':'')+'>'+x[1]+'</option>';}).join('')+'</select></label>';}
+function lvBar(id,set,levels,shortcuts,nLv){nLv=nLv||4;var h='<div class="lvbar" data-lv="'+id+'"><span class="lvk">Group by</span>';
+  for(var i=0;i<nLv;i++){h+='<label class="lvl">Level '+(i+1)+' <select class="sel" data-i="'+i+'"><option value="">'+(nLv>4?'(none)':'Off')+'</option>'+LV_OPTS[set].map(function(x){var used=levels.indexOf(x[0])>=0&&levels[i]!==x[0];return '<option value="'+x[0]+'"'+(levels[i]===x[0]?' selected':'')+(used?' disabled':'')+'>'+x[1]+'</option>';}).join('')+'</select></label>';}
   if(shortcuts)h+='<span class="lvk" style="margin-left:6px">Shortcut</span>'+shortcuts.map(function(s){return '<button type="button" class="btn sm" data-sc="'+s[1].join(',')+'">'+esc(s[0])+'</button>';}).join('');
+  if(nLv>4)h+='<button type="button" class="btn sm" data-lvclr="'+nLv+'">✕ Clear</button>';
   return h+'</div>';}
 function lvBind(root,id){var b=root.querySelector('[data-lv="'+id+'"]');if(!b)return;
+  var cl=b.querySelector('[data-lvclr]');if(cl)cl.onclick=function(){var n=+cl.dataset.lvclr;LV[id]=[];for(var i=0;i<n;i++)LV[id].push('');render();};
   b.querySelectorAll('select').forEach(function(s){s.onchange=function(){LV[id][+s.dataset.i]=s.value;render();};});
   b.querySelectorAll('[data-sc]').forEach(function(x){x.onclick=function(){var a=x.dataset.sc.split(',');LV[id]=[0,1,2,3].map(function(i){return a[i]||'';});render();};});}
 function lvLabel2(v){return v;}
@@ -2708,13 +2804,13 @@ var OVX='<div class="card"><div class="card-h"><h2>Net P&amp;L comparison</h2><d
   miHtml('ov')+
   '<div class="card"><div class="card-h"><h2>Drawdown &amp; Recovery</h2><p>Biggest fall for each company.</p></div><div id="ovDR"></div></div>'+
   '<div class="card"><div class="card-h"><h2>Trading P&amp;L calendar</h2></div><div id="ovCal"></div></div>'+
-  '<div class="card"><div class="card-h"><h2>Trader combination summary</h2><p>How traders trade: FNO only, FNO + Equity, Equity only, MCX only. Press + for the segment part.</p></div><div id="ovCmb"></div></div>'+
+  '<div class="card"><div class="card-h"><h2>Trader combination summary</h2><div class="tools"><span id="ovCmbBtns"></span></div><p>How traders trade: FNO only, FNO + Equity, Equity only, MCX only. Press + for the segment part.</p></div><div id="ovCmb"></div></div>'+
   '<div class="card"><div class="card-h"><h2>Segment start dates</h2><p>First trade date for each broker, demat and segment. Press + for demat and traders.</p></div><div id="ovSeg"></div></div>';
 function ovArrange(el){
   var q=function(sel){var x=el.querySelector(sel);if(!x)return null;return (x.classList.contains('card')||x.classList.contains('kpis')||x.id==='ovMkt')?x:x.closest('.card');};
   var byH=function(t){var hs=el.querySelectorAll('.card-h h2');for(var i=0;i<hs.length;i++)if(hs[i].textContent.indexOf(t)>=0)return hs[i].closest('.card');return null;};
   var CH=window.OVMODE==='charts';
-  var LAY=CH?[[q('#ovCh'),6],[q('#ovMvI'),6],[q('#ovCUt'),4],[q('#ovPL'),4],[q('#ovStC'),4],[q('#ovPie'),4],[q('#ovTA'),4],[q('#ovFlow'),4]]:
+  var LAY=CH?[[q('#ovCh'),4],[q('#ovMvI'),4],[q('#ovCUt'),3],[q('#ovPL'),3],[q('#ovStC'),3],[q('#ovPie'),3],[q('#ovTA'),3],[q('#ovFlow'),4]]:
     [[q('.hero'),9],[q('.fs-mini'),3],[q('.kpis.k9'),12],
     [q('#ovMkt'),4],[byH('Win ratio'),4],[q('#ovCo'),4],
     [q('#ovSeg'),4],[q('#ovDR'),4],[q('#ovFy'),4],
@@ -2728,12 +2824,13 @@ function ovArrange(el){
   el.insertBefore(g,el.firstChild);old.forEach(function(c){if(c===g||g.contains(c))return;if(!c.classList.contains('card')&&!c.querySelector('.card,.kpis'))c.remove();});
   el.querySelectorAll('.card,.kpis,.hero,.fs-mini').forEach(function(c){if(seen.some(function(x){return x===c||x.contains(c);}))return;c.style.display='none';});
   Array.from(el.children).forEach(function(c){if(c!==g&&!g.contains(c))c.style.display='none';});
-  if(CH&&window.CFULL&&window.CFULL.k){var fc=q('#'+window.CFULL.k);if(fc){fc.dataset.nw=window.CFULL.nw;fc.classList.add('cfull');D.body.classList.add('cfull-on');}}}
+  if(CH&&window.CFULL&&window.CFULL.k){var fc=q('#'+window.CFULL.k);if(fc){cxTop();fc.classList.add('cfull');D.body.classList.add('cfull-on');}}}
 var ovCmpV='st',ovMiV='fy';
 
 function dlBlob(b,fn){var a=D.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;D.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);}
 function cardTitle(card){var h=card.querySelector('.card-h h2');return h?h.textContent.trim():'Chart';}
-function cardPng(card){var svgs=Array.from(card.querySelectorAll('svg')).filter(function(v){return !v.closest('.ib')&&!v.closest('button');});if(!svgs.length){showMessage('No chart to save.',true);return;}
+function cardPng(card){cardCanvas(card,function(c){if(c)c.toBlob(function(b){dlBlob(b,cardTitle(card).replace(/[^\w\- ]+/g,'').trim()+'.png');});else showMessage('No chart to save.',true);});}
+function cardCanvas(card,cb){var svgs=Array.from(card.querySelectorAll('svg')).filter(function(v){return !v.closest('.ib')&&!v.closest('button');});if(!svgs.length){cb(null);return;}
   var svg=svgs.sort(function(a,b){var ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();return rb.width*rb.height-ra.width*ra.height;})[0],cl=svg.cloneNode(true),src=[svg].concat(Array.from(svg.querySelectorAll('*'))),dst=[cl].concat(Array.from(cl.querySelectorAll('*')));
   src.forEach(function(e,i){var cs=getComputedStyle(e);['fill','stroke','stroke-width','stroke-dasharray','font-size','font-weight','font-family','opacity','paint-order','stroke-linejoin','text-anchor'].forEach(function(p){var v=cs.getPropertyValue(p);if(v)dst[i].style.setProperty(p,v);});});
   var vb=svg.viewBox&&svg.viewBox.baseVal,r=svg.getBoundingClientRect(),w=Math.round(vb&&vb.width?vb.width:r.width),h=Math.round(vb&&vb.height?vb.height:r.height);if(w<400){h=Math.round(h*400/w);w=400;}
@@ -2743,8 +2840,8 @@ function cardPng(card){var svgs=Array.from(card.querySelectorAll('svg')).filter(
   img.onload=function(){var c=D.createElement('canvas'),k=2;c.width=w*k;c.height=(h+top+bot)*k;var x=c.getContext('2d');x.scale(k,k);x.fillStyle=bg;x.fillRect(0,0,w,h+top+bot);x.fillStyle=fg;x.font='600 16px Inter, Segoe UI, sans-serif';x.fillText(cardTitle(card),12,26);
     x.font='11px Inter, Segoe UI, sans-serif';x.textAlign='right';x.fillText(filterLabel(),w-12,26);x.textAlign='left';x.drawImage(img,0,top,w,h);
     var lx=12;lg.forEach(function(l){x.fillStyle=l[1];x.fillRect(lx,h+top+10,10,10);x.fillStyle=fg;x.font='12px Inter, Segoe UI, sans-serif';x.fillText(l[0],lx+14,h+top+19);lx+=x.measureText(l[0]).width+34;});
-    c.toBlob(function(b){dlBlob(b,cardTitle(card).replace(/[^\w\- ]+/g,'').trim()+'.png');});};
-  img.onerror=function(){showMessage('Could not make the picture.',true);};
+    cb(c);};
+  img.onerror=function(){cb(null);};
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(cl));}
 function cardXls(card){var t=cardTitle(card),h='<html><head><meta charset="UTF-8"></head><body><h3>'+esc(t)+'</h3><p>'+esc(filterLabel())+'</p>';
   var tips=uniq(Array.from(card.querySelectorAll('svg [data-tip]')).map(function(e){return e.getAttribute('data-tip');})).map(function(x){return x.split('\n');});
@@ -2752,32 +2849,47 @@ function cardXls(card){var t=cardTitle(card),h='<html><head><meta charset="UTF-8
     h+='<table border="1"><tr><th>Item</th>'+keys.map(function(k){return '<th>'+esc(k)+'</th>';}).join('')+'</tr>'+tips.map(function(l){var m={};l.slice(1).forEach(function(p){var i=p.indexOf(':');m[i>0?p.slice(0,i).trim():'Value']=i>0?p.slice(i+1).trim():p;});return '<tr><td>'+esc(l[0])+'</td>'+keys.map(function(k){return '<td>'+esc(m[k]==null?'':m[k])+'</td>';}).join('')+'</tr>';}).join('')+'</table><br>';}
   card.querySelectorAll('table').forEach(function(tb){var c=tb.cloneNode(true);c.querySelectorAll('button,input,svg').forEach(function(x){x.remove();});c.setAttribute('border','1');h+=c.outerHTML+'<br>';});
   dlBlob(new Blob([h+'</body></html>'],{type:'application/vnd.ms-excel'}),t.replace(/[^\w\- ]+/g,'').trim()+'.xls');}
+render=(function(r0){return function(){var pg=page,same=window._lastPg===pg,sy=window.scrollY,mc=D.querySelector('.mx-content'),my=mc?mc.scrollTop:0;r0.apply(this,arguments);window._lastPg=page;if(same&&page===pg){var back=function(){window.scrollTo(0,sy);if(mc)mc.scrollTop=my;};back();requestAnimationFrame(back);}};})(render);
+var CALTM=(function(){try{return localStorage.getItem('MX_CALTM')||'all';}catch(e){return 'all';}})();
+R.cal=function(el,rows){R.traders(el,rows);var hc=$('trHeat'),cc=$('trCal');hc=hc&&hc.closest('.card');cc=cc&&cc.closest('.card');
+  Array.from(el.children).forEach(function(c){if(c!==hc&&c!==cc)c.style.display='none';});if(cc&&hc)el.insertBefore(cc,hc);
+  el.insertAdjacentHTML('beforeend','<div class="card"><div class="card-h"><h2>Trader × month heatmap</h2><div class="tools">'+segBtns('caltm',[['top','Top 5'],['bot','Bottom 5'],['all','All']],CALTM)+'</div><p>Net P&amp;L per month for each trader. Top 5 = highest total net P&amp;L.</p></div><div class="cb" id="calTM"></div></div>');
+  bindSeg(el,'caltm',function(v){CALTM=v;try{localStorage.setItem('MX_CALTM',v);}catch(e){}render();});
+  var r2=segRows(rows),mks=uniq(r2.map(function(o){return o.mkey;})).filter(Boolean).sort().slice(-12),cell={};
+  r2.forEach(function(o){if(mks.indexOf(o.mkey)<0)return;var t=cell[o.trader]||(cell[o.trader]={});t[o.mkey]=(t[o.mkey]||0)+V(o,GSEG,'net');});
+  var tr=Object.keys(cell).map(function(n){var r={name:n},t=0;mks.forEach(function(k){var v=cell[n][k]||0;r['m'+k]=v;t+=v;});r.total=t;return r;}).filter(function(r){return Math.abs(r.total)>=1||mks.some(function(k){return Math.abs(r['m'+k])>=1;});}).sort(function(a,b){return b.total-a.total;});
+  if(CALTM==='top')tr=tr.slice(0,5);else if(CALTM==='bot')tr=tr.slice(-5);
+  var mx=Math.max.apply(null,tr.map(function(r){return Math.max.apply(null,mks.map(function(k){return Math.abs(r['m'+k]);}));}).concat([1]));
+  var hc2=function(v){if(Math.abs(v)<1)return '<span class="muted">–</span>';return '<span class="hcell" style="background:color-mix(in srgb,'+(v>0?'var(--gain)':'var(--loss)')+' '+Math.round((0.3+Math.min(1,Math.sqrt(Math.abs(v)/mx))*0.65)*100)+'%,transparent)">'+short(v)+'</span>';};
+  table($('calTM'),{id:'cal-tm',title:'Trader × month heatmap',defaultSort:{key:'total',dir:-1},columns:[nameCol].concat(mks.map(function(k){return {key:'m'+k,label:monthLabelFromKey(k),type:'int',render:hc2};}),[{key:'total',label:'Total',type:'money'}]),rows:tr});};
 var CHART_KEYS=['ovMvI','ovCh','ovFlow','ovCUt','ovStC','ovPie','ovTA','ovPL','cxCum','cxDD','cxFvn','cxDow','cxN50','cxBnk','cxSeg','cxCo','cxBr','cxFlow','cxTr','cxDist','cxAct','cxWin','cxPL','cxChg','cxChM','cxChP'];
 /* ===== Charts & Insights: 3D helpers ===== */
 var CXHL='paint-order:stroke;stroke:var(--panel);stroke-width:3.5px;stroke-linejoin:round;font-size:12px;font-weight:700';
 function cxCube(x,y,w,h,c,d){d=d==null?Math.max(3,Math.min(9,w*0.3)):d;return '<polygon points="'+svgPts([[x+w,y],[x+w+d,y-d],[x+w+d,y+h-d],[x+w,y+h]])+'" style="fill:color-mix(in srgb,'+c+' 62%,#000)"/><polygon points="'+svgPts([[x,y],[x+d,y-d],[x+w+d,y-d],[x+w,y]])+'" style="fill:color-mix(in srgb,'+c+' 70%,#fff)"/><rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(1,h).toFixed(1)+'" style="fill:'+c+'"/>';}
+function lblK(space,len){var need=(len||4)*6.4+4;return Math.max(1,Math.ceil(need/Math.max(1,space)));}
 function cxLab(x,y,t,c,an){return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+(an||'middle')+'" style="fill:'+(c||'var(--text)')+';'+CXHL+'">'+esc(t)+'</text>';}
 function cxLegend(series){return '<div class="legend">'+series.map(function(s){return '<span><i style="background:'+s.color+'"></i>'+esc(s.name)+'</span>';}).join('')+'</div>';}
 function cxAxis(W,L,R,ticks,Y){var g='';ticks.forEach(function(t){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" style="stroke:var(--line)" '+(t===0?'':'stroke-dasharray="2 4"')+'/><text x="'+(L-6)+'" y="'+(Y(t)+3.5)+'" text-anchor="end">'+axisShort(t)+'</text>';});return g;}
 function cxEmpty(el){el.innerHTML='<div class="empty">No data for this selection</div>';}
 /* grouped 3D columns: series [{name,color,values}] */
-function grp3d(el,labels,series,o){o=o||{};if(!labels.length||!series.length)return cxEmpty(el);var fmt=o.fmt||short,W=chartWidth(el),H=o.h||250,L=56,R=14,T=30,B=30;
+function grp3d(el,labels,series,o){o=o||{};if(labels.length&&!series.length){el.innerHTML='<div class="empty">Nothing selected – tick at least one box</div>';return;}if(!labels.length)return cxEmpty(el);var fmt=o.fmt||short,W=chartWidth(el),H=fsH(el,o.h||250),L=56,R=14,T=30,B=30;
   var all=[0];series.forEach(function(s){all=all.concat(s.values.map(function(v){return v||0;}));});var mn=Math.min.apply(null,all),mx=Math.max.apply(null,all),pd=(mx-mn)*0.12;
-  var ticks=niceTicks(mn<0?mn-pd:0,mx+pd,4),lo=ticks[0],hi=ticks[ticks.length-1],Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));},gw=(W-L-R)/labels.length,n=series.length,bw=Math.min(40,gw*0.7/n),g=cxAxis(W,L,R,ticks,Y),show=labels.length*n<=40;
+  var ticks=niceTicks(mn<0?mn-pd:0,mx+pd,4),lo=ticks[0],hi=ticks[ticks.length-1],Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));},gw=(W-L-R)/labels.length,n=series.length,bw=Math.min(40,gw*0.7/n),g=cxAxis(W,L,R,ticks,Y),_gl=0;series.forEach(function(s){s.values.forEach(function(v){_gl=Math.max(_gl,String(fmt(v||0)).length);});});var _gk=lblK(bw+3,_gl);
   labels.forEach(function(lb,i){var x0=L+i*gw+(gw-n*bw-(n-1)*3)/2;series.forEach(function(s,j){var v=s.values[i]||0,x=x0+j*(bw+3),y0=Y(0),y1=Y(v),top=Math.min(y0,y1),hh=Math.max(1.5,Math.abs(y1-y0));
-    g+=cxCube(x,top,bw,hh,o.signColor?(v>=0?'var(--gain)':'var(--loss)'):s.color).replace(/<rect /,'<rect data-tip="'+esc(lb+'\n'+s.name+': '+fmt(v))+'" ');
-    if(show&&Math.abs(v)>1e-9)g+=cxLab(x+bw/2+2,v>=0?top-Math.min(9,bw*0.3)-4:top+hh+13,fmt(v),o.signColor||o.vcol?(v>=0?'var(--vlp)':'var(--vln)'):'var(--text)');});
-    g+='<text x="'+(L+i*gw+gw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
-  el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'+(o.noLegend?'':cxLegend(series));}
+    var dep=o.flat?0:Math.min(9,bw*0.3),tp='data-tip="'+esc(lb+'\n'+s.name+': '+fmt(v))+'" ';if(o.flat){var bs=v>=0?'var(--gain)':'var(--loss)';g+='<rect '+tp+'x="'+x.toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="2" style="fill:'+(j===0?bs:'color-mix(in srgb,'+bs+' 45%,var(--panel))')+'"/>';}
+    else g+=cxCube(x,top,bw,hh,o.signColor?(v>=0?'var(--gain)':'var(--loss)'):s.color).replace(/<rect /,'<rect '+tp);
+    if(((i*n+j)%_gk===0||i===labels.length-1)&&Math.abs(v)>1e-9)g+=cxLab(x+bw/2+(o.flat?0:2),v>=0?top-dep-5:top+hh+13,fmt(v),o.signColor||o.vcol?(v>=0?'var(--vlp)':'var(--vln)'):'var(--text)');});
+    if(i%lblK(gw,Math.max.apply(null,labels.map(function(z){return String(z).length;})))===0)g+='<text x="'+(L+i*gw+gw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
+  el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'+(o.noLegend?'':cxLegend(o.flat?series.map(function(s,j){return {name:s.name+(j===0?' (dark)':' (light)'),color:j===0?'var(--muted)':'color-mix(in srgb,var(--muted) 40%,var(--panel))'};}):series));}
 /* stacked 3D columns, negatives stack downward */
-function stack3d(el,labels,series,o){o=o||{};if(!labels.length)return cxEmpty(el);var fmt=o.fmt||short,W=chartWidth(el),H=o.h||250,L=56,R=14,T=30,B=30;
+function stack3d(el,labels,series,o){o=o||{};if(!labels.length)return cxEmpty(el);if(!series.length){el.innerHTML='<div class="empty">Nothing selected – tick at least one box</div>';return;}var fmt=o.fmt||short,W=chartWidth(el),H=fsH(el,o.h||250),L=56,R=14,T=30,B=30;
   var up=labels.map(function(_,i){return sum(series,function(s){return Math.max(0,s.values[i]||0);});}),dn=labels.map(function(_,i){return sum(series,function(s){return Math.min(0,s.values[i]||0);});});
   var mn=Math.min.apply(null,dn.concat([0])),mx=Math.max.apply(null,up.concat([0])),pd=(mx-mn)*0.12,ticks=niceTicks(mn<0?mn-pd:0,mx+pd,4),lo=ticks[0],hi=ticks[ticks.length-1],Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));};
-  var gw=(W-L-R)/labels.length,bw=Math.min(46,gw*0.55),g=cxAxis(W,L,R,ticks,Y);
+  var gw=(W-L-R)/labels.length,bw=Math.min(46,gw*0.55),g=cxAxis(W,L,R,ticks,Y),_sk=lblK(gw,Math.max.apply(null,labels.map(function(_,i){return String(fmt(sum(series,function(s){return s.values[i]||0;}))).length;})));
   labels.forEach(function(lb,i){var x=L+i*gw+(gw-bw)/2,pu=0,pn=0;series.forEach(function(s){var v=s.values[i]||0;if(!v)return;var a=v>0?pu:pn,b=a+v;if(v>0)pu=b;else pn=b;var top=Math.min(Y(a),Y(b)),hh=Math.abs(Y(a)-Y(b));
-      g+=cxCube(x,top,bw,hh,s.color).replace(/<rect /,'<rect data-tip="'+esc(lb+'\n'+s.name+': '+fmt(v))+'" ');});
-    var tot=sum(series,function(s){return s.values[i]||0;});if(labels.length<=24&&Math.abs(tot)>1e-9)g+=cxLab(x+bw/2+3,tot>=0?Y(pu)-Math.min(9,bw*0.3)-5:Y(pn)+14,fmt(tot),o.vcol?(tot>=0?'var(--vlp)':'var(--vln)'):'var(--text)');
-    g+='<text x="'+(L+i*gw+gw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
+      var tt=sum(series,function(z){return Math.abs(z.values[i]||0);})||1;g+=cxCube(x,top,bw,hh,s.color).replace(/<rect /,'<rect data-tip="'+esc(lb+'\n'+s.name+': '+fmt(v)+' · '+(Math.abs(v)/tt*100).toFixed(1)+'%\nShown total: '+fmt(sum(series,function(z){return z.values[i]||0;})))+'" ');});
+    var tot=sum(series,function(s){return s.values[i]||0;});if((i%_sk===0||i===labels.length-1)&&Math.abs(tot)>1e-9)g+=cxLab(x+bw/2+3,tot>=0?Y(pu)-Math.min(9,bw*0.3)-5:Y(pn)+14,fmt(tot),o.vcol?(tot>=0?'var(--vlp)':'var(--vln)'):'var(--text)');
+    if(i%lblK(gw,Math.max.apply(null,labels.map(function(z){return String(z).length;})))===0)g+='<text x="'+(L+i*gw+gw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
   el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'+cxLegend(series);}
 /* horizontal 3D bars: items [{label,value,color,tip}] */
 function hbar3d(el,items,o){o=o||{};if(!items.length)return cxEmpty(el);var fmt=o.fmt||short,W=chartWidth(el),rowH=28,Lb=Math.min(210,W*0.26),R=110,H=items.length*rowH+14;
@@ -2787,7 +2899,7 @@ function hbar3d(el,items,o){o=o||{};if(!items.length)return cxEmpty(el);var fmt=
       cxLab(it.value>=0?x+w+10:x-4,y+12,fmt(it.value),o.lcol?o.lcol(it):(it.value>=0?'var(--vlp)':'var(--vln)'),it.value>=0?'start':'end');});
   el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>';}
 /* area (drawdown) */
-function area3(el,labels,vals,o){o=o||{};if(!vals.length)return cxEmpty(el);var W=chartWidth(el),H=o.h||240,L=60,R=14,T=24,B=28,mn=Math.min.apply(null,vals.concat([0])),ticks=niceTicks(mn*1.15||-1,0,4),lo=ticks[0],hi=ticks[ticks.length-1]||0,Y=function(v){return T+(H-T-B)*(1-(v-lo)/((hi-lo)||1));},X=function(i){return L+i*(W-L-R)/Math.max(1,vals.length-1);};
+function area3(el,labels,vals,o){o=o||{};if(!vals.length)return cxEmpty(el);var W=chartWidth(el),H=fsH(el,o.h||240),L=60,R=14,T=24,B=28,mn=Math.min.apply(null,vals.concat([0])),ticks=niceTicks(mn*1.15||-1,0,4),lo=ticks[0],hi=ticks[ticks.length-1]||0,Y=function(v){return T+(H-T-B)*(1-(v-lo)/((hi-lo)||1));},X=function(i){return L+i*(W-L-R)/Math.max(1,vals.length-1);};
   var g=cxAxis(W,L,R,ticks,Y),p=vals.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1);}).join(' ');g+='<polygon points="'+X(0)+','+Y(0)+' '+p+' '+X(vals.length-1)+','+Y(0)+'" style="fill:var(--loss);opacity:.18"/><polyline fill="none" points="'+p+'" style="stroke:var(--loss)" stroke-width="2"/>';
   var mi=vals.indexOf(Math.min.apply(null,vals));if(vals[mi]<0)g+='<circle cx="'+X(mi)+'" cy="'+Y(vals[mi])+'" r="4" style="fill:var(--loss)"/>'+cxLab(Math.min(W-R-60,Math.max(L+60,X(mi))),Y(vals[mi])+17,short(vals[mi])+' ('+dmy(labels[mi])+')','var(--vln)');
   var li=vals.length-1;g+=cxLab(X(li)-4,Y(vals[li])-8,'Now '+short(vals[li]),vals[li]<0?'var(--vln)':'var(--vlp)','end');
@@ -2795,7 +2907,7 @@ function area3(el,labels,vals,o){o=o||{};if(!vals.length)return cxEmpty(el);var 
   for(var i=0;i<vals.length;i++)g+='<rect x="'+(X(i)-2)+'" y="'+T+'" width="4" height="'+(H-T-B)+'" style="fill:transparent" data-tip="'+esc(dmy(labels[i])+'\nBelow peak: '+money(vals[i]))+'"/>';
   el.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>';}
 /* 3D waterfall */
-function wf3d(el,steps){var W=chartWidth(el),H=250,L=60,R=14,T=30,B=28,run=0,pts=[];steps.forEach(function(x){var y0,y1;if(x[2]==='t'){y0=0;y1=x[1];run=x[1];}else{y0=run;y1=run+x[1];run=y1;}pts.push([y0,y1]);});
+function wf3d(el,steps){var W=chartWidth(el),H=fsH(el,250),L=60,R=14,T=30,B=28,run=0,pts=[];steps.forEach(function(x){var y0,y1;if(x[2]==='t'){y0=0;y1=x[1];run=x[1];}else{y0=run;y1=run+x[1];run=y1;}pts.push([y0,y1]);});
   var all=[].concat.apply([0],pts),mx=Math.max.apply(null,all),mn=Math.min.apply(null,all),pd=(mx-mn)*0.1,ticks=niceTicks(mn<0?mn-pd:0,mx+pd,4),lo=ticks[0],hi=ticks[ticks.length-1],Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo));},bw=(W-L-R)/steps.length,g=cxAxis(W,L,R,ticks,Y);
   steps.forEach(function(x,i){var p=pts[i],top=Math.min(Y(p[0]),Y(p[1])),hh=Math.max(1.5,Math.abs(Y(p[0])-Y(p[1]))),w=bw*0.55,X0=L+i*bw+(bw-w)/2,c=x[2]==='t'?'var(--accent)':x[1]>=0?'var(--gain)':'var(--loss)';
     g+=cxCube(X0,top,w,hh,c).replace(/<rect /,'<rect data-tip="'+esc(x[0]+'\n'+money(x[1]))+'" ')+cxLab(X0+w/2+3,top-Math.min(9,w*0.3)-5,short(x[1]),x[2]==='t'?'var(--text)':x[1]>=0?'var(--vlp)':'var(--vln)')+'<text x="'+(X0+w/2)+'" y="'+(H-8)+'" text-anchor="middle">'+x[0]+'</text>';});
@@ -2810,9 +2922,17 @@ function pie3dSvg(parts,center,sub,hole){var cx=95,cy=62,r=82,k=0.5,d=16,a=-Math
   return '<svg class="mxc" viewBox="0 0 190 '+(cy+r*k+d+6)+'">'+side+top+(hole?'<text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" style="fill:var(--text);font-size:12px;font-weight:700">'+esc(center||'')+'</text><text x="'+cx+'" y="'+(cy+14)+'" text-anchor="middle" style="font-size:9px">'+esc(sub||'')+'</text>':'')+'</svg>';}
 
 /* ===== Charts & Insights page ===== */
+var OVCMBV=(function(){try{return localStorage.getItem('MX_CMBV')||'c';}catch(e){return 'c';}})();
 var CX={cum:'fy',cumN:1,cumB:1,dd:'all',fvn:'M',dowU:'amt',dowP:'fy',n50:'fy',bnk:'fy',segF:1,segC:1,segM:1,segP:'M',segU:'amt',coP:'M',coU:'amt',coHide:{},brP:'M',brU:'amt',flow:'all',cu:'amt',trF:'trader',trN:'tb',trU:'amt',dist:'trader',act:'M',win:'M',pl:'M',chg:'company',chm:'M',chpP:'M',chpHide:{}};
+var CXDEF=JSON.stringify(CX),CXDD={};
+function cxDdClose(){D.querySelectorAll('.cxddp').forEach(function(p){p.hidden=true;});D.querySelectorAll('.ctdm').forEach(function(p){p.hidden=true;});CXDD={};}
+if(!window._cxDdDoc){window._cxDdDoc=1;document.addEventListener('click',function(e){if(!e.target.closest('.cxdd')&&!e.target.closest('.ctdl'))cxDdClose();});}
 try{var _cx=JSON.parse(localStorage.getItem('MX_CX')||'null');if(_cx)Object.keys(_cx).forEach(function(k){CX[k]=_cx[k];});}catch(e){}
 if(!CX.v2){CX.trN='tb';CX.v2=1;}
+function cxAC(){return '<button type="button" class="btn sm cxac" data-cxac="1">✓ All</button><button type="button" class="btn sm cxac" data-cxac="0">✕ Clear</button>';}
+function cxMoM(rows,list){var mks=uniq(rows.map(function(o){return o.mkey;})).filter(Boolean).sort();if(mks.length<2)return '';var a=mks[mks.length-1],b=mks[mks.length-2];
+  return '<span class="cxmom">'+list.map(function(z){var f=function(k){return sum(rows.filter(function(o){return o.mkey===k&&(!z.f||z.f(o));}),function(o){return V(o,z.S===undefined?GSEG:z.S,'net');});},cv=f(a),pv=f(b),up=cv>=pv;
+    return (z.n?'<b>'+esc(z.n)+'</b> ':'')+'<span class="'+(cv>=0?'gain':'loss')+'">'+monthLabelFromKey(a)+' '+short(cv)+'</span> <span class="'+(up?'gain':'loss')+'">'+(up?'▲':'▼')+'</span> <span class="muted">vs '+monthLabelFromKey(b)+' '+short(pv)+'</span>';}).join(' · ')+'</span>';}
 function cxKeep(){try{localStorage.setItem('MX_CX',JSON.stringify(CX));}catch(e){}}
 function cxPeriod(rows,P,maxN){var key=P==='W'?function(o){return o.week;}:function(o){return o.mkey;},g=groupBy(rows,key),ks=Array.from(g.keys()).filter(Boolean).sort();if(maxN)ks=ks.slice(-maxN);
   return ks.map(function(k){var l=g.get(k);return {k:k,rows:l,label:P==='W'?dShort(k):monthLabelFromKey(k)};});}
@@ -2836,9 +2956,9 @@ function firmVsNifty(host,rows,P){var s=stats(rows,GSEG),dn=s.dn,ds=Object.keys(
 function cxIdxLine(host,rows,name,color,mo){var r=rangeOf(rows),l=MARKET.filter(function(m){return m.index===name&&(!r[0]||m.iso>=r[0])&&(!r[1]||m.iso<=r[1]);}).sort(function(a,b){return a.iso<b.iso?-1:1;});
   if(mo!=='fy'&&l.length){var d=new Date(l[l.length-1].iso);d.setMonth(d.getMonth()-(+mo));var c=d.toISOString().slice(0,10);l=l.filter(function(m){return m.iso>c;});}
   if(!l.length)return cxEmpty(host);lineChart(host,[{name:name,color:color,points:l.map(function(m){return {x:m.iso,y:m.close};})}],{h:240,fmt:function(v){return Math.round(v).toLocaleString('en-IN');},tipfmt:function(v){return v.toLocaleString('en-IN',{maximumFractionDigits:2});}});}
-R.charts=function(el,rows){window.OVMODE='charts';try{R.overview(el,rows);}finally{window.OVMODE='';}
+R.charts=function(el,rows){CX.trS=CX.trS||'net';CX.lblOff=CX.lblOff||{};CX.segP=CX.coP=CX.brP=CX.win=CX.pl=CX.act=CX.chm=CX.chpP='M';CX.cum='fy';CX.dowP='fy';CX.chmHide=CX.chmHide||{};CX.winHide=CX.winHide||{};ovChart='mon';MIV.ov='mon';window.OVMODE='charts';try{R.overview(el,rows);}finally{window.OVMODE='';}
   var q=function(id){var x=$(id);return x?x.closest('.card'):null;},old=el.querySelector('.ovg'),S=GSEG;
-  var SECS=[['a','Key charts'],['b','More detail'],['c','Reference']],NAV=[['ovCh','Firm performance'],['cxCo','Company & broker'],['cxTr','Traders'],['cxChg','Charges']];
+  var SECS=[['a','Key charts'],['b','More detail']],NAV=[['ovCh','Firm performance'],['cxCo','Company & broker'],['cxTr','Traders'],['cxChg','Charges']];
   var wrap=D.createElement('div');wrap.className='cx-wrap';wrap.innerHTML='<div class="cx-nav">'+NAV.map(function(x){return '<button type="button" class="btn sm" data-cxs="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>'+SECS.map(function(x){return '<h3 class="cx-sec" id="cxs-'+x[0]+'">'+x[1]+'</h3><div class="ovg cxg" id="cxg-'+x[0]+'"></div>';}).join('');
   el.insertBefore(wrap,el.firstChild);if(old)old.style.display='none';
   wrap.querySelectorAll('[data-cxs]').forEach(function(b){b.onclick=function(){var t=$(b.dataset.cxs);t=t&&t.closest('.card');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});};});
@@ -2846,63 +2966,94 @@ R.charts=function(el,rows){window.OVMODE='charts';try{R.overview(el,rows);}final
   var PMW=[['M','Monthly'],['W','Weekly']],AP=[['amt','Amount'],['pct','%']],RG=[['fy','FY'],['6','6 months'],['3','3 months']];
   var cos=uniq(rows.map(function(o){return o.company;})).sort(),brs=uniq(rows.map(brokerOf)).sort();
   var CF={
-    cxCum:{n:3,t:'Cumulative net P&L vs Nifty / Bank Nifty',sec:'a',tools:function(){return chk('cumN','Nifty 50')+chk('cumB','Bank Nifty')+seg('cum',RG);},draw:function(h){var r=cxSince(rows,CX.cum),st=stats(r,S),ds=Object.keys(st.dn).sort(),f=st.fund||1,c=0,mine=ds.map(function(d){c+=st.dn[d];return +(c/f*100).toFixed(2);}),ser=[{name:'Minix',color:'var(--accent)',v:mine}];
+    cxCum:{n:3,t:'Cumulative net P&L vs Nifty / Bank Nifty',sec:'a',tools:function(){return chk('cumN','Nifty 50')+chk('cumB','Bank Nifty');},draw:function(h){var r=cxSince(rows,CX.cum),st=stats(r,S),ds=Object.keys(st.dn).sort(),f=st.fund||1,c=0,mine=ds.map(function(d){c+=st.dn[d];return +(c/f*100).toFixed(2);}),ser=[{name:'Minix',color:'var(--accent)',v:mine}];
       [['cumN','Nifty 50','var(--warn)'],['cumB','Nifty Bank','#8B5CF6']].forEach(function(z){if(!CX[z[0]])return;var mp={};MARKET.forEach(function(m){if(m.index===z[1])mp[m.iso]=m.close;});var b=null,lastV=null;ser.push({name:z[1]==='Nifty Bank'?'Bank Nifty':'Nifty 50',color:z[2],v:ds.map(function(d){var v=mp[d];if(v==null)return lastV;if(b==null)b=v;lastV=+((v/b-1)*100).toFixed(2);return lastV;})});});
       lineMulti(h,ds.map(dShort),ser);}},
     cxDD:{n:4,t:'Drawdown curve',sec:'a',tools:function(){return seg('dd',[['all','All']].concat(cos.map(function(c){return [c,cxCoShort(c)];})));},draw:function(h){var r=CX.dd==='all'?rows:rows.filter(function(o){return o.company===CX.dd;}),st=stats(r,S),ds=Object.keys(st.dn).sort(),c=0,pk=0;area3(h,ds,ds.map(function(d){c+=st.dn[d];if(c>pk)pk=c;return c-pk;}));}},
     cxFvn:{n:5,t:'Firm net P&L vs Nifty 50',sec:'a',tools:function(){return seg('fvn',[['D','Day'],['W','Week'],['M','Month']]);},draw:function(h){firmVsNifty(h,rows,CX.fvn);}},
-    cxDow:{n:6,t:'Day-of-week P&L',sec:'a',tools:function(){return seg('dowU',AP)+seg('dowP',[['fy','FY'],['3','Last 3 months']]);},draw:function(h){var r=cxSince(rows,CX.dowP),st=stats(r,S),nm=['Mon','Tue','Wed','Thu','Fri'],v=[0,0,0,0,0];Object.keys(st.dn).forEach(function(d){var w=new Date(d+'T00:00:00').getDay();if(w>=1&&w<=5)v[w-1]+=st.dn[d];});
+    cxDow:{n:6,t:'Day-of-week P&L',sec:'a',tools:function(){return seg('dowU',AP);},draw:function(h){var r=cxSince(rows,CX.dowP),st=stats(r,S),nm=['Mon','Tue','Wed','Thu','Fri'],v=[0,0,0,0,0];Object.keys(st.dn).forEach(function(d){var w=new Date(d+'T00:00:00').getDay();if(w>=1&&w<=5)v[w-1]+=st.dn[d];});
       var pc=CX.dowU==='pct';col3d(h,nm.map(function(n,i){return {label:n,value:pc?(st.fund?v[i]/st.fund*100:0):v[i]};}),{h:240,vfmt:pc?cxPctF:null});}},
     cxN50:{n:7,t:'Nifty 50 chart',sec:'a',tools:function(){return seg('n50',RG);},draw:function(h){cxIdxLine(h,rows,'Nifty 50','var(--accent)',CX.n50);}},
     cxBnk:{n:8,t:'Bank Nifty chart',sec:'a',tools:function(){return seg('bnk',RG);},draw:function(h){cxIdxLine(h,rows,'Nifty Bank','#8B5CF6',CX.bnk);}},
-    cxSeg:{n:9,t:'Segment-wise net P&L',sec:'b',tools:function(){return chk('segF','F&O')+chk('segC','Equity')+chk('segM','MCX')+seg('segP',PMW)+seg('segU',AP);},draw:function(h){var ps=cxPeriod(rows,CX.segP,CX.segP==='W'?12:0),sg=[['FNO','segF','F&O','var(--fno)'],['Cash','segC','Equity','var(--cash)'],['MCX','segM','MCX','var(--mcx)']].filter(function(z){return CX[z[1]]&&(!S||S===z[0]);}),pc=CX.segU==='pct';
+    cxSeg:{n:9,t:'Segment-wise net P&L',sec:'b',tools:function(){return chk('segF','F&O')+chk('segC','Equity')+chk('segM','MCX')+seg('segU',AP);},draw:function(h){var ps=cxPeriod(rows,CX.segP,CX.segP==='W'?12:0),sg=[['FNO','segF','F&O','var(--fno)'],['Cash','segC','Equity','var(--cash)'],['MCX','segM','MCX','var(--mcx)']].filter(function(z){return CX[z[1]]&&(!S||S===z[0]);}),pc=CX.segU==='pct';
       var ser=sg.map(function(z){return {name:z[2],color:z[3],values:ps.map(function(p){return pc?stats(p.rows,z[0]).roi:sum(p.rows,function(o){return V(o,z[0],'net');});})};}),lb=ps.map(function(p){return p.label;});pc?grp3d(h,lb,ser,{fmt:cxPctF,vcol:1}):stack3d(h,lb,ser,{vcol:1});}},
-    cxCo:{n:10,t:'Company net P&L',sec:'b',tools:function(){return cos.map(function(c){return '<label class="lvl"><input type="checkbox" data-cxco="'+esc(c)+'"'+(CX.coHide[c]?'':' checked')+'> '+esc(cxCoShort(c))+'</label>';}).join('')+seg('coP',PMW)+seg('coU',AP);},draw:function(h){var ps=cxPeriod(rows,CX.coP,CX.coP==='W'?12:0),pc=CX.coU==='pct',cols=['var(--accent)','var(--warn)','var(--cash)','var(--mcx)'];
-      grp3d(h,ps.map(function(p){return p.label;}),cos.filter(function(c){return !CX.coHide[c];}).map(function(c,i){return {name:cxCoShort(c),color:cols[cos.indexOf(c)%4],values:ps.map(function(p){var l=p.rows.filter(function(o){return o.company===c;});return pc?stats(l,S).roi:sum(l,function(o){return V(o,S,'net');});})};}),{fmt:pc?cxPctF:short,vcol:1});}},
-    cxBr:{n:12,t:'Broker / demat net P&L',sec:'b',tools:function(){return seg('brP',PMW)+seg('brU',AP);},draw:function(h){var ps=cxPeriod(rows,CX.brP,CX.brP==='W'?12:0),pc=CX.brU==='pct',cols=['var(--accent)','var(--warn)','var(--cash)','var(--mcx)','#3FB6B0','var(--faint)'];
-      grp3d(h,ps.map(function(p){return p.label;}),brs.map(function(b,i){return {name:b,color:cols[i%6],values:ps.map(function(p){var l=p.rows.filter(function(o){return brokerOf(o)===b;});return pc?stats(l,S).roi:sum(l,function(o){return V(o,S,'net');});})};}),{fmt:pc?cxPctF:short,vcol:1});}},
+    cxCo:{n:10,t:'Company net P&L',sec:'b',tools:function(){return cos.map(function(c){return '<label class="lvl"><input type="checkbox" data-cxco="'+esc(c)+'"'+(CX.coHide[c]?'':' checked')+'> '+esc(cxCoShort(c))+'</label>';}).join('')+seg('coU',AP);},draw:function(h){var ps=cxPeriod(rows,CX.coP,CX.coP==='W'?12:0),pc=CX.coU==='pct',cols=['var(--accent)','var(--warn)','var(--cash)','var(--mcx)'];
+      grp3d(h,ps.map(function(p){return p.label;}),cos.filter(function(c){return !CX.coHide[c];}).map(function(c,i){return {name:cxCoShort(c),color:cols[cos.indexOf(c)%4],values:ps.map(function(p){var l=p.rows.filter(function(o){return o.company===c;});return pc?stats(l,S).roi:sum(l,function(o){return V(o,S,'net');});})};}),{fmt:pc?cxPctF:short,vcol:1,flat:1});}},
+    cxBr:{n:12,t:'Broker / demat comparison',sec:'b',tools:function(){return seg('brU',[['amt','Amount'],['pct','ROI %']]);},draw:function(h){var pc=CX.brU==='pct',pr=peopleRows(rows,'demat').filter(function(r){return r.name&&Math.abs(r.net)>=1;});
+      col3d(h,pr.map(function(r){return {label:String(r.name),value:pc?(r.fund?r.net/r.fund*100:0):r.net,tip:r.name+'\nNet P&L: '+money(r.net)+'\nCharges: '+money(r.chg)+'\nAvg fund: '+money(r.fund)};}).sort(function(a,b){return b.value-a.value;}),{h:250,vfmt:pc?cxPctF:null});}},
     cxFlow:{n:13,t:'Fund flow',sec:'b',tools:function(){return seg('flow',[['all','Combined']].concat(cos.map(function(c){return [c,cxCoShort(c)];})));},draw:function(h){var r=CX.flow==='all'?rows:rows.filter(function(o){return o.company===CX.flow;});if(!r.length)return cxEmpty(h);var ff=flowNumbers(r,S),n=stats(r,S).net;
       wf3d(h,[['Opening',ff.open,'t'],['Added',ff.added,'d'],['Withdrawn',ff.wd,'d'],['Closing',ff.close,'t'],['Net P&L',n,'d'],['Net fund',ff.close+n,'t']]);}},
-    cxTr:{n:15,t:'Net P&L by trader / portfolio',sec:'c',span:12,tools:function(){return seg('trF',[['trader','Trader'],['portfolio','Portfolio'],['researcher','Research']])+seg('trN',[['tb','Top 10 + Bottom 10'],['top','Top 10'],['bot','Bottom 10'],['all','All']])+seg('trU',[['amt','Amount'],['pct','ROI %']]);},draw:function(h){var pc=CX.trU==='pct',r=rankBy(rows,CX.trF).filter(function(x){return x.name&&Math.abs(x.net)>=1;}).map(function(x){return {label:String(x.name),value:pc?x.roi:x.net,tip:x.name+'\nNet: '+money(x.net)+'\nROI: '+pct(x.roi)};}).sort(function(a,b){return b.value-a.value;});
-      if(CX.trN==='top')r=r.slice(0,10);else if(CX.trN==='bot')r=r.slice(-10);else if(CX.trN==='tb'&&r.length>20)r=r.slice(0,10).concat(r.slice(-10));col3d(h,r,{h:300,vfmt:pc?cxPctF:null});}},
+    cxTr:{n:15,t:'Net P&L by trader / portfolio',sec:'c',span:12,tools:function(){return seg('trF',[['trader','Trader'],['portfolio','Portfolio'],['researcher','Research']])+seg('trN',[['tb','Top 10 + Bottom 10'],['top','Top 10'],['bot','Bottom 10'],['all','All']])+seg('trU',[['amt','Amount'],['pct','ROI %']])+'<span class="lvk">Sort</span>'+seg('trS',[['net','Net P&L'],['roi','ROI'],['fund','Fund']]);},draw:function(h){var pc=CX.trU==='pct',fm={};groupBy(rows,function(o){return o[CX.trF];}).forEach(function(l,k){fm[k]=capAvg(l,S,'fund');});var sk=CX.trS||'net',r=rankBy(rows,CX.trF).filter(function(x){return x.name&&Math.abs(x.net)>=1;}).map(function(x){return {label:String(x.name),value:pc?x.roi:x.net,_s:sk==='roi'?x.roi:sk==='fund'?(fm[x.name]||0):x.net,tip:x.name+'\nNet: '+money(x.net)+'\nROI: '+pct(x.roi)+'\nAvg fund: '+money(fm[x.name]||0)};}).sort(function(a,b){return b._s-a._s;});
+      if(CX.trN==='top')r=r.slice(0,10);else if(CX.trN==='bot')r=r.slice(-10);else if(CX.trN==='tb'&&r.length>20)r=r.slice(0,10).concat(r.slice(-10));barChart(h,r,{h:300,flat:1,rot:r.length>8,vfmt:pc?cxPctF:null});}},
     cxDist:{n:16,t:'Trader P&L distribution',sec:'c',tools:function(){return seg('dist',[['trader','Traders'],['portfolio','Portfolio']]);},draw:function(h){var r=rankBy(rows,CX.dist).filter(function(x){return x.name;}),E=[[-Infinity,-1e7,'< -1 Cr'],[-1e7,-1e6,'-1 Cr to -10 L'],[-1e6,0,'-10 L to 0'],[0,1e6,'0 to 10 L'],[1e6,1e7,'10 L to 1 Cr'],[1e7,Infinity,'> 1 Cr']];
       col3d(h,E.map(function(e,i){var c=r.filter(function(x){return x.net>=e[0]&&x.net<e[1];}).length;return {label:e[2],value:c,color:i<3?'var(--loss)':'var(--gain)'};}),{h:240,vfmt:cxInt});}},
-    cxAct:{n:19,t:'Active traders',sec:'c',tools:function(){return seg('act',PMW);},draw:function(h){var ps=cxPeriod(rows,CX.act,CX.act==='W'?12:0);col3d(h,ps.map(function(p){return {label:p.label,value:uniq(p.rows.filter(function(o){return Math.abs(V(o,S,'net'))>0.004||Math.abs(V(o,S,'gross'))>0.004;}).map(function(o){return o.trader;})).length,color:'var(--accent)'};}),{h:240,vfmt:cxInt});}},
-    cxWin:{n:20,t:'Win rate trend',sec:'c',tools:function(){return seg('win',PMW);},draw:function(h){var ps=cxPeriod(rows,CX.win,CX.win==='W'?12:0);lineMulti(h,ps.map(function(p){return p.label;}),[{name:'Win rate',color:'var(--accent)',v:ps.map(function(p){return +stats(p.rows,S).win.toFixed(2);})}]);}},
-    cxPL:{n:21,t:'Profit day vs loss day size',sec:'c',tools:function(){return seg('pl',PMW);},draw:function(h){var ps=cxPeriod(rows,CX.pl,CX.pl==='W'?12:0),a=[],b=[];ps.forEach(function(p){var dn=stats(p.rows,S).dn,v=Object.keys(dn).map(function(d){return dn[d];}),pp=v.filter(function(x){return x>0;}),nn=v.filter(function(x){return x<0;});a.push(pp.length?sum(pp,function(x){return x;})/pp.length:0);b.push(nn.length?Math.abs(sum(nn,function(x){return x;}))/nn.length:0);});
+    cxAct:{n:19,t:'Active traders',sec:'c',tools:function(){return '';},draw:function(h){var ps=cxPeriod(rows,CX.act,CX.act==='W'?12:0);col3d(h,ps.map(function(p){return {label:p.label,value:uniq(p.rows.filter(function(o){return Math.abs(V(o,S,'net'))>0.004||Math.abs(V(o,S,'gross'))>0.004;}).map(function(o){return o.trader;})).length,color:'var(--accent)'};}),{h:240,vfmt:cxInt});}},
+    cxWin:{n:20,t:'Win rate trend',sec:'c',tools:function(){return cos.map(function(c){return '<label class="lvl"><input type="checkbox" data-cxwn="'+esc(c)+'"'+(CX.winHide[c]?'':' checked')+'> '+esc(cxCoShort(c))+'</label>';}).join('');},draw:function(h){var ps=cxPeriod(rows,CX.win,CX.win==='W'?12:0),sel=cos.filter(function(c){return !CX.winHide[c];}),cols=['var(--accent)','var(--warn)','var(--cash)','var(--mcx)'];
+      if(!sel.length){h.innerHTML='<div class="empty">Nothing selected – tick at least one box</div>';return;}lineMulti(h,ps.map(function(p){return p.label;}),sel.map(function(c){return {name:cxCoShort(c),color:cols[cos.indexOf(c)%4],v:ps.map(function(p){var l=p.rows.filter(function(o){return o.company===c;});return l.length?+stats(l,S).win.toFixed(2):null;})};}));}},
+    cxPL:{n:21,t:'Profit day vs loss day size',sec:'c',tools:function(){return '';},draw:function(h){var ps=cxPeriod(rows,CX.pl,CX.pl==='W'?12:0),a=[],b=[];ps.forEach(function(p){var dn=stats(p.rows,S).dn,v=Object.keys(dn).map(function(d){return dn[d];}),pp=v.filter(function(x){return x>0;}),nn=v.filter(function(x){return x<0;});a.push(pp.length?sum(pp,function(x){return x;})/pp.length:0);b.push(nn.length?Math.abs(sum(nn,function(x){return x;}))/nn.length:0);});
       grp3d(h,ps.map(function(p){return p.label;}),[{name:'Avg profit day',color:'var(--gain)',values:a},{name:'Avg loss day',color:'var(--loss)',values:b}]);}},
     cxChg:{n:22,t:'Charges comparison (% of average fund)',sec:'d',span:12,tools:function(){return seg('chg',[['company','Company'],['trader','Trader'],['portfolio','Portfolio'],['researcher','Research'],['demat','Demat']]);},draw:function(h){var g=groupBy(rows,function(o){return o[CX.chg];}),it=[];g.forEach(function(l,k){var c=sum(l,function(o){return V(o,S,'chg');}),f=capAvg(l,S,'fund');if(c>0&&k)it.push({label:String(k),value:f?c/f*100:0,tip:k+'\nCharges: '+money(c)+'\nAvg fund: '+money(f)});});
-      it.sort(function(a,b){return b.value-a.value;});it.forEach(function(x){x.color=x.value>2.5?'var(--loss)':x.value<1?'var(--gain)':'var(--warn)';});hbar3d(h,it,{fmt:function(v){return v.toFixed(2)+'%';},lcol:function(x){return x.value>2.5?'var(--vln)':x.value<1?'var(--vlp)':'var(--text)';}});}},
-    cxChM:{n:24,t:'Charges by month',sec:'d',tools:function(){return seg('chm',PMW);},draw:function(h){var ps=cxPeriod(rows,CX.chm,CX.chm==='W'?12:0),sg=S?[S]:SEGS,hs=function(l,ks){return sum(l,function(o){return sg.reduce(function(a,G){return a+ks.reduce(function(b,k){return b+num(o.seg[G].ch[k]);},0);},0);});};
+      it.sort(function(a,b){return b.value-a.value;});it.forEach(function(x){x.color=x.value>2.5?'var(--loss)':x.value<1?'var(--gain)':'var(--warn)';});col3d(h,it,{h:270,vfmt:function(v){return v.toFixed(2)+'%';}});}},
+    cxChM:{n:24,t:'Charges by month',sec:'d',tools:function(){var N=['STT / CTT','Transaction','Brokerage + GST','Stamp duty','SEBI','IPF','Clearing','GST'],on=N.filter(function(n){return !CX.chmHide[n];}).length;return '<span class="cxdd"><button type="button" class="btn sm cxddb">Charges ('+on+'/'+N.length+') ▾</button><span class="cxddp"'+(CXDD.cxChM?'':' hidden')+'>'+N.map(function(n){return '<label class="lvl"><input type="checkbox" data-cxchm="'+esc(n)+'"'+(CX.chmHide[n]?'':' checked')+'> '+esc(n)+'</label>';}).join('')+'</span></span>';},draw:function(h){var ps=cxPeriod(rows,CX.chm,CX.chm==='W'?12:0),sg=S?[S]:SEGS,hs=function(l,ks){return sum(l,function(o){return sg.reduce(function(a,G){return a+ks.reduce(function(b,k){return b+num(o.seg[G].ch[k]);},0);},0);});};
       var B=ps.map(function(p){return hs(p.rows,['BRK','BRK On GST']);}),Tt=ps.map(function(p){return hs(p.rows,['STT']);}),Tx=ps.map(function(p){return hs(p.rows,['Trx Chgs']);}),St=ps.map(function(p){return hs(p.rows,['Stamp Duty']);}),Al=ps.map(function(p){return sum(p.rows,function(o){return V(o,S,'chg');});});
-      stack3d(h,ps.map(function(p){return p.label;}),[{name:'STT / CTT',color:'var(--cash)',values:Tt},{name:'Transaction',color:'var(--mcx)',values:Tx},{name:'Brokerage + GST',color:'var(--fno)',values:B},{name:'Stamp duty',color:'#3FB6B0',values:St},{name:'Others',color:'var(--faint)',values:Al.map(function(a,i){return Math.max(0,a-B[i]-Tt[i]-Tx[i]-St[i]);})}]);}},
-    cxChP:{n:25,t:'Charges % of fund trend',sec:'d',span:12,tools:function(){return cos.map(function(c){return '<label class="lvl"><input type="checkbox" data-cxcp="'+esc(c)+'"'+(CX.chpHide[c]?'':' checked')+'> '+esc(cxCoShort(c))+'</label>';}).join('')+seg('chpP',PMW);},draw:function(h){var ps=cxPeriod(rows,CX.chpP,CX.chpP==='W'?12:0),cols=['var(--loss)','var(--warn)','var(--accent)','var(--cash)'];
-      lineMulti(h,ps.map(function(p){return p.label;}),cos.filter(function(c){return !CX.chpHide[c];}).map(function(c){return {name:cxCoShort(c),color:cols[cos.indexOf(c)%4],v:ps.map(function(p){var l=p.rows.filter(function(o){return o.company===c;}),f=capAvg(l,S,'fund');return l.length&&f?+(sum(l,function(o){return V(o,S,'chg');})/f*100).toFixed(2):null;})};}));}}
+      stack3d(h,ps.map(function(p){return p.label;}),[{name:'STT / CTT',color:'var(--cash)',values:Tt},{name:'Transaction',color:'var(--mcx)',values:Tx},{name:'Brokerage + GST',color:'var(--fno)',values:B},{name:'Stamp duty',color:'#3FB6B0',values:St},{name:'SEBI',color:'#C084FC',values:ps.map(function(p){return hs(p.rows,['Sebi Chgs']);})},{name:'IPF',color:'#94A3B8',values:ps.map(function(p){return hs(p.rows,['IPF Charges']);})},{name:'Clearing',color:'#F472B6',values:ps.map(function(p){return hs(p.rows,['Clearing Charges']);})},{name:'GST',color:'#FBBF24',values:ps.map(function(p){return hs(p.rows,['GST']);})}].filter(function(z){return !CX.chmHide[z.name];}),{full:Al});}},
+    cxChP:{n:25,t:'Charges % of fund trend',sec:'d',span:12,tools:function(){return cos.map(function(c){return '<label class="lvl"><input type="checkbox" data-cxcp="'+esc(c)+'"'+(CX.chpHide[c]?'':' checked')+'> '+esc(cxCoShort(c))+'</label>';}).join('');},draw:function(h){var ps=cxPeriod(rows,CX.chpP,CX.chpP==='W'?12:0),cols=['var(--loss)','var(--warn)','var(--accent)','var(--cash)'];
+      if(!cos.filter(function(c){return !CX.chpHide[c];}).length){h.innerHTML='<div class="empty">Nothing selected – tick at least one box</div>';return;}lineMulti(h,ps.map(function(p){return p.label;}),cos.filter(function(c){return !CX.chpHide[c];}).map(function(c){return {name:cxCoShort(c),color:cols[cos.indexOf(c)%4],v:ps.map(function(p){var l=p.rows.filter(function(o){return o.company===c;}),f=capAvg(l,S,'fund');return l.length&&f?+(sum(l,function(o){return V(o,S,'chg');})/f*100).toFixed(2):null;})};}));}}
   };
-  var ORDER={a:['ovCh','cxDD','cxTr','ovMvI','cxCo','cxSeg','cxFlow'],b:['ovCUt','cxChg','cxChP','ovPL','cxBr','cxCum','cxFvn','cxWin','cxPL'],c:['ovStC','cxChM','ovPie','cxDist','ovTA','cxAct','cxDow','cxN50','cxBnk']},NUM={},SPN={};
-  var nn=0;['a','b','c'].forEach(function(k){ORDER[k].forEach(function(id){NUM[id]=++nn;SPN[id]=k==='a'?(id==='cxTr'?12:6):4;if(CF[id]){CF[id].n=NUM[id];CF[id].span=SPN[id];}});});
+  delete CF.cxFvn;delete CF.cxN50;delete CF.cxBnk;
+  var ORDER={a:['ovCh','cxDD','ovMvI','cxTr','cxCo','cxSeg','cxFlow'],b:['ovCUt','cxChg','cxChP','ovPL','cxBr','cxCum','cxWin','cxPL','ovStC','cxChM','ovPie','cxDist','ovTA','cxAct','cxDow']},NUM={},SPN={};
+  var nn=0;['a','b'].forEach(function(k){ORDER[k].forEach(function(id){NUM[id]=++nn;SPN[id]=id==='cxTr'?12:id==='cxDow'?6:(k==='a'?4:3);});});NUM.ovMvI=4;NUM.cxTr=3;
+  Object.keys(NUM).forEach(function(id){if(CF[id]){CF[id].n=NUM[id];CF[id].span=SPN[id];}});
   var fc=q('ovFlow');if(fc)fc.style.display='none';
   Object.keys(ORDER).forEach(function(sc){var gd=$('cxg-'+sc);ORDER[sc].forEach(function(id){var c;if(CF[id]){gd.insertAdjacentHTML('beforeend','<div class="card sp'+(CF[id].span||6)+'"><div class="card-h"><h2><span class="cxn">'+CF[id].n+'.</span> '+esc(CF[id].t)+'</h2><div class="tools"><span class="cxo" id="'+id+'O">'+CF[id].tools()+'</span></div></div><div class="chart" id="'+id+'"></div></div>');}
       else if((c=q(id))){c.className=c.className.replace(/\bsp\d+\b/g,'').trim()+' sp'+SPN[id];c.style.display='';var h2=c.querySelector('.card-h h2');if(h2&&!h2.querySelector('.cxn'))h2.insertAdjacentHTML('afterbegin','<span class="cxn">'+NUM[id]+'.</span> ');gd.appendChild(c);}});});
-  if(window.CFULL&&window.CFULL.k){var fcd=$(window.CFULL.k);fcd=fcd&&fcd.closest('.card');if(fcd&&!fcd.classList.contains('cfull')){fcd.dataset.nw=window.CFULL.nw;fcd.classList.add('cfull');D.body.classList.add('cfull-on');}}
-  var bindO=function(id){var o=$(id+'O');if(!o)return;o.querySelectorAll('.seg').forEach(function(sg){sg.onclick=function(e){var b=e.target.closest('button');if(!b)return;CX[sg.dataset.seg.split('|')[1]]=b.dataset.v;cxKeep();refresh(id);};});
+  if(window.CFULL&&window.CFULL.k){var fcd=$(window.CFULL.k);fcd=fcd&&fcd.closest('.card');if(fcd&&!fcd.classList.contains('cfull')){cxTop();fcd.classList.add('cfull');D.body.classList.add('cfull-on');}}
+  var bindO=function(id){var o=$(id+'O');if(!o)return;
+      o.querySelectorAll('[data-cxac]').forEach(function(b){b.onclick=function(){var on=b.dataset.cxac==='1';o.querySelectorAll('input[type=checkbox]').forEach(function(i){if(i.dataset.cxk)CX[i.dataset.cxk]=on?1:0;if(i.dataset.cxco)CX.coHide[i.dataset.cxco]=!on;if(i.dataset.cxcp)CX.chpHide[i.dataset.cxcp]=!on;if(i.dataset.cxchm)CX.chmHide[i.dataset.cxchm]=!on;if(i.dataset.cxwn)CX.winHide[i.dataset.cxwn]=!on;});cxKeep();refresh(id);};});o.querySelectorAll('.seg').forEach(function(sg){sg.onclick=function(e){var b=e.target.closest('button');if(!b)return;CX[sg.dataset.seg.split('|')[1]]=b.dataset.v;cxKeep();refresh(id);};});
       o.querySelectorAll('input[data-cxk]').forEach(function(i){i.onchange=function(){CX[i.dataset.cxk]=i.checked?1:0;cxKeep();refresh(id);};});
       o.querySelectorAll('input[data-cxco]').forEach(function(i){i.onchange=function(){CX.coHide[i.dataset.cxco]=!i.checked;cxKeep();refresh(id);};});
-      o.querySelectorAll('input[data-cxcp]').forEach(function(i){i.onchange=function(){CX.chpHide[i.dataset.cxcp]=!i.checked;cxKeep();refresh(id);};});};
-  var refresh=function(id){var o=$(id+'O');if(o)o.innerHTML=CF[id].tools();bindO(id);try{CF[id].draw($(id));}catch(e){console.error(e);$(id).innerHTML='<div class="empty">Could not draw this chart</div>';}};
+      o.querySelectorAll('input[data-cxchm]').forEach(function(i){i.onchange=function(){CX.chmHide[i.dataset.cxchm]=!i.checked;cxKeep();refresh(id);};});
+      o.querySelectorAll('input[data-cxcp]').forEach(function(i){i.onchange=function(){CX.chpHide[i.dataset.cxcp]=!i.checked;cxKeep();refresh(id);};});
+      o.querySelectorAll('input[data-cxwn]').forEach(function(i){i.onchange=function(){CX.winHide[i.dataset.cxwn]=!i.checked;cxKeep();refresh(id);};});
+      var db=o.querySelector('.cxddb'),dp=o.querySelector('.cxddp');if(db&&dp){db.onclick=function(e){e.stopPropagation();var op=dp.hidden;cxDdClose();dp.hidden=!op;CXDD[id]=op?1:0;};dp.onclick=function(e){e.stopPropagation();};}};
+  var refresh=function(id){var o=$(id+'O');if(o){o.innerHTML=CF[id].tools();if(o.querySelectorAll('input[type=checkbox]').length>=2)(o.querySelector('.cxddp')||o).insertAdjacentHTML('beforeend',(o.querySelector('.cxddp')?'<span class="cxddac">':'')+cxAC()+(o.querySelector('.cxddp')?'</span>':''));}bindO(id);try{CF[id].draw($(id));}catch(e){console.error(e);$(id).innerHTML='<div class="empty">Could not draw this chart</div>';}};
   Object.keys(CF).forEach(refresh);
   /* 14: Amount / Used % */
   var cuc=q('ovCUt');if(cuc){var hd=cuc.querySelector('.card-h'),tl=hd.querySelector('.tools');if(!tl){tl=D.createElement('div');tl.className='tools';hd.insertBefore(tl,hd.querySelector('p'));}tl.insertAdjacentHTML('afterbegin','<span class="cxo" id="cuO">'+seg('cu',[['amt','Amount'],['pct','Used %']])+'</span>');
     tl.querySelector('.seg').onclick=function(e){var b=e.target.closest('button');if(!b)return;CX.cu=b.dataset.v;cxKeep();render();};
     if(CX.cu==='pct')col3d($('ovCUc'),cos.map(function(c){var st=stats(rows.filter(function(o){return o.company===c;}),S);return {label:cxCoShort(c),value:st.fund&&st.util?st.util/st.fund*100:0,color:'var(--accent)'};}).concat([{label:'Total',value:(function(){var st=stats(rows,S);return st.fund&&st.util?st.util/st.fund*100:0;})(),color:'var(--warn)'}]),{h:200,vfmt:function(v){return v.toFixed(1)+'%';}});}
-  chartTools(el);};
+  (function(){var cc=q('ovCh');if(!cc)return;var hd=cc.querySelector('.card-h'),tl=hd&&hd.querySelector('.tools');if(!tl)return;tl.insertAdjacentHTML('afterbegin','<span class="cxo" id="c1O"><label class="lvl"><input type="checkbox" data-c1="c1b"'+(CX.c1b!==0?' checked':'')+'> Month net</label><label class="lvl"><input type="checkbox" data-c1="c1l"'+(CX.c1l!==0?' checked':'')+'> Cumulative line</label>'+cxAC()+'</span>');
+    var c1d=function(){var h=$('ovC');if(h&&h._bl)barLine(h,h._bl);};tl.querySelectorAll('input[data-c1]').forEach(function(i){i.onchange=function(){CX[i.dataset.c1]=i.checked?1:0;cxKeep();c1d();};});
+    tl.querySelectorAll('#c1O [data-cxac]').forEach(function(b){b.onclick=function(){var on=b.dataset.cxac==='1';CX.c1b=CX.c1l=on?1:0;tl.querySelectorAll('input[data-c1]').forEach(function(i){i.checked=on;});cxKeep();c1d();};});})();
+  (function(){var mc=q('ovMvI');if(!mc)return;var tl=mc.querySelector('.card-h .tools');if(!tl)return;tl.insertAdjacentHTML('beforeend','<span class="cxo">'+cxAC()+'</span>');tl.querySelectorAll('[data-cxac]').forEach(function(b){b.onclick=function(){var on=b.dataset.cxac==='1';['ovMiN','ovMiB'].forEach(function(id){var i=$(id);if(i&&i.checked!==on){i.checked=on;i.dispatchEvent(new Event('change',{bubbles:true}));}});};});})();
+  (function(){var add=function(id,html){var c=q(id);if(!c||!html)return;var h2=c.querySelector('.card-h h2');if(h2&&!c.querySelector('.cxmom'))h2.insertAdjacentHTML('afterend',html);};
+    add('ovCh',cxMoM(rows,[{}]));})();
+  /* 9. data last updated, 4. reset, 5. download all */
+  (function(){var nav=wrap.querySelector('.cx-nav'),lt=rows.reduce(function(m,o){return o.iso>m?o.iso:m;},''),lu=lastLoad?new Date(lastLoad):null;
+    nav.insertAdjacentHTML('beforeend','<span class="cx-sp"></span><span class="cx-upd">Data last updated: <b>'+(lu&&!isNaN(lu)?dmy(lu.toISOString().slice(0,10))+' '+lu.toTimeString().slice(0,5):'–')+'</b> · Last trade <b>'+(lt?dmy(lt):'–')+'</b></span><button type="button" class="btn sm" id="cxReset">↺ Reset all charts</button><button type="button" class="btn sm" id="cxPdf">⬇ Download all (PDF)</button>');
+    $('cxReset').onclick=function(){var d=JSON.parse(CXDEF);Object.keys(CX).forEach(function(k){delete CX[k];});Object.keys(d).forEach(function(k){CX[k]=d[k];});CX.v2=1;cxKeep();ovPie='chg';ovCmpV='st';render();};
+    $('cxPdf').onclick=function(){var cards=Array.from(el.querySelectorAll('.cxg>.card')).filter(function(c){return c.offsetParent!==null;}),w=window.open('','_blank');if(!w){showMessage('Allow pop-ups to download the PDF.',true);return;}
+      w.document.write('<html><head><meta charset="utf-8"><title>Minix charts '+dmy(lt||'')+'</title><style>body{font-family:Inter,Segoe UI,sans-serif;margin:18px;color:#111}h1{font-size:18px;margin:0 0 4px}p{margin:0 0 12px;font-size:12px;color:#555}.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}img{width:100%;border:1px solid #ddd;border-radius:8px;break-inside:avoid}@media print{.g{gap:8px}}</style></head><body><h1>Charts &amp; Insights</h1><p>'+esc(filterLabel())+' · Last trade '+dmy(lt||'')+'</p><div class="g" id="g">Preparing charts…</div></body></html>');w.document.close();
+      var out=[],i=0,next=function(){if(i>=cards.length){var g=w.document.getElementById('g');g.innerHTML=out.join('');setTimeout(function(){w.focus();w.print();},600);return;}cardCanvas(cards[i++],function(c){if(c)out.push('<img src="'+c.toDataURL('image/png')+'">');next();});};next();};})();
+  /* 8. click a month bar -> traders of that month */
+  (function(){var lab={};uniq(rows.map(function(o){return o.mkey;})).filter(Boolean).forEach(function(k){lab[monthLabelFromKey(k)]=k;});
+    wrap.onclick=function(e){var r=e.target.closest('[data-tip]');if(!r||!r.closest('.cxg'))return;var mk=lab[String(r.getAttribute('data-tip')).split('\n')[0]];if(!mk)return;var card=r.closest('.card'),isChg=/charges/i.test(cardTitle(card)),l=rows.filter(function(o){return o.mkey===mk;});
+      var tr=Array.from(groupBy(l,function(o){return o.trader;}).entries()).map(function(x){var f=capAvg(x[1],S,'fund'),n=sum(x[1],function(o){return V(o,S,'net');}),c=sum(x[1],function(o){return V(o,S,'chg');});return {n:x[0],net:n,chg:c,roi:f?n/f*100:0};}).filter(function(x){return Math.abs(x.net)>=1||x.chg>=1;}).sort(function(a,b){return isChg?b.chg-a.chg:b.net-a.net;});
+      var m=D.createElement('div');m.className='cx-pop';m.innerHTML='<div class="cx-pop-in"><div class="card-h"><h2>'+esc(monthLabelFromKey(mk))+' – trader wise'+(isChg?' charges':' net P&amp;L')+'</h2><div class="tools"><button type="button" class="btn sm" data-x>✕ Close</button></div></div><table class="tbl calc"><thead><tr><th>#</th><th>Trader</th><th class="n">Net P&amp;L</th><th class="n">ROI</th><th class="n">Charges</th></tr></thead><tbody>'+tr.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(x.n)+'</td><td class="n '+cls(x.net)+'">'+money(x.net)+'</td><td class="n '+cls(x.roi)+'">'+pct(x.roi)+'</td><td class="n">'+money(x.chg)+'</td></tr>';}).join('')+'</tbody></table></div>';
+      D.body.appendChild(m);var close=function(){m.remove();D.removeEventListener('keydown',esc2);},esc2=function(ev){if(ev.key==='Escape')close();};D.addEventListener('keydown',esc2);m.onclick=function(ev){if(ev.target===m||ev.target.closest('[data-x]'))close();};};})();
+  /* 7. labels on / off per chart */
+  el.querySelectorAll('.cxg>.card').forEach(function(card){var k=CHART_KEYS.find(function(id){return card.querySelector('#'+id);});if(k&&(CX.lblOff||{})[k])card.classList.add('cxlbl-off');});
+  chartTools(el);
+  el.querySelectorAll('.cxg>.card .ctb').forEach(function(tb){if(tb.querySelector('[data-ct="lbl"]'))return;var card=tb.closest('.card'),k=CHART_KEYS.find(function(id){return card.querySelector('#'+id);});tb.insertAdjacentHTML('afterbegin','<button type="button" class="btn sm" data-ct="lbl" title="Show or hide the numbers on the chart">Labels: '+(card.classList.contains('cxlbl-off')?'Off':'On')+'</button>');
+    tb.querySelector('[data-ct="lbl"]').onclick=function(){var off=!card.classList.contains('cxlbl-off');card.classList.toggle('cxlbl-off',off);this.textContent='Labels: '+(off?'Off':'On');CX.lblOff=CX.lblOff||{};if(k){CX.lblOff[k]=off?1:0;cxKeep();}};});};
 
 function chartTools(el){el.querySelectorAll('.ovg>.card').forEach(function(card){var hd=card.querySelector('.card-h');if(!hd||hd.querySelector('.ctb'))return;var tl=hd.querySelector('.tools');if(!tl){tl=D.createElement('div');tl.className='tools';var p=hd.querySelector('p');hd.insertBefore(tl,p||null);}
-  tl.insertAdjacentHTML('beforeend','<span class="ctb"><button type="button" class="btn sm" data-ct="fs" title="Full screen">⛶</button><button type="button" class="btn sm" data-ct="xls" title="Download data as Excel">Excel</button><button type="button" class="btn sm" data-ct="png" title="Save chart as a picture">PNG</button></span>');
+  tl.insertAdjacentHTML('beforeend','<span class="ctb"><button type="button" class="btn sm" data-ct="fs" title="Full screen">⛶</button><span class="ctdl"><button type="button" class="btn sm" data-ct="dl" title="Download (Excel / PNG)">⬇</button><span class="ctdm" hidden><button type="button" class="btn sm" data-ct="xls" title="Download data as Excel">Excel</button><button type="button" class="btn sm" data-ct="png" title="Save chart as a picture">PNG</button></span></span></span>');
   tl.querySelector('[data-ct="fs"]').onclick=function(){var on=!card.classList.contains('cfull');D.querySelectorAll('.cfull').forEach(function(c){c.classList.remove('cfull');delete c.dataset.nw;});D.body.classList.toggle('cfull-on',on);window.CFULL=null;
-    if(on){var k=CHART_KEYS.find(function(id){return card.querySelector('#'+id);});card.dataset.nw=card.clientWidth;window.CFULL={k:k,nw:card.clientWidth};card.classList.add('cfull');}};
-  tl.querySelector('[data-ct="xls"]').onclick=function(){cardXls(card);};tl.querySelector('[data-ct="png"]').onclick=function(){cardPng(card);};});
-  if(!window._cfEsc){window._cfEsc=1;D.addEventListener('keydown',function(e){if(e.key==='Escape'){D.querySelectorAll('.cfull').forEach(function(c){c.classList.remove('cfull');delete c.dataset.nw;});D.body.classList.remove('cfull-on');window.CFULL=null;}});}}
+    if(on){var k=CHART_KEYS.find(function(id){return card.querySelector('#'+id);});window.CFULL={k:k};cxTop();card.classList.add('cfull');}render();};
+  var dm=tl.querySelector('.ctdm');tl.querySelector('[data-ct="dl"]').onclick=function(e){e.stopPropagation();var op=dm.hidden;D.querySelectorAll('.ctdm').forEach(function(p){p.hidden=true;});dm.hidden=!op;};
+  tl.querySelector('[data-ct="xls"]').onclick=function(){dm.hidden=true;cardXls(card);};tl.querySelector('[data-ct="png"]').onclick=function(){dm.hidden=true;cardPng(card);};});
+  if(!window._cfEsc){window._cfEsc=1;D.addEventListener('keydown',function(e){if(e.key==='Escape'&&window.CFULL){D.querySelectorAll('.cfull').forEach(function(c){c.classList.remove('cfull');delete c.dataset.nw;});D.body.classList.remove('cfull-on');window.CFULL=null;render();}});}}
 function ovExtra(el,rows){
   var strat=Array.from(groupBy(rows,function(o){return o.strategy;}).entries()).map(function(e){return statRow(e[0],stats(e[1],GSEG));}).filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;});
   var dm=peopleRows(rows,'demat').filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;});
@@ -2913,30 +3064,37 @@ function ovExtra(el,rows){
   ovDrawdown($('ovDR'),rows);
   try{drawSegStart($('ovSeg'));}catch(e){console.error(e);}
   miniCal($('ovCal'),rows);
-  var cr=withCtx(rows,function(){return comboRows(rows);});
-  table($('ovCmb'),{id:'ov-cmb',title:'Trader combination',search:false,defaultSort:{key:'tfund',dir:-1},columns:[{key:'name',label:'Combination'},{key:'traders',label:'Traders',type:'int'},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}],tree:cr.map(function(r){return r.parts.length?{row:r,children:r.parts.map(function(p){return {row:p};})}:{row:r};}),total:(function(){var st0=stats(rows,GSEG),t={name:'Total',tfund:sum(cr,function(r){return r.tfund;}),fund:capAvg(rows,null,'fund'),net:sum(cr,function(r){return r.net;}),pos:st0.pos,neg:st0.neg};t.roi=t.fund?t.net/t.fund*100:0;return t;})()});
+  if($('ovCmbBtns')){$('ovCmbBtns').innerHTML=segBtns('ovcmbv',[['c','Combination'],['s','Segment']],OVCMBV);bindSeg(el,'ovcmbv',function(v){OVCMBV=v;try{localStorage.setItem('MX_CMBV',v);}catch(e){}render();});}
+  var cmbCols=function(first){return [{key:'name',label:first},{key:'traders',label:'Traders',type:'int'},{key:'tfund',label:'Total fund',type:'money',plain:1,render:function(v,r){return money(v||0)+(r&&r.tfd?'<small class="muted" style="display:block">last on '+dmyS(r.tfd)+'</small>':'');}},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}];};
+  if(OVCMBV==='s'){var segRow=function(l,name,S){var st=stats(l,S),f=capAvg(l,S,'fund'),n=sum(l,function(o){return V(o,S,'net');});return {name:name,traders:uniq(l.map(function(o){return o.trader;})).length,tfund:fundInfo(l,S).total,fund:f,net:n,roi:f?n/f*100:0,pos:st.pos,neg:st.neg};};
+    var sTree=(GSEG?[GSEG]:SEGS).map(function(S){var sub=rows.filter(function(o){var x=o.seg[S];return x.net||x.gross||x.chg;});if(!sub.length)return null;return {row:segRow(sub,SEGNAME[S],S),children:Array.from(groupBy(sub,function(o){return o.trader;}).entries()).map(function(e){return {row:segRow(e[1],e[0],S)};}).sort(function(a,b){return b.row.net-a.row.net;})};}).filter(Boolean);
+    var st1=stats(rows,GSEG),tt={name:'Total',traders:uniq(rows.map(function(o){return o.trader;})).length,tfund:fundInfo(rows,GSEG).total,fund:capAvg(rows,GSEG,'fund'),net:st1.net,pos:st1.pos,neg:st1.neg};tt.roi=tt.fund?tt.net/tt.fund*100:0;
+    table($('ovCmb'),{id:'ov-cmb-s',title:'Trader combination – segment',search:false,defaultSort:{key:'tfund',dir:-1},columns:cmbCols('Segment'),tree:sTree,total:tt});}
+  else{var cr=withCtx(rows,function(){return comboRows(rows);});
+  table($('ovCmb'),{id:'ov-cmb',title:'Trader combination',search:false,defaultSort:{key:'tfund',dir:-1},columns:cmbCols('Combination'),tree:cr.map(function(r){return r.parts.length?{row:r,children:r.parts.map(function(p){return {row:p};})}:{row:r};}),total:(function(){var st0=stats(rows,GSEG),t={name:'Total',tfund:sum(cr,function(r){return r.tfd?0:r.tfund;}),fund:capAvg(rows,null,'fund'),net:sum(cr,function(r){return r.net;}),pos:st0.pos,neg:st0.neg};t.roi=t.fund?t.net/t.fund*100:0;return t;})()});}
   ovShortNames(el);}
 var MIV={};
 function miHtml(px){return '<div class="card"><div class="card-h"><h2>Minix vs Index</h2><div class="tools"><label class="lvl"><input type="checkbox" id="'+px+'MiN" checked> Nifty 50</label><label class="lvl"><input type="checkbox" id="'+px+'MiB" checked> Bank Nifty</label><span id="'+px+'MiBtns"></span></div><p>Minix ROI vs Nifty 50 % and Bank Nifty % change.</p></div><div class="chart" id="'+px+'MvI"></div></div>';}
 function miBind(root,rows,px){if(!$(px+'MvI'))return;MIV[px]=MIV[px]||'fy';var nm=px+'mi';
-  var draw=function(){var keys,lab,grp;if(MIV[px]==='fy'){grp=groupBy(rows,function(o){return o.fy;});keys=Array.from(grp.keys()).sort();lab=function(k){return k;};}else{grp=groupBy(rows,function(o){return o.mkey;});keys=Array.from(grp.keys()).sort().slice(-12);lab=monthLabelFromKey;}
-    var mi=[],nf=[],bk=[];keys.forEach(function(k){var l=grp.get(k),st=stats(l,GSEG),nb=niftyBank(l);mi.push(st.roi);nf.push(nb[0]);bk.push(nb[1]);});
+  var draw=function(){var keys,lab,grp,_mk=uniq(rows.map(function(o){return o.mkey;})).filter(Boolean),daily=_mk.length===1;if(daily){grp=groupBy(rows,function(o){return o.iso;});keys=Array.from(grp.keys()).filter(Boolean).sort();lab=dShort;}else if(MIV[px]==='fy'){grp=groupBy(rows,function(o){return o.fy;});keys=Array.from(grp.keys()).sort();lab=function(k){return k;};}else{grp=groupBy(rows,function(o){return o.mkey;});keys=Array.from(grp.keys()).sort().slice(-12);lab=monthLabelFromKey;}
+    var mi=[],nf=[],bk=[];keys.forEach(function(k){var l=grp.get(k),st=stats(l,GSEG),nb=daily?[idxChg('Nifty 50',k),idxChg('Nifty Bank',k)]:niftyBank(l);mi.push(st.roi);nf.push(nb[0]);bk.push(nb[1]);});
     var ser=[{name:'Minix ROI',color:'var(--accent)',v:mi}];if($(px+'MiN').checked)ser.push({name:'Nifty 50',color:'#F59E0B',v:nf});if($(px+'MiB').checked)ser.push({name:'Bank Nifty',color:'#A855F7',v:bk});
     lineMulti($(px+'MvI'),keys.map(lab),ser);};
   var btn=function(){$(px+'MiBtns').innerHTML=segBtns(nm,[['fy','FY'],['m','Monthly']],MIV[px]);bindSeg(root,nm,function(v){MIV[px]=v;btn();draw();});};
   btn();draw();$(px+'MiN').onchange=draw;$(px+'MiB').onchange=draw;}
 function lineMulti(el,labels,ser){if(!el)return;if(!labels.length){el.innerHTML='<div class="empty">No data</div>';return;}
-  var W=chartWidth(el),H=230,L=46,Rr=70,T=24,B=28,all=[],LB=[],sid=0;ser.forEach(function(s){s.v.forEach(function(x){if(x!=null&&isFinite(x))all.push(x);});});var mn=Math.min(0,Math.min.apply(null,all.length?all:[0])),mx=Math.max(0,Math.max.apply(null,all.length?all:[0]));
+  var W=chartWidth(el),H=fsH(el,230),L=46,Rr=70,T=24,B=28,all=[],LB=[],sid=0;ser.forEach(function(s){s.v.forEach(function(x){if(x!=null&&isFinite(x))all.push(x);});});var mn=Math.min(0,Math.min.apply(null,all.length?all:[0])),mx=Math.max(0,Math.max.apply(null,all.length?all:[0]));
   var tk=niceTicks(mn,mx,4),lo=tk[0],hi=tk[tk.length-1],n=labels.length,X=function(i){return n===1?(L+(W-L-Rr)/2):L+(W-L-Rr)*i/(n-1);},Y=function(v){return T+(H-T-B)*(1-(v-lo)/((hi-lo)||1));},g='';
   tk.forEach(function(t){g+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" style="stroke:var(--line)" '+(t===0?'':'stroke-dasharray="2 4"')+'/><text x="'+(L-6)+'" y="'+(Y(t)+3.5)+'" text-anchor="end">'+t.toFixed(Math.abs(hi-lo)<4?1:0)+'%</text>';});
-  labels.forEach(function(lb,i){if(n<=14||i%2===0)g+='<text x="'+X(i)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
+  var _st=(W-L-Rr)/Math.max(1,n-1),_xk=lblK(_st,Math.max.apply(null,labels.map(function(z){return String(z).length;}))),_vk=lblK(_st,7);
+  labels.forEach(function(lb,i){if(i%_xk===0)g+='<text x="'+X(i)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(lb)+'</text>';});
   ser.forEach(function(s){var pts=[];s.v.forEach(function(v,i){if(v!=null&&isFinite(v))pts.push([X(i),Y(v),v,i]);});if(!pts.length)return;
     g+='<polyline fill="none" points="'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+'" style="stroke:'+s.color+';stroke-width:2.2"/>';
     pts.forEach(function(p){g+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3.6" style="fill:'+s.color+'" data-tip="'+esc(s.name+' · '+labels[p[3]]+'\n'+(p[2]>=0?'+':'')+p[2].toFixed(2)+'%')+'"/>';LB.push({x:p[0],y:p[1],v:p[2],i:p[3],c:s.color,sid:sid});});sid++;
     var lp=pts[pts.length-1];s._ly=lp[1];});
   var ends=ser.filter(function(s){return s._ly!=null;}).sort(function(a,b){return a._ly-b._ly;});for(var e=1;e<ends.length;e++)if(ends[e]._ly-ends[e-1]._ly<12)ends[e]._ly=ends[e-1]._ly+12;
   ends.forEach(function(s){g+='<text x="'+(W-Rr+8)+'" y="'+(s._ly+3.5).toFixed(1)+'" style="font-size:10px;fill:'+s.color+';font-weight:600">'+esc(s.name)+'</text>';delete s._ly;});
-  if(n>24){var keep={};for(var q=0;q<sid;q++){var sl=LB.filter(function(b){return b.sid===q;});if(!sl.length)continue;var a1=sl.reduce(function(a,b){return b.v>a.v?b:a;}),a2=sl.reduce(function(a,b){return b.v<a.v?b:a;});keep[q+'|'+a1.i]=1;keep[q+'|'+a2.i]=1;keep[q+'|'+sl[sl.length-1].i]=1;}LB=LB.filter(function(b){return keep[b.sid+'|'+b.i];});}
+  if(_vk>1){var keep={};for(var q=0;q<sid;q++){var sl=LB.filter(function(b){return b.sid===q;});if(!sl.length)continue;var a1=sl.reduce(function(a,b){return b.v>a.v?b:a;}),a2=sl.reduce(function(a,b){return b.v<a.v?b:a;});keep[q+'|'+a1.i]=1;keep[q+'|'+a2.i]=1;keep[q+'|'+sl[sl.length-1].i]=1;sl.forEach(function(b){if(b.i%_vk===0&&n-1-b.i>=_vk)keep[q+'|'+b.i]=1;});}LB=LB.filter(function(b){return keep[b.sid+'|'+b.i];});}
   var byc={};LB.forEach(function(b){(byc[b.i]=byc[b.i]||[]).push(b);});
   Object.keys(byc).forEach(function(k){var c=byc[k].sort(function(a,b){return a.y-b.y;});c.forEach(function(b,j){b.ly=j===0?b.y-8:(j===c.length-1?b.y+15:(b.y-c[j-1].y>20?b.y-8:b.y+15));});
     c.sort(function(a,b){return a.ly-b.ly;});for(var j=1;j<c.length;j++)if(c[j].ly-c[j-1].ly<11)c[j].ly=c[j-1].ly+11;
@@ -3241,14 +3399,17 @@ R.fy=function(el,rows){rows=segRows(rows);var S=GSEG,s=stats(rows,S),fi=fundInfo
 
 /* ---------- 1. Overview (one page, tabbed cards) ---------- */
 var ovChart='day',ovSeries='Net',ovPie='chg',ovBot='top',ovHw='top',ovHr='6',ovRk={kw:'trader',km:'trader',w:'',m:''},ovHm={p:'7',m:'%'};
+/* Company split in the Net P&L card: net, ROI and trading days per company. */
+function coLines(rows){var g=groupBy(rows,function(o){return o.company;});var ks=Array.from(g.keys()).sort(function(a,b){return a<b?-1:1;});if(!ks.length)return '';
+  return '<div class="co-lines">'+ks.map(function(c){var st=stats(g.get(c),GSEG);return '<div class="co-line"><span class="co-n">'+esc(c.replace(' Pvt Ltd',''))+'</span><b class="num '+cls(st.net)+'">'+short(st.net)+'</b><span class="co-m">ROI <b class="'+cls(st.roi)+'">'+pct(st.roi)+'</b> · '+plural(st.days,'day')+'</span></div>';}).join('')+'</div>';}
 R.overview=function(el,rows){
   var s=stats(rows,GSEG),fi=fundInfo(rows,GSEG),dates=Object.keys(s.dn).sort(),from=dates[0],to=dates[dates.length-1],nb=niftyBank(rows),comps=Object.keys(fi.byCompany).sort();
   var segS=SEGS.map(function(S){return [S,stats(rows,S)];});
   var chgItem=CHG.map(function(c){return [c[1],sum(rows,function(o){return GSEG?o.seg[GSEG].ch[c[0]]:o.seg.FNO.ch[c[0]]+o.seg.Cash.ch[c[0]]+o.seg.MCX.ch[c[0]];})];});
   var compNet={};comps.forEach(function(c){compNet[c]=netOf(rows.filter(function(o){return o.company===c;}));});
   var last=to,ls=stats(rows.filter(function(o){return o.iso===last;}),GSEG);
-  CALC={tf:{title:'Total fund',how:'Each company’s fund on its last trading day, added together. Inside a company, every trader’s fund pools on his last date are counted once.',rows:comps.map(function(c){return [esc(c)+' ('+dmy(fi.companyDate[c])+')',money(fi.byCompany[c])];}),total:['Total fund',money(fi.total)]},
-    af:{title:'Average fund',how:'For every trading day, add up all fund pools; then average those daily totals.',rows:[['Trading days',dates.length],['Sum of daily totals',money(s.fund*dates.length)]],total:['Average fund',money(s.fund)],note:'A pool with two rows on the same day is counted once (larger value). Zero-fund rows are skipped.'},
+  CALC={tf:{title:'Total fund',how:'Active traders only (traded in the last '+FUND_ACTIVE_DAYS+' days). For each trader, every fund row on his last trading day is added. Minix Holding: each demat + strategy pool’s fund on its own last day.',rows:comps.map(function(c){return [esc(c)+' ('+dmy(fi.companyDate[c])+')',money(fi.byCompany[c])];}),total:['Total fund',money(fi.total)]},
+    af:{title:'Average fund',how:'Add the fund of every row, then divide by the number of trading days.',rows:[['Trading days',dates.length],['Sum of daily totals',money(s.fund*dates.length)]],total:['Average fund',money(s.fund)],note:'Every row is counted (rows are not merged). Days = all trading days in the period.'},
     mu:{title:'Average margin used',how:'Same method as average fund, using the Margin Utilized column.',rows:[['Average margin used',money(s.util)],['Average fund',money(s.fund)]],total:['Margin used % of fund',pct(s.utilPct,1)]},
     gr:{title:'Gross P&L',how:'Gross = Charges + Net for each segment.',rows:segS.map(function(x){return [SEGNAME[x[0]],money(x[1].gross)];}),total:['Gross P&L',money(s.gross)]},
     ch:{title:'Charges',how:'Sum of the Gorv Chg column (brokerage + government charges).',rows:chgItem.filter(function(x){return x[1];}).map(function(x){return [x[0],money(x[1])];}),total:['Charges',money(s.chg)]},
@@ -3257,7 +3418,7 @@ R.overview=function(el,rows){
     wr:{title:'Trader win rate',how:'One day per trader per date. Win = net above zero; loss = below zero.',rows:[['Winning trader-days',s.pos.toLocaleString('en-IN')],['Losing trader-days',s.neg.toLocaleString('en-IN')]],total:['Win rate',pct(s.win,1)]},
     dv:{title:'Dividend received',how:'Sum of the Dividend Received column. Not added to Net P&L.',rows:[['Dividend',money(s.div)]],total:['Dividend received',money(s.div)]}};
   var fsplit=function(f){return comps.map(function(c){return c.replace(' Pvt Ltd','').replace('Minix ','')+' '+short(f(c));}).join(' · ');};
-  el.innerHTML='<div class="grid g21 tight"><div class="card hero sm"><div class="hero-l"><div class="lbl">Net P&amp;L after charges · '+segLabel()+'</div><div class="big num '+cls(s.net)+'">'+short(s.net)+'</div><div class="sub"><span>ROI <b class="'+cls(s.roi)+'">'+pct(s.roi)+'</b></span><span>Avg fund <b>'+short(s.fund)+'</b></span></div><div class="sub"><span class="gain">'+plural(s.dpos,'profit day')+'</span><span class="loss">'+plural(s.dneg,'loss day')+'</span></div><div class="meta">'+(from?dmy(from)+' to '+dmy(to)+' · ':'')+plural(s.traders,'trader')+'</div></div><div class="hero-r"><div class="chart" id="ovCurve"></div></div></div>'+
+  el.innerHTML='<div class="grid g21 tight"><div class="card hero sm"><div class="hero-l"><div class="lbl">Net P&amp;L after charges · '+segLabel()+'</div><div class="big num '+cls(s.net)+'">'+short(s.net)+'</div><div class="sub"><span>ROI <b class="'+cls(s.roi)+'">'+pct(s.roi)+'</b></span><span>Avg fund <b>'+short(s.fund)+'</b></span></div>'+coLines(rows)+'<div class="sub"><span class="gain">'+plural(s.dpos,'profit day')+'</span><span class="loss">'+plural(s.dneg,'loss day')+'</span><span>'+plural(s.days,'total day')+'</span></div><div class="meta">'+(from?dmy(from)+' to '+dmy(to)+' · ':'')+plural(s.traders,'trader')+'</div></div><div class="hero-r"><div class="chart" id="ovCurve"></div></div></div>'+
     '<div class="card fs-mini"><div class="card-h"><h2>Fund summary</h2></div><div class="fsr"><span>Total fund</span><b>'+short(fi.total)+'</b></div><small>'+fsplit(function(c){return fi.byCompany[c];})+'</small><div class="fsr"><span>+ Net P&amp;L</span><b class="'+cls(s.net)+'">'+short(s.net)+'</b></div><div class="fsr hl"><span>= Net fund</span><b>'+short(fi.total+s.net)+'</b></div><small>'+fsplit(function(c){return fi.byCompany[c]+(compNet[c]||0);})+'</small><div class="mkt3"><span>Nifty 50 <b class="'+cls(idxChg('Nifty 50',last))+'">'+pct(idxChg('Nifty 50',last)||0)+'</b></span><span>Bank Nifty <b class="'+cls(idxChg('Nifty Bank',last))+'">'+pct(idxChg('Nifty Bank',last)||0)+'</b></span><span>Minix today <b class="'+cls(ls.net)+'">'+pct(fi.total?ls.net/fi.total*100:0)+'</b></span></div></div></div>'+
     '<div class="kpis k9">'+kpiC('tf','Total fund',short(fi.total),'')+kpiC('af','Average fund',short(s.fund),'')+kpiC('mu','Margin used',short(s.util),pct(s.utilPct,1)+' of fund')+kpiC('gr','Gross P&amp;L',short(s.gross),'',cls(s.gross))+kpiC('ch','Charges',short(s.chg),'')+kpiC('np','Net P&amp;L',short(s.net),'',cls(s.net))+kpiC('roi','ROI on fund',pct(s.roi),'',cls(s.roi))+kpiC('wr','Win rate',pct(s.win,1),'')+kpiC('dv','Dividend',short(s.div),'Not in net')+'</div>'+
     '<div class="card" id="ovMkt"></div>'+
@@ -3275,7 +3436,7 @@ R.overview=function(el,rows){
     '<div class="grid g2 tight"><div class="card"><div class="card-h"><h2>Fund flow</h2><p>Opening → added → withdrawn → closing → net P&amp;L → net fund</p></div><div class="chart" id="ovFlow"></div></div>'+
     '<div class="card"><div class="card-h"><h2 id="ovPieT"></h2><div class="tools">'+tabs('ovpie',[['chg','Charges'],['co','Company'],['sg','Segment'],['np','Net'],['br','Broker']],ovPie)+'</div></div><div id="ovPie"></div></div></div>';
   el.insertAdjacentHTML('beforeend',OVX);ovArrange(el);
-  lineChart($('ovCurve'),[{name:'Cumulative net',color:s.net>=0?'var(--gain)':'var(--loss)',points:s.curve}],{area:true,zero:true,h:105});
+  lineChart($('ovCurve'),[{name:'Cumulative net',color:s.net>=0?'var(--gain)':'var(--loss)',points:s.curve}],{area:true,zero:true,h:125,hero:1});
   /* market cards */
   $('ovMkt').innerHTML='<div class="card-h"><h2>Market today</h2><p>'+(last?dmy(last):'')+'</p></div><table class="tbl calc mkt-t"><thead><tr><th></th><th class="n">Close / Net</th><th class="n">Change</th><th class="n">Points / Up-Down</th></tr></thead><tbody>'+['Nifty 50','Nifty Bank'].map(function(n){var nm=n==='Nifty Bank'?'Bank Nifty':'Nifty 50',l=MARKET.filter(function(m){return m.index===n&&(!to||m.iso<=to);}).sort(function(a,b){return a.iso<b.iso?-1:1;});var z=l[l.length-1];if(!z)return '<tr><td>'+nm+'</td><td class="n muted" colspan="3">No data</td></tr>';
       return '<tr><td>'+nm+'</td><td class="n">'+z.close.toLocaleString('en-IN',{maximumFractionDigits:2})+'</td><td class="n '+cls(z.chg)+'">'+(z.chg>=0?'▲ ':'▼ ')+pct(Math.abs(z.chg))+'</td><td class="n '+cls(z.pts)+'">'+(z.pts>=0?'+':'-')+Math.abs(z.pts).toFixed(2)+'</td></tr>';}).join('')+
@@ -3449,25 +3610,19 @@ var LF={company:'',trader:'',researcher:'',portfolio:'',demat:''},vbP='co_tr';
 R.people=function(el,rows){
   rows=segRows(rows);
   var fi=fundInfo(rows,GSEG),s=stats(rows,GSEG),nb=niftyBank(rows);
-  var la=lvGet('pa',['company','trader','','']),lc=lvGet('pc',['company','trader','','']);
-  el.innerHTML='<div class="card"><div class="card-h"><h2>All traders</h2><p>Pick up to 4 levels in any order (Level 1 + 4, Level 2 + 3 or all four). Grouped rows open with + / −. Click a name for the profile.</p></div>'+lvBar('pa','tr',la,LVTR_SC)+'<div id="ppAll"></div></div>'+
-    '<div class="card"><div class="card-h"><h2>Charges by trader &amp; efficiency</h2><p>Efficiency: charges % of average fund (lower is better) and charges % of gross profit.</p></div>'+lvBar('pc','tr',lc,LVTR_SC)+'<div id="ppChg"></div></div>'+
+  var la=lvGet('pa',['company','trader','','','','']);while(la.length<6)la.push('');
+  el.innerHTML='<div class="card"><div class="card-h"><h2>All traders</h2><p>Pick up to 6 levels in any order. Grouped rows open with + / −. Click a name for the profile.</p></div>'+lvBar('pa','tr',la,null,6)+'<div id="ppAll"></div></div>'+
     '<div class="card"><div class="card-h"><h2>All traders – date wise</h2><p>Nifty and Bank Nifty % next to ROI. Net fund = total fund that day + net P&amp;L till that day.</p></div><div class="cb" id="ppDate"></div></div>';
-  lvBind(el,'pa');lvBind(el,'pc');
-  var mk=function(list,name,kind,sg){return Object.assign({name:name,kind:kind},chgMetrics(list,sg||GSEG));};
+  lvBind(el,'pa');
+  var mk=function(list,name,kind,sg){var r=Object.assign({name:name,kind:kind},chgMetrics(list,sg||GSEG));r.traders=uniq(list.map(function(o){return o.trader;})).length;if(r.chgPct==null)r.chgPct=r.fund?r.chg/r.fund*100:0;return r;};
   var act=la.filter(Boolean),flat=!act.length||(act.length===1&&act[0]==='trader');
   var acols=[{key:'name',label:act.length?act.map(function(k){return lvName('tr',k);}).join(' → '):'Trader',render:function(v,r){return r.kind?who(v,r.kind):esc(v);}}];
   if(flat)acols=acols.concat([{key:'company',label:'Company'},{key:'portfolio',label:'Portfolio'},{key:'researcher',label:'Research'}]);
-  acols=acols.concat([{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'net',label:'Net P&L',type:'money'},{key:'nfund',label:'Net fund',type:'money',plain:1},{key:'days',label:'Days',type:'int'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'},{key:'win',label:'Win %',type:'pct',plain:1},{key:'roi',label:'ROI',type:'pct'}],idxCols(),[{key:'best',label:'Best day',type:'money'},{key:'worst',label:'Worst day',type:'money'},{key:'maxDD',label:'Max drawdown',type:'money'},{key:'div',label:'Dividend',type:'money',plain:1}]);
+  acols=acols.concat([{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'chgPct',label:'Charges % of fund',type:'pct',plain:1,render:function(v){return '<span class="'+(v>2.5?'loss':v<1?'gain':'warn')+'">'+pct(v||0)+'</span>';}},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI',type:'pct'},{key:'traders',label:'Traders',type:'int'},{key:'win',label:'Win %',type:'pct',plain:1},{key:'nfund',label:'Net fund',type:'money',plain:1},{key:'days',label:'Days',type:'int'},{key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'}],idxCols(),[{key:'div',label:'Dividend',type:'money',plain:1}]);
   var ctxOk=act.indexOf('mkey')<0&&(act.indexOf('combo')>=0||act.indexOf('seg')>=0);if(ctxOk)FI_CTX=rangeOf(rows)[1];
-  var avd=flat?{rows:peopleRows(rows,'trader').map(function(r){r.kind='Trader';return r;})}:(act.length===1?{rows:lvTree(rows,act,mk).map(function(n){return n.row;})}:{tree:lvTree(rows,act,mk)});
+  var avd=flat?{rows:peopleRows(rows,'trader').map(function(r){r.kind='Trader';r.traders=1;if(r.chgPct==null)r.chgPct=r.fund?r.chg/r.fund*100:0;return r;})}:(act.length===1?{rows:lvTree(rows,act,mk).map(function(n){return n.row;})}:{tree:lvTree(rows,act,mk)});
   FI_CTX=null;
-  table($('ppAll'),Object.assign({id:'pp-all-'+(act.join('-')||'tr'),title:'All traders',defaultSort:{key:'net',dir:-1},columns:acols,total:statRow('Grand total',s,{tfund:fi.total,nfund:fi.total+s.net,nifty:nb[0],bank:nb[1]})},avd));
-  var ac=lc.filter(Boolean),ck=ac.length?ac:['trader'];
-  var ctx2=ck.indexOf('mkey')<0&&(ck.indexOf('combo')>=0||ck.indexOf('seg')>=0);if(ctx2)FI_CTX=rangeOf(rows)[1];
-  var cdata=ck.length===1?{rows:lvTree(rows,ck,mk).map(function(n){return n.row;})}:{tree:lvTree(rows,ck,mk)};
-  FI_CTX=null;
-  table($('ppChg'),Object.assign({id:'pp-chg-'+ck.join('-'),title:'Charges by trader & efficiency',defaultSort:{key:'chg',dir:-1},columns:[{key:'name',label:ck.map(function(k){return lvName('tr',k);}).join(' → '),render:function(v,r){return r.kind?who(v,r.kind):esc(v);}},{key:'tfund',label:'Total fund',type:'money',plain:1},{key:'fund',label:'Avg fund',type:'money',plain:1},{key:'gross',label:'Gross',type:'money'},{key:'chg',label:'Charges',type:'money',plain:1},{key:'chgPct',label:'Charges % of fund',type:'pct',plain:1,render:function(v){return '<span class="'+(v>2.5?'loss':v<1?'gain':'warn')+'">'+pct(v)+'</span>';}},{key:'gpPct',label:'Charges % of gross profit',type:'pct',plain:1,render:function(v){return v==null?'<span class="muted">gross in loss</span>':pct(v,1);}},{key:'net',label:'Net P&L',type:'money'}],total:Object.assign({name:'Total'},chgMetrics(rows))},cdata));
+  table($('ppAll'),Object.assign({id:'pp-all-'+(act.join('-')||'tr'),title:'All traders',defaultSort:{key:'net',dir:-1},columns:acols,total:statRow('Grand total',s,{tfund:fi.total,nfund:fi.total+s.net,nifty:nb[0],bank:nb[1],traders:s.traders,chgPct:s.fund?s.chg/s.fund*100:0})},avd));
   var dsAll=uniq(rows.map(function(o){return o.iso;})).sort(),cum=0,byD=groupBy(rows,function(o){return o.iso;});
   var drows=dsAll.map(function(d){var l=byD.get(d),f=capAvg(l,GSEG,'fund'),n=netOf(l),tf=fundInfo(rows,GSEG,d).total;cum+=n;var tn={};l.forEach(function(o){tn[o.trader]=(tn[o.trader]||0)+V(o,GSEG,'net');});var tp=0,tl=0;Object.keys(tn).forEach(function(k){if(tn[k]>0.004)tp++;else if(tn[k]<-0.004)tl++;});
     return {date:d,nifty:idxChg('Nifty 50',d),bank:idxChg('Nifty Bank',d),roi:f?n/f*100:0,tfund:tf,gross:sum(l,function(o){return V(o,GSEG,'gross');}),chg:sum(l,function(o){return V(o,GSEG,'chg');}),net:n,cum:cum,nfund:tf+cum,tp:tp,tl:tl};});
@@ -3567,7 +3722,7 @@ R.charges=function(el,rows){
   var flat=vd.rows||vd.tree.map(function(n){return n.row;});flat=flat.filter(function(r){return r.chg>0;}).sort(function(a,b){return b.chgPct-a.chgPct;}).slice(0,20);
   (function(h){if(!flat.length){h.innerHTML='<div class="empty">No charges</div>';return;}var W=chartWidth(h),rowH=22,L=Math.min(190,W*0.34),Rr=70,Hh=flat.length*rowH+6,mx=Math.max.apply(null,flat.map(function(r){return r.chgPct;}))*1.05||1,g='';flat.forEach(function(r,i){var y=3+i*rowH,w=r.chgPct/mx*(W-L-Rr);g+='<text x="'+(L-8)+'" y="'+(y+14)+'" text-anchor="end" style="fill:var(--text)">'+esc(r.name.length>24?r.name.slice(0,23)+'…':r.name)+'</text><rect x="'+L+'" y="'+(y+4)+'" width="'+Math.max(1,w)+'" height="12" rx="3" style="fill:'+(r.chgPct>2.5?'var(--loss)':r.chgPct<1?'var(--gain)':'var(--warn)')+'" data-tip="'+esc(r.name+'\nCharges '+money(r.chg)+'\n'+pct(r.chgPct)+' of avg fund')+'"/><text x="'+(L+w+6)+'" y="'+(y+14)+'">'+pct(r.chgPct)+'</text>';});h.innerHTML='<svg class="mxc" viewBox="0 0 '+W+' '+Hh+'">'+g+'</svg>';})($('cmpChg'));
   donut($('chPie'),[['STT / CTT',tot.STT,'var(--cash)'],['Transaction',tot['Trx Chgs'],'var(--mcx)'],['Brokerage + GST',tot.brk,'var(--fno)'],['Stamp',tot['Stamp Duty'],'var(--gain)'],['Others',tot['Sebi Chgs']+tot['IPF Charges']+tot['Clearing Charges']+tot.GST+Math.max(0,tot.other),'var(--faint)']],short(tot.chg),'Charges');
-  $('chPie').insertAdjacentHTML('beforeend','<table class="tbl calc" style="margin-top:10px"><tbody>'+[['Total charges',money(tot.chg)],['Government charges',money(tot.govt)],['Brokerage incl. GST',money(tot.brk)],['Other / rounding',money(tot.other)],['Charges % of gross',tot.gross?pct(tot.chg/Math.abs(tot.gross)*100):'–']].map(function(x,i){return '<tr'+(i===0?' style="font-weight:600"':'')+'><td>'+x[0]+'</td><td class="n">'+x[1]+'</td></tr>';}).join('')+'</tbody></table>');
+  $('chPie').insertAdjacentHTML('beforeend','<table class="tbl calc" style="margin-top:10px"><tbody>'+[['Total charges',money(tot.chg)],['Government charges',money(tot.govt)],['Brokerage incl. GST',money(tot.brk)],['Other / rounding',money(tot.other)],['Charges % of fund',(function(){var f=capAvg(rows,S,'fund');return f?pct(tot.chg/f*100):'–';})()]].map(function(x,i){return '<tr'+(i===0?' style="font-weight:600"':'')+'><td>'+x[0]+'</td><td class="n">'+x[1]+'</td></tr>';}).join('')+'</tbody></table>');
   var dm=peopleRows(rows,'demat');dm.forEach(function(r){r.chgPct=r.fund?r.chg/r.fund*100:0;});
   col3d($('brC'),dm.filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;}).map(function(r){return {label:r.name,value:r.net};}),{h:240,aria:'Broker / demat comparison'});
   var bm=groupBy(rows,function(o){return o.mkey;}),mk=Array.from(bm.keys()).sort(),ml=mk.map(function(k){return line(bm.get(k),monthLabelFromKey(k),{mkey:k});});
@@ -3799,21 +3954,21 @@ function fytsRender(box,rows){
 var PAGES=[
  {id:'overview',title:'Dashboard',sub:'Everything at a glance',icon:'<path d="M3 13h4v8H3zM10 9h4v12h-4zM17 4h4v17h-4z"/>'},
  {id:'charts',title:'Charts & Insights',sub:'All charts in one place',icon:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>'},
+ {id:'cal',title:'Calendar & Heatmaps',sub:'P&L calendar and heatmaps',icon:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2"/>'},
  {id:'traders',title:'Weekly & Monthly Performance',sub:'Rankings, weekly, heatmap, calendar, drawdown',icon:'<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/>'},
  {id:'people',title:'All Traders Analysis',sub:'All traders, charges, date wise',icon:'<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2.5h14V17"/>'},
- {id:'fy',title:'FY-wise Trading Performance',sub:'FY vs FY, company → segment → trader',icon:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h3M7 17h6"/>'},
  {id:'reports',title:'Excel Reports',sub:'Ready reports and custom report, .xlsx download',icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13l4 5M12 13l-4 5"/>'},
  {id:'index',title:'Index Data',sub:'Nifty 50 and Bank Nifty',icon:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>'},
  {id:'fund',title:'Fund & Risk',sub:'Fund flow, risk, transfers',icon:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>'},
  {id:'charges',title:'Charges & Brokers',sub:'Charges and efficiency',icon:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>'},
  {id:'wa',title:'WhatsApp Message Center',sub:'KANWAL MTM, segment summary, daily P&L',icon:'<path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 21l2.2-5.2A8.5 8.5 0 1 1 21 11.5z"/><path d="M9 9.5c.5 2 2 3.5 4 4.2l1.2-1.2 2 1-.6 1.8c-3.5.2-7.6-3.6-7.6-7.4l1.8-.6 1 2z"/>'},
- {id:'daily',title:'Today\u2019s Report',sub:'Submissions and daily summary',icon:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>'},
  {id:'rvc',title:'Report vs CSV',sub:'Trader report vs CSV farak, accuracy',icon:'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'},
  {id:'admin',title:'Admin Settings',sub:'Photos, limits, notes, data',icon:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'}];
 var SECS={overview:[['Net P&L and fund summary','Net P&L after charges'],['Segment start dates','Segment start dates'],['KPI cards','Total fund'],['Market today','Market today'],['Win ratio summary','Win ratio'],['Trader × month heatmap','Trader × month'],['Top 5 traders','Top 5'],['Capital utilization','Capital utilization'],['Trading P&L calendar','Trading P&L calendar']],
+ cal:[['Trading P&L calendar','Trading Calendar'],['P&L Heatmap','P&L Heatmap'],['Trader × month heatmap','Trader × month']],
  charts:[['Firm performance','Minix vs Index'],['Drawdown curve','Drawdown curve'],['Company & broker','Segment-wise'],['Fund flow','Fund flow'],['Traders','Net P&L by trader'],['Win rate trend','Win rate'],['Charges','Charges comparison'],['Charges by month','Charges by month']],
- traders:[['Weekly ranking','Weekly ranking'],['Monthly ranking','Monthly ranking'],['Weekly net P&L','Weekly net P&L'],['P&L Heatmap','P&L Heatmap'],['Trading Calendar','Trading Calendar'],['Drawdown','Drawdown table']],
- people:[['All traders','All traders'],['Charges by trader & efficiency','Charges by trader'],['Date wise','date wise'],['FY-wise Trader Summary','FY-wise Trader Summary']],
+ traders:[['Weekly ranking','Weekly ranking'],['Monthly ranking','Monthly ranking'],['Weekly net P&L','Weekly net P&L'],['Drawdown','Drawdown table']],
+ people:[['All traders','All traders'],['Date wise','date wise'],['FY-wise Trader Summary','FY-wise Trader Summary']],
  fy:[['FY vs FY','FY vs FY'],['Company → Segment → Portfolio → Trader','Company → segment'],['Company → Combination → Trader','Company → combination']],
  reports:[['Ready reports','Ready reports'],['Custom report','Custom report']],
  index:[['Index cards','NIFTY'],['Firm vs Nifty 50 summary','Firm vs Nifty'],['Monthly Minix vs index','Monthly'],['Index data table','Index data']],
@@ -3848,8 +4003,9 @@ function render(){
   $('mxPageTitle').textContent=P.title;$('mxPageSub').textContent=P.sub+(GSEG?' · Segment: '+SEGNAME[GSEG]:'');
   updateAlerts();setStatus();hstats();
   if(page!=='charts'){window.CFULL=null;D.body.classList.remove('cfull-on');}
+  if(page==='cal'){if($('page-traders'))$('page-traders').innerHTML='';}else if(page==='traders'){if($('page-cal'))$('page-cal').innerHTML='';}
   if(page==='charts'){if($('page-overview'))$('page-overview').innerHTML='';}else if(page==='overview'){if($('page-charts'))$('page-charts').innerHTML='';}
-  try{R[page]($('page-'+page),FILTERED);if(page==='fy'){var fm=$('fyMvI');if(fm&&fm.closest('.card'))fm.closest('.card').style.display='none';}decorate($('page-'+page));}catch(e){console.error(e);$('page-'+page).insertAdjacentHTML('afterbegin','<div class="card loss">This page could not be drawn: '+esc(e.message)+'</div>');}
+  try{R[page]($('page-'+page),FILTERED);if(page==='fy'){var fm=$('fyMvI');if(fm&&fm.closest('.card'))fm.closest('.card').style.display='none';}if(page==='traders'){['trHeat','trCal'].forEach(function(id){var x=$(id);x=x&&x.closest('.card');if(x)x.style.display='none';});}decorate($('page-'+page));}catch(e){console.error(e);$('page-'+page).insertAdjacentHTML('afterbegin','<div class="card loss">This page could not be drawn: '+esc(e.message)+'</div>');}
   if(pageOpt.focus){var t=$('mx-'+pageOpt.focus);if(t)t.scrollIntoView({block:'start'});pageOpt={};}
 }
 
@@ -4028,15 +4184,17 @@ R.reports=function(el,rows){
     '<div class="card"><div class="card-h"><h2>Custom report</h2><p>Pick the levels and columns. Your choice is kept for next time.</p></div>'+
     '<h3>Period</h3><div class="rp-lv">'+segBtns('rpper',[['','None'],['fy','FY'],['month','Monthly'],['date','Date wise']],CUST.period)+'</div>'+
     '<h3>Group by</h3><div class="rp-lv">'+[0,1,2,3].map(function(i){return (i?'<span class="ar">→</span>':'')+'<select class="sel" data-lv="'+i+'" aria-label="Level '+(i+1)+'">'+opt(CUST.levels[i]||'',i?'(none)':'Choose')+'</select>';}).join('')+'</div>'+
-    '<h3>Columns</h3><div class="rp-m">'+RMET.map(function(m){return '<label><input type="checkbox" data-met="'+m[0]+'"'+(CUST.met.indexOf(m[0])>=0?' checked':'')+'> '+esc(m[1])+'</label>';}).join('')+'</div>'+
-    '<h3>Charges breakup <button type="button" class="btn sm" id="rpChAll" style="margin-left:8px">Select all charges</button></h3><div class="rp-m">'+CMET.map(function(m){return '<label><input type="checkbox" data-met="'+m[0]+'"'+(CUST.met.indexOf(m[0])>=0?' checked':'')+'> '+esc(m[1])+'</label>';}).join('')+'</div>'+
+    '<h3>Columns <button type="button" class="btn sm" id="rpMAll" style="margin-left:8px">✓ All</button> <button type="button" class="btn sm" id="rpMClr">✕ Clear</button></h3><div class="rp-m">'+RMET.map(function(m){return '<label><input type="checkbox" data-met="'+m[0]+'"'+(CUST.met.indexOf(m[0])>=0?' checked':'')+'> '+esc(m[1])+'</label>';}).join('')+'</div>'+
+    '<h3>Charges breakup <button type="button" class="btn sm" id="rpChAll" style="margin-left:8px">✓ All</button> <button type="button" class="btn sm" id="rpChClr">✕ Clear</button></h3><div class="rp-m">'+CMET.map(function(m){return '<label><input type="checkbox" data-met="'+m[0]+'"'+(CUST.met.indexOf(m[0])>=0?' checked':'')+'> '+esc(m[1])+'</label>';}).join('')+'</div>'+
     '<button type="button" class="btn primary sm" id="rpCustBtn">Download custom report</button></div></div>';
   el.querySelectorAll('[data-rp]').forEach(function(b){b.onclick=function(){var r=REPORTS.find(function(x){return x.id===b.dataset.rp;});runReport(b,function(){return r.sheets(FILTERED);},r.name);};});
   var keep=function(){try{localStorage.setItem('MX_CUSTOM_RPT',JSON.stringify(CUST));}catch(e){}};
   var per=function(v){CUST.period=v;keep();el.querySelector('.seg[data-seg="rpper"]').outerHTML=segBtns('rpper',[['','None'],['fy','FY'],['month','Monthly'],['date','Date wise']],CUST.period);bindSeg(el,'rpper',per);};bindSeg(el,'rpper',per);
   el.querySelectorAll('select[data-lv]').forEach(function(s){s.onchange=function(){CUST.levels[+s.dataset.lv]=s.value;keep();};});
   el.querySelectorAll('input[data-met]').forEach(function(c){c.onchange=function(){CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};});
-  if($('rpChAll'))$('rpChAll').onclick=function(){var cs=CMET.map(function(m){return el.querySelector('input[data-met="'+m[0]+'"]');}).filter(Boolean),allOn=cs.every(function(c){return c.checked;});cs.forEach(function(c){c.checked=!allOn;});var ch=el.querySelector('input[data-met="chg"]');if(ch&&!allOn)ch.checked=true;CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};
+  var rpSet=function(list,on){list.forEach(function(m){var c=el.querySelector('input[data-met="'+m[0]+'"]');if(c)c.checked=on;});CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};
+  if($('rpMAll'))$('rpMAll').onclick=function(){rpSet(RMET,true);};if($('rpMClr'))$('rpMClr').onclick=function(){rpSet(RMET,false);};if($('rpChClr'))$('rpChClr').onclick=function(){rpSet(CMET,false);};
+  if($('rpChAll'))$('rpChAll').onclick=function(){var cs=CMET.map(function(m){return el.querySelector('input[data-met="'+m[0]+'"]');}).filter(Boolean),allOn=false;cs.forEach(function(c){c.checked=true;});var ch=el.querySelector('input[data-met="chg"]');if(ch&&!allOn)ch.checked=true;CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};
   $('rpCustBtn').onclick=function(){var lv=[];if(CUST.period)lv.push(CUST.period);CUST.levels.forEach(function(l){if(l&&lv.indexOf(l)<0)lv.push(l);});
     if(!lv.length){showMessage('Choose at least one level under Group by.',true);return;}if(!CUST.met.length){showMessage('Tick at least one column.',true);return;}
     var name=lv.map(function(l){return RLV[l].label.replace(/ \(.*\)$/,'');}).join(' → ');

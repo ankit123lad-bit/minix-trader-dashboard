@@ -1530,6 +1530,7 @@ body .mx-mega{max-height:calc(100vh - 80px)}
       <section class="page" id="page-charges"></section>
       <section class="page" id="page-fy"></section>
       <section class="page" id="page-reports"></section>
+      <section class="page" id="page-dq"></section>
       <section class="page" id="page-wa"></section>
 
       <section class="page" id="page-rvc"></section>
@@ -3958,6 +3959,7 @@ var PAGES=[
  {id:'traders',title:'Weekly & Monthly Performance',sub:'Rankings, weekly, heatmap, calendar, drawdown',icon:'<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/>'},
  {id:'people',title:'All Traders Analysis',sub:'All traders, charges, date wise',icon:'<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2.5h14V17"/>'},
  {id:'reports',title:'Excel Reports',sub:'Ready reports and custom report, .xlsx download',icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13l4 5M12 13l-4 5"/>'},
+ {id:'dq',title:'Data Quality Check',sub:'Rows in the uploaded data that look wrong',icon:'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'},
  {id:'index',title:'Index Data',sub:'Nifty 50 and Bank Nifty',icon:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>'},
  {id:'fund',title:'Fund & Risk',sub:'Fund flow, risk, transfers',icon:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>'},
  {id:'charges',title:'Charges & Brokers',sub:'Charges and efficiency',icon:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>'},
@@ -4063,31 +4065,66 @@ var XL=(function(){
       '<borders count="2"><border/><border><left style="thin"><color rgb="FF9AA8BC"/></left><right style="thin"><color rgb="FF9AA8BC"/></right><top style="thin"><color rgb="FF9AA8BC"/></top><bottom style="thin"><color rgb="FF9AA8BC"/></bottom></border></borders>'+
       '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="22">'+xf+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';}
   function serial(s){var p=String(s).split('-');if(p.length!==3)return null;return (Date.UTC(+p[0],+p[1]-1,+p[2])-Date.UTC(1899,11,30))/864e5;}
-  function cell(ref,v,type,kind){if(v==null||v===''||v===Infinity||(typeof v==='number'&&!isFinite(v)))return '';var s=sx(type,kind);
+  function cell(ref,v,type,kind,f){var s=sx(type,kind);
+    if(f){var cv=(type!=='date'&&typeof v==='number'&&isFinite(v))?'<v>'+(Math.round(v*100)/100)+'</v>':'';return '<c r="'+ref+'" s="'+s+'"><f>'+x(f)+'</f>'+cv+'</c>';}
+    if(v==null||v===''||v===Infinity||(typeof v==='number'&&!isFinite(v)))return '';
     if(type==='date'){var n=serial(v);if(n!=null)return '<c r="'+ref+'" s="'+s+'"><v>'+n+'</v></c>';type='text';s=sx('text',kind);}
-    if(type!=='text'){var f=num(v);return '<c r="'+ref+'" s="'+s+'"><v>'+(Math.round(f*100)/100)+'</v></c>';}
+    if(type!=='text'){var fv=num(v);return '<c r="'+ref+'" s="'+s+'"><v>'+(Math.round(fv*100)/100)+'</v></c>';}
     return '<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+x(v)+'</t></is></c>';}
   function txt(ref,v,s){return '<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+x(v)+'</t></is></c>';}
   /* sh = {name,title,notes:[..],columns:[{label,type,w}],rows:[{v:[..],lvl,kind}]} */
-  function sheet(sh){var H=sh.notes.length+3,out='',maxL=0;
-    out+='<row r="1">'+txt('A1',sh.title,1)+'</row>';sh.notes.forEach(function(n,i){out+='<row r="'+(i+2)+'">'+txt('A'+(i+2),n,2)+'</row>';});
-    out+='<row r="'+H+'" ht="30" customHeight="1">'+sh.columns.map(function(c,i){return txt(colL(i)+H,c.label,HDR);}).join('')+'</row>';
-    sh.rows.forEach(function(r,ri){var R=H+1+ri,l=Math.min(7,r.lvl||0);if(l>maxL)maxL=l;
-      out+='<row r="'+R+'"'+(l?' outlineLevel="'+l+'"':'')+'>'+sh.columns.map(function(c,i){return cell(colL(i)+R,r.v[i],c.type||'text',r.kind||'n');}).join('')+'</row>';});
-    var cols='<cols>'+sh.columns.map(function(c,i){return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+(c.w||(c.type&&c.type!=='text'?15:i===0?34:18))+'" customWidth="1"/>';}).join('')+'</cols>';
-    var last=colL(sh.columns.length-1)+(H+sh.rows.length);
+  /* Nov-2026: live formulas. Group rows = SUBTOTAL of the rows under them, grand total = SUBTOTAL of all rows,
+     ratio columns (ROI %, Win %, charges %) = formula on the same row. Delete or filter a row: every total updates.
+     SUBTOTAL 9/4/5 (not 109): rows closed with the + / − outline still count, so levels 1 / 2 / 3 never show 0. */
+  var AGG={sum:9,max:4,min:5};
+  function aggOf(c){if(c.agg)return c.agg;if(c.calc)return 'calc';return (c.type==='money'||c.type==='int')?'sum':'none';}
+  function isAgg(c){return !c.calc&&!!AGG[aggOf(c)];}
+  function sheet(sh){var H=sh.notes.length+3,out='',maxL=0,C=sh.columns,L={},rows=sh.rows.slice(),tIdx=-1,i;
+    var on=function(k){return !sh.xo||(sh.xo[k]!==0&&sh.xo[k]!==false);},F=on('f'),AF=on('af'),CK=F&&on('ck');
+    C.forEach(function(c,ci){if(c.key)L[c.key]=colL(ci);});
+    for(i=0;i<rows.length;i++)if(rows[i].kind==='t'){tIdx=i;break;}
+    var aggV=function(a,vs){vs=vs.filter(function(q){return typeof q==='number'&&isFinite(q);});if(!vs.length)return '';if(a==='sum')return vs.reduce(function(s,q){return s+q;},0);return a==='max'?Math.max.apply(null,vs):Math.min.apply(null,vs);};
+    var leafV=function(a,b,ci){var o=[];for(var j=a;j<=b;j++){var q=rows[j];if(!q.raw&&q.kind!=='g'&&q.kind!=='t')o.push((q.v||[])[ci]);}return o;};
+    var grpEnd=function(ri){var r=rows[ri],e=ri;while(e+1<rows.length&&!rows[e+1].raw&&rows[e+1].kind!=='t'&&(rows[e+1].lvl||0)>(r.lvl||0))e++;return e;};
+    var top0=function(){var o=[];for(var j=0;j<tIdx;j++)if(rows[j].kind==='g'&&!(rows[j].lvl||0))o.push(j);return o;};
+    var expV=function(c,ci){var a=aggOf(c);if(c.totTop&&top0().length)return aggV('sum',top0().map(function(j){return aggV(a,leafV(j+1,grpEnd(j),ci));}));return aggV(a,leafV(0,tIdx-1,ci));};
+    if(CK&&tIdx>0){var add=[{lvl:0,kind:'n',raw:1,v:C.map(function(c,ci){return ci===0?'Total at export (fixed number, for checking)':(isAgg(c)?expV(c,ci):'');})},
+      {lvl:0,kind:'n',raw:1,chk:'diff',v:C.map(function(c,ci){return ci===0?'Difference (grand total now − total at export)':(isAgg(c)?0:'');})}];
+      if(sh.chgCheck&&L[sh.chgCheck.total])add.push({lvl:0,kind:'n',raw:1,chk:'chg',v:C.map(function(c,ci){return ci===0?'Charges check (total charges − sum of charge heads)':(c.key===sh.chgCheck.total?0:'');})});
+      rows.splice.apply(rows,[tIdx+1,0].concat(add));}
+    var TR=H+1+tIdx;
+    function fOf(r,ri,c,ci){if(!F||ci===0||!r.v||!r.v.length)return null;var R=H+1+ri,col=colL(ci),a=aggOf(c);
+      if(r.chk==='diff')return isAgg(c)?col+TR+'-'+col+(TR+1):null;
+      if(r.chk==='chg'){if(c.key!==sh.chgCheck.total)return null;var hs=sh.chgCheck.heads.filter(function(k){return L[k];}).map(function(k){return L[k]+TR;});return hs.length?col+TR+'-('+hs.join('+')+')':null;}
+      if(r.raw)return null;
+      if(c.calc){try{return c.calc(function(k){if(!L[k])throw 0;return L[k]+R;});}catch(e){return null;}}
+      if(!AGG[a])return null;
+      if(r.kind==='t'&&c.totTop&&rows.slice(0,ri).some(function(q){return q.kind==='g'&&!(q.lvl||0);})){var tp=[];for(var j=0;j<ri;j++)if(rows[j].kind==='g'&&!(rows[j].lvl||0))tp.push(col+(H+1+j));return tp.join('+');}
+      if(r.kind==='g'){var e=grpEnd(ri);return e>ri?'SUBTOTAL('+AGG[a]+','+col+(R+1)+':'+col+(H+1+e)+')':null;}
+      if(r.kind==='t')return ri>0?'SUBTOTAL('+AGG[a]+','+col+(H+1)+':'+col+(R-1)+')':null;
+      return null;}
+    out+='<row r="1">'+txt('A1',sh.title,1)+'</row>';sh.notes.forEach(function(n,ni){out+='<row r="'+(ni+2)+'">'+txt('A'+(ni+2),n,2)+'</row>';});
+    out+='<row r="'+H+'" ht="30" customHeight="1">'+C.map(function(c,ci){return txt(colL(ci)+H,c.label,HDR);}).join('')+'</row>';
+    rows.forEach(function(r,ri){var R=H+1+ri,l=Math.min(7,r.lvl||0);if(l>maxL)maxL=l;var v=r.v||[];
+      out+='<row r="'+R+'"'+(l?' outlineLevel="'+l+'"':'')+'>'+C.map(function(c,ci){return cell(colL(ci)+R,v[ci],c.type||'text',r.kind||'n',fOf(r,ri,c,ci));}).join('')+'</row>';});
+    var lastD=H;if(tIdx>=0)lastD=TR-1;else for(i=rows.length-1;i>=0;i--)if(!rows[i].raw&&rows[i].v&&rows[i].v.length){lastD=H+1+i;break;}
+    sh._af=AF&&lastD>H?'A'+H+':'+colL(C.length-1)+lastD:null;
+    var cols='<cols>'+C.map(function(c,ci){return '<col min="'+(ci+1)+'" max="'+(ci+1)+'" width="'+(c.w||(c.type&&c.type!=='text'?15:ci===0?34:18))+'" customWidth="1"/>';}).join('')+'</cols>';
+    var last=colL(C.length-1)+Math.max(H,H+rows.length);
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
       '<sheetPr><outlinePr summaryBelow="0"/><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:'+last+'"/>'+
       '<sheetViews><sheetView workbookViewId="0"><pane xSplit="1" ySplit="'+H+'" topLeftCell="B'+(H+1)+'" activePane="bottomRight" state="frozen"/><selection pane="bottomRight" activeCell="B'+(H+1)+'" sqref="B'+(H+1)+'"/></sheetView></sheetViews>'+
-      '<sheetFormatPr defaultRowHeight="15"'+(maxL?' outlineLevelRow="'+maxL+'"':'')+'/>'+cols+'<sheetData>'+out+'</sheetData>'+
+      '<sheetFormatPr defaultRowHeight="15"'+(maxL?' outlineLevelRow="'+maxL+'"':'')+'/>'+cols+'<sheetData>'+out+'</sheetData>'+(sh._af?'<autoFilter ref="'+sh._af+'"/>':'')+
       '<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>';}
   function save(sheets,fname){var used={};sheets.forEach(function(s){var n=String(s.name).replace(/[\[\]:*?\/\\]/g,' ').slice(0,31).trim()||'Sheet',b=n,i=2;while(used[n.toLowerCase()]){n=b.slice(0,27)+' ('+i+')';i++;}used[n.toLowerCase()]=1;s._n=n;});
+    var WS=sheets.map(function(s){return sheet(s);}),abs=function(r){return r.replace(/([A-Z]+)(\d+)/g,'$$$1$$$2');};
+    var DN=sheets.map(function(s,i){return s._af?'<definedName name="_xlnm._FilterDatabase" localSheetId="'+i+'" hidden="1">'+x("'"+s._n.replace(/'/g,"''")+"'!"+abs(s._af))+'</definedName>':'';}).join('');
     var files=[{name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map(function(s,i){return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';}).join('')+'</Types>'},
       {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
-      {name:'xl/workbook.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>'+sheets.map(function(s,i){return '<sheet name="'+x(s._n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';}).join('')+'</sheets></workbook>'},
+      {name:'xl/workbook.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>'+sheets.map(function(s,i){return '<sheet name="'+x(s._n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';}).join('')+'</sheets>'+(DN?'<definedNames>'+DN+'</definedNames>':'')+'<calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>'},
       {name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(s,i){return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>';}).join('')+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
       {name:'xl/styles.xml',data:styles()}];
-    sheets.forEach(function(s,i){files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',data:sheet(s)});});
+    sheets.forEach(function(s,i){files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',data:WS[i]});});
     var blob=zip(files);if(fname==null)return blob;
     var a=D.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;D.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);return blob;}
   return {save:save};
@@ -4120,19 +4157,27 @@ function rptTree(rows,levels,S0){
     var g=groupBy(list,L.get);return Array.from(g.keys()).sort(function(a,b){return String(a).localeCompare(String(b),'en',{numeric:true});}).map(function(key){var l=g.get(key),k=build(l,i+1,S),r=rptNode(l,L.fmt?L.fmt(key):key,S);return k?{row:r,children:k}:{row:r};});}
   return withCtx(rows,function(){return build(rows,0,S0||GSEG);});}
 function rptNotes(){return ['Filters: '+filterLabel(),'Exported '+new Date().toLocaleString('en-IN')+' · Amounts in rupees · Press 1 / 2 / 3 at the left edge (or + / −) to open or close groups'];}
-function flatTree(tree,cols,out,depth){out=out||[];depth=depth||0;tree.forEach(function(n){var has=n.children&&n.children.length;
-  out.push({lvl:depth,kind:has?'g':'n',v:cols.map(function(c,i){var v=n.row[c.key];if(i===0)return new Array(depth*3+1).join(' ')+(v==null?'':v);if(c.key==='roi'&&n.row._nofund)return '';return v;})});
-  if(has)flatTree(n.children,cols,out,depth+1);});return out;}
-function treeSheet(name,title,firstLabel,tree,cols,totalRow){var C=[{key:'name',label:firstLabel,type:'text'}].concat(cols);var rows=flatTree(tree,C);
+function flatTree(tree,cols,out,depth,path){out=out||[];depth=depth||0;path=path||[];tree.forEach(function(n){var has=n.children&&n.children.length,P=path.concat([String(n.row.name==null?'':n.row.name)]);
+  out.push({lvl:depth,kind:has?'g':'n',v:cols.map(function(c,i){var v=n.row[c.key];if(i===0)return new Array(depth*3+1).join(' ')+(v==null?'':v);if(c.path!=null)return c.path<=depth?P[c.path]:'';if(c.key==='roi'&&n.row._nofund)return '';return v;})});
+  if(has)flatTree(n.children,cols,out,depth+1,P);});return out;}
+function treeSheet(name,title,firstLabel,tree,cols,totalRow){var LV=String(firstLabel).split(' → ');var C=[{key:'name',label:firstLabel,type:'text'}].concat(cols,LV.map(function(l,i){return {key:'_p'+i,label:l+' (filter)',type:'text',w:16,path:i};}));var rows=flatTree(tree,C);
   if(totalRow)rows.push({lvl:0,kind:'t',v:C.map(function(c,i){return i===0?totalRow.name:(c.key==='roi'&&totalRow._nofund?'':totalRow[c.key]);})});
-  return {name:name,title:'Minix – '+title,notes:rptNotes(),columns:C,rows:rows};}
-function metCols(keys){return RMET.concat(CMET).filter(function(m){return !keys||keys.indexOf(m[0])>=0;}).map(function(m){return {key:m[0],label:m[1],type:m[2]};});}
+  return {name:name,title:'Minix – '+title,notes:rptNotes().concat(['To filter, use the columns marked (filter) at the right: the company or group row stays with its traders, so totals stay correct.']),columns:C,rows:rows};}
+var XCALC={roi:function(c){return 'IF('+c('fund')+'=0,"",'+c('net')+'/'+c('fund')+'*100)';},
+  win:function(c){return 'IF('+c('pos')+'+'+c('neg')+'=0,"",'+c('pos')+'/('+c('pos')+'+'+c('neg')+')*100)';},
+  c_pf:function(c){return 'IF('+c('fund')+'=0,"",'+c('chg')+'/'+c('fund')+'*100)';},
+  nfund:function(c){return c('tfund')+'+'+c('net');},
+  c_govt:function(c){return ['c_stt','c_trx','c_stamp','c_sebi','c_ipf','c_clr','c_gst'].map(c).join('+');},
+  c_oth:function(c){return c('chg')+'-'+c('c_govt')+'-'+c('c_brk');},
+  cp:function(c){return 'IF('+c('gross')+'>0,'+c('chg')+'/'+c('gross')+'*100,"")';},
+  govt:function(c){return GOVT.map(c).join('+');}},AGGK={days:'max'};
+function metCols(keys){return RMET.concat(CMET).filter(function(m){return !keys||keys.indexOf(m[0])>=0;}).map(function(m){return {key:m[0],label:m[1],type:m[2],calc:XCALC[m[0]],agg:AGGK[m[0]]};});}
 var DEF_MET=['tfund','fund','gross','chg','net','roi','pos','neg','win','days'];
-function levelSheet(rows,name,title,levels,keys){var labels=levels.map(function(l){return RLV[l].label.replace(/ \(.*\)$/,'');});
-  var tree=rptTree(rows,levels),tot=withCtx(rows,function(){return rptNode(rows,'Grand total',GSEG);});
-  var sh=treeSheet(name,title,labels.join(' → '),tree,metCols(keys||DEF_MET),tot);
+function levelSheet(rows,name,title,levels,keys,opts){var labels=levels.map(function(l){return RLV[l].label.replace(/ \(.*\)$/,'');});
+  var tree=rptTree(rows,levels);if(opts)tree=shapeTree(tree,opts,keys||DEF_MET);var tot=withCtx(rows,function(){return rptNode(rows,'Grand total',GSEG);});
+  var sh=treeSheet(name,title,labels.join(' → '),tree,metCols(keys||DEF_MET),tot);if(['fy','month','date'].indexOf(levels[0])>=0)sh.columns.forEach(function(c){if(c.key==='days')c.totTop=1;});
   if(levels.indexOf('segment')>=0){sh.notes.push('Note: a trader with a combined fund (e.g. FNO & Cash) is counted in each segment it trades, so segment fund rows can add up to more than the company total. Gross, charges and net P&L add up exactly.');
-    sh.rows.push({lvl:0,kind:'n',v:[]});sh.rows.push({lvl:0,kind:'n',v:[sh.notes[sh.notes.length-1]]});}
+    sh.rows.push({lvl:0,kind:'n',raw:1,v:[]});sh.rows.push({lvl:0,kind:'n',raw:1,v:[sh.notes[sh.notes.length-1]]});}
   return sh;}
 function dateWiseSheet(rows){var g=groupBy(rows,function(o){return o.iso+'|'+o.company+'|'+o.demat+'|'+o.portfolio+'|'+o.trader;}),out=[];
   g.forEach(function(l){var o=l[0];var sg=function(S){return sum(l,function(r){return r.seg[S].net;});};
@@ -4140,7 +4185,7 @@ function dateWiseSheet(rows){var g=groupBy(rows,function(o){return o.iso+'|'+o.c
   out.sort(function(a,b){return a.iso<b.iso?-1:a.iso>b.iso?1:String(a.v[4]).localeCompare(String(b.v[4]));});
   var rws=out.map(function(r){return {lvl:0,kind:'n',v:r.v};}),t=function(i){return sum(out,function(r){return num(r.v[i]);});};
   rws.push({lvl:0,kind:'t',v:['Grand total','','','','','',t(6),t(7),t(8),t(9),t(10),t(11)]});
-  return {name:'Date wise',title:'Minix – All traders, date wise',notes:rptNotes(),columns:[{label:'Date',type:'date',w:12},{label:'Company',type:'text',w:22},{label:'Demat account',type:'text',w:20},{label:'Portfolio',type:'text',w:18},{label:'Trader',type:'text',w:22},{label:'Fund',type:'money'},{label:'F&O net',type:'money'},{label:'Equity net',type:'money'},{label:'MCX net',type:'money'},{label:'Gross P&L',type:'money'},{label:'Charges',type:'money'},{label:'Net P&L',type:'money'}],rows:rws};}
+  return {name:'Date wise',title:'Minix – All traders, date wise',notes:rptNotes(),columns:[{label:'Date',type:'date',w:12},{label:'Company',type:'text',w:22},{label:'Demat account',type:'text',w:20},{label:'Portfolio',type:'text',w:18},{label:'Trader',type:'text',w:22},{label:'Fund',type:'money',agg:'none'},{label:'F&O net',type:'money'},{label:'Equity net',type:'money'},{label:'MCX net',type:'money'},{label:'Gross P&L',type:'money'},{label:'Charges',type:'money'},{label:'Net P&L',type:'money'}],rows:rws};}
 function startSheet(){var srt=function(L){L.sort(function(a,b){return String(a.row.name).localeCompare(String(b.row.name));});L.forEach(function(n){if(n.children)srt(n.children);});return L;};var T=srt(segStartTree());
   var sh=treeSheet('Segment start dates','Segment start dates (first trade date)','Broker → Demat → Trader',T,[{key:'FNO',label:'F&O start',type:'date',w:13},{key:'Cash',label:'Equity start',type:'date',w:13},{key:'MCX',label:'MCX start',type:'date',w:13}],null);
   sh.notes[0]='Filters: '+filterLabel()+' (FY / month / week filters not used for start dates)';return sh;}
@@ -4148,16 +4193,88 @@ function chargeRow(list,label){var r={name:label},S=GSEG,segs=S?[S]:SEGS;CHG.for
   r.gross=sum(list,function(o){return V(o,S,'gross');});r.chg=sum(list,function(o){return V(o,S,'chg');});r.net=sum(list,function(o){return V(o,S,'net');});r.cp=r.gross>0?r.chg/r.gross*100:null;return r;}
 function chargeSheet(rows){var tree=Array.from(groupBy(rows,function(o){return o.company;}).entries()).sort(function(a,b){return a[0].localeCompare(b[0]);}).map(function(c){
     return {row:chargeRow(c[1],c[0]),children:Array.from(groupBy(c[1],function(o){return o.trader;}).entries()).sort(function(a,b){return a[0].localeCompare(b[0]);}).map(function(t){return {row:chargeRow(t[1],t[0])};})};});
-  var cols=[{key:'gross',label:'Gross P&L',type:'money'}].concat(CHG.map(function(c){return {key:c[0],label:c[1],type:'money'};}),[{key:'chg',label:'Total charges',type:'money'},{key:'net',label:'Net P&L',type:'money'},{key:'cp',label:'Charges % of gross',type:'pct'}]);
-  return treeSheet('Charges','Charges report – company → trader','Company → Trader',tree,cols,chargeRow(rows,'Grand total'));}
+  var cols=[{key:'gross',label:'Gross P&L',type:'money'}].concat(CHG.map(function(c){return {key:c[0],label:c[1],type:'money'};}),[{key:'chg',label:'Total charges',type:'money'},{key:'net',label:'Net P&L',type:'money'},{key:'cp',label:'Charges % of gross',type:'pct',calc:XCALC.cp}]);
+  var sh=treeSheet('Charges','Charges report – company → trader','Company → Trader',tree,cols,chargeRow(rows,'Grand total'));sh.chgCheck={total:'chg',heads:CHG.map(function(c){return c[0];})};return sh;}
 function govtRow(list,label,segs){var r={name:label};CHG.forEach(function(c){r[c[0]]=sum(list,function(o){return segs.reduce(function(a,g){return a+num(o.seg[g].ch[c[0]]);},0);});});
   r.govt=GOVT.reduce(function(a,k){return a+r[k];},0);r.brk=r.BRK+r['BRK On GST'];r.chg=sum(list,function(o){return segs.reduce(function(a,g){return a+num(o.seg[g].chg);},0);});return r;}
 function govtSheet(rows){var segs=GSEG?[GSEG]:SEGS,srt=function(a,b){return a[0].localeCompare(b[0]);};
   var tree=segs.map(function(S){var sub=rows.filter(function(o){var x=o.seg[S];return num(x.chg)||num(x.gross)||num(x.net);});if(!sub.length)return null;
     return {row:govtRow(sub,SEGNAME[S],[S]),children:Array.from(groupBy(sub,function(o){return o.company;}).entries()).sort(srt).map(function(c){
       return {row:govtRow(c[1],c[0],[S]),children:Array.from(groupBy(c[1],function(o){return o.trader;}).entries()).sort(srt).map(function(t){return {row:govtRow(t[1],t[0],[S])};})};})};}).filter(Boolean);
-  var cols=[['Trx Chgs','Transaction'],['Sebi Chgs','SEBI'],['IPF Charges','IPF'],['Stamp Duty','Stamp duty'],['STT','STT / CTT'],['Clearing Charges','Clearing'],['GST','GST'],['govt','Total government'],['brk','Brokerage incl. GST'],['chg','All charges']].map(function(c){return {key:c[0],label:c[1],type:'money'};});
+  var cols=[['Trx Chgs','Transaction'],['Sebi Chgs','SEBI'],['IPF Charges','IPF'],['Stamp Duty','Stamp duty'],['STT','STT / CTT'],['Clearing Charges','Clearing'],['GST','GST'],['govt','Total government'],['brk','Brokerage incl. GST'],['chg','All charges']].map(function(c){return {key:c[0],label:c[1],type:'money',calc:c[0]==='govt'?XCALC.govt:undefined};});
   return treeSheet('Government charges','Government charges details – segment → company → trader','Segment → Company → Trader',tree,cols,govtRow(rows,'Grand total',segs));}
+/* ---------- Nov-2026: custom report shaping + new ready reports ---------- */
+function shapeTree(tree,o,keys){var all=RMET.concat(CMET),nk=keys.filter(function(k){var m=all.find(function(x){return x[0]===k;});return m&&m[2]!=='pct';});
+  var zero=function(r){return nk.length&&nk.every(function(k){return Math.abs(num(r[k]))<0.5;});};
+  var sp=String(o.sort||'').split(':'),sk=sp[0],sd=sp[1]==='a'?1:-1;
+  var go=function(L){L=L.filter(function(n){return !(o.hz&&zero(n.row));});
+    L.forEach(function(n){if(n.children){n.children=go(n.children);if(!n.children.length)delete n.children;}});
+    if(sk)L.sort(function(a,b){return sd*(num(a.row[sk])-num(b.row[sk]));});
+    if(o.top>0&&L.every(function(n){return !n.children;}))L=L.slice(0,o.top);return L;};
+  return go(tree);}
+function shortCo(c){return String(c||'').replace(/\s*(pvt\.?|private)\s*(ltd\.?|limited)\.?\s*$/i,'').trim()||String(c||'');}
+var srtE=function(a,b){return String(a[0]).localeCompare(String(b[0]),'en',{numeric:true});};
+function okTrader(n){return !/^test account$/i.test(String(n||''));}
+function coTrTree(rows,nodeFn){return Array.from(groupBy(rows,function(o){return o.company;}).entries()).sort(srtE).map(function(c){
+  return {row:nodeFn(c[1],c[0],1),children:Array.from(groupBy(c[1],function(o){return o.trader;}).entries()).sort(srtE).map(function(t){return {row:nodeFn(t[1],t[0],0)};})};});}
+function roiF(f,n){return function(c){return 'IF('+c(f)+'=0,"",'+c(n)+'/'+c(f)+'*100)';};}
+/* same trader in Holding and Fintech, side by side */
+function hfSheet(rows){return withCtx(rows,function(){
+  var cos=uniq(rows.map(function(o){return o.company;})).sort(),cols=[{key:'name',label:'Trader',type:'text'}];
+  cos.forEach(function(co,i){var s=shortCo(co);cols.push({key:'f'+i,label:s+' avg fund',type:'money'},{key:'n'+i,label:s+' net P&L',type:'money'},{key:'r'+i,label:s+' ROI %',type:'pct',calc:roiF('f'+i,'n'+i)});});
+  var fk=cos.map(function(_,i){return 'f'+i;}),nk=cos.map(function(_,i){return 'n'+i;});
+  cols.push({key:'cf',label:'Combined avg fund',type:'money',calc:function(c){return fk.map(c).join('+');}},{key:'cn',label:'Combined net P&L',type:'money',calc:function(c){return nk.map(c).join('+');}},
+    {key:'cr',label:'Combined ROI %',type:'pct',calc:roiF('cf','cn')},{key:'both',label:'No. of companies',type:'int',agg:'none',w:12});
+  var rec=function(list,label){var r={name:label,cf:0,cn:0,both:0};cos.forEach(function(co,i){var l=list.filter(function(o){return o.company===co;});
+      if(!l.length){r['f'+i]='';r['n'+i]='';r['r'+i]='';return;}var n=rptNode(l,'',GSEG);r['f'+i]=n.fund;r['n'+i]=n.net;r['r'+i]=n.fund?n.net/n.fund*100:'';r.cf+=num(n.fund);r.cn+=num(n.net);r.both++;});
+    r.cr=r.cf?r.cn/r.cf*100:'';return r;};
+  var out=Array.from(groupBy(rows,function(o){return o.trader;}).entries()).filter(function(e){return okTrader(e[0]);}).map(function(e){return rec(e[1],e[0]);});
+  out.sort(function(a,b){return (b.both-a.both)||String(a.name).localeCompare(String(b.name));});
+  var tot=rec(rows,'Grand total');tot.both='';
+  var sh={name:'Holding vs Fintech',title:'Minix – Same trader across companies',notes:rptNotes(),columns:cols,
+    rows:out.map(function(r){return {lvl:0,kind:'n',v:cols.map(function(c){return r[c.key];})};}).concat([{lvl:0,kind:'t',v:cols.map(function(c){return tot[c.key];})}])};
+  sh.notes.push('Traders in more than one company come first. Use the filter on "No. of companies" to see only them.');return sh;});}
+/* active / inactive traders */
+function actSheet(rows){var ref=maxIso(ROWS&&ROWS.length?ROWS:rows),cut=ref?isoAdd(ref,-FUND_ACTIVE_DAYS):'';
+  var lastAct=function(l){var a=l.filter(function(o){return Math.abs(V(o,GSEG,'net'))>0.004||Math.abs(V(o,GSEG,'gross'))>0.004;});return rangeOf(a.length?a:l);};
+  return withCtx(rows,function(){
+    var node=function(l,label,grp){var rg=lastAct(l),s=stats(l,GSEG),ac=0,n=0;
+      groupBy(l,function(o){return o.company+'|'+o.trader;}).forEach(function(tl){n++;if(lastAct(tl)[1]>=cut)ac++;});
+      var since=rg[1]&&ref?Math.round((Date.UTC(+ref.slice(0,4),+ref.slice(5,7)-1,+ref.slice(8,10))-Date.UTC(+rg[1].slice(0,4),+rg[1].slice(5,7)-1,+rg[1].slice(8,10)))/864e5):'';
+      return {name:label,first:rg[0],last:rg[1],since:since,days:s.days,net:s.net,cfund:fundInfo(l,GSEG).total,act:ac,status:grp?ac+' active / '+(n-ac)+' inactive':(ac?'Active':'Inactive')};};
+    var tree=coTrTree(rows.filter(function(o){return okTrader(o.trader);}),node);
+    var cols=[{key:'first',label:'First trade',type:'date',w:12},{key:'last',label:'Last trade',type:'date',w:12},{key:'since',label:'Days since last trade',type:'int',agg:'none'},{key:'days',label:'Trading days',type:'int',agg:'max'},
+      {key:'net',label:'Net P&L',type:'money'},{key:'cfund',label:'Current fund',type:'money'},{key:'act',label:'Active traders',type:'int'},{key:'status',label:'Status',type:'text',w:22}];
+    var sh=treeSheet('Active-Inactive','Active / inactive traders','Company → Trader',tree,cols,node(rows,'Grand total',1));
+    sh.notes.push('Active = traded in the last '+FUND_ACTIVE_DAYS+' days up to '+dmy(ref)+'. Current fund counts active traders only (same rule as the dashboard).');return sh;});}
+/* month-on-month pivot of net P&L */
+function pivotSheet(rows){var ms=uniq(rows.map(function(o){return o.mkey;})).filter(Boolean).sort();
+  var node=function(l,label){var r={name:label};ms.forEach(function(m){var x=l.filter(function(o){return o.mkey===m;});r['m'+m]=x.length?sum(x,function(o){return V(o,GSEG,'net');}):'';});r.tot=sum(l,function(o){return V(o,GSEG,'net');});return r;};
+  var cols=ms.map(function(m){return {key:'m'+m,label:monthLabelFromKey(m),type:'money',w:13};});
+  if(ms.length)cols.push({key:'tot',label:'Total net P&L',type:'money',calc:function(c){return 'SUM('+c('m'+ms[0])+':'+c('m'+ms[ms.length-1])+')';}});
+  var sh=treeSheet('Month pivot','Month-on-month net P&L','Company → Trader',coTrTree(rows.filter(function(o){return okTrader(o.trader);}),node),cols,node(rows,'Grand total'));
+  sh.notes.push('Net P&L per month. Total = sum of the months on the same row.');return sh;}
+/* top / bottom 10 */
+function topSheet(rows){return withCtx(rows,function(){
+  var U=Array.from(groupBy(rows.filter(function(o){return okTrader(o.trader);}),function(o){return o.company+'|'+o.trader;}).values()).map(function(l){var n=rptNode(l,l[0].trader,GSEG);n.co=shortCo(l[0].company);return n;});
+  var cols=[{key:'name',label:'Rank / trader',type:'text'},{key:'co',label:'Company',type:'text',w:16},{key:'fund',label:'Avg fund',type:'money'},{key:'net',label:'Net P&L',type:'money'},{key:'roi',label:'ROI %',type:'pct',calc:XCALC.roi},
+    {key:'pos',label:'Profit days',type:'int'},{key:'neg',label:'Loss days',type:'int'},{key:'win',label:'Win %',type:'pct',calc:XCALC.win},{key:'days',label:'Trading days',type:'int',agg:'max'},{key:'_p0',label:'List (filter)',type:'text',w:22}];
+  var wf=U.filter(function(n){return num(n.fund)>0;}),by=function(L,k,d){return L.slice().sort(function(a,b){return d*(num(a[k])-num(b[k]));}).slice(0,10);};
+  var blocks=[['Top 10 by net P&L',by(U,'net',-1)],['Bottom 10 by net P&L',by(U,'net',1)],['Top 10 by ROI %',by(wf,'roi',-1)],['Bottom 10 by ROI %',by(wf,'roi',1)]],out=[];
+  blocks.forEach(function(b){if(!b[1].length)return;var L=b[1],g={name:b[0],co:'',fund:sum(L,function(n){return num(n.fund);}),net:sum(L,function(n){return num(n.net);}),pos:sum(L,function(n){return n.pos;}),neg:sum(L,function(n){return n.neg;}),days:Math.max.apply(null,L.map(function(n){return n.days||0;}))};
+    g._p0=b[0];g.roi=g.fund?g.net/g.fund*100:'';g.win=(g.pos+g.neg)?g.pos/(g.pos+g.neg)*100:'';
+    out.push({lvl:0,kind:'g',v:cols.map(function(c){return g[c.key];})});
+    L.forEach(function(n,i){out.push({lvl:1,kind:'n',v:cols.map(function(c){return c.key==='_p0'?b[0]:c.key==='name'?(i+1)+'. '+n.name:(c.key==='roi'&&n._nofund?'':n[c.key]);})});});});
+  var sh={name:'Top-Bottom 10',title:'Minix – Top / bottom 10 traders',notes:rptNotes(),columns:cols,rows:out};
+  sh.notes.push('ROI ranking uses traders with a fund only. A trader in two companies is ranked separately in each.');return sh;});}
+/* worst days / drawdown */
+function ddSheet(rows){return withCtx(rows,function(){
+  var node=function(l,label){var s=stats(l,GSEG),ds=Object.keys(s.dn).sort(),cur=0,mx=0;ds.forEach(function(d){if(s.dn[d]<-0.004){cur++;if(cur>mx)mx=cur;}else cur=0;});
+    return {name:label,net:s.net,bd:s.best?s.best.d:'',bv:s.best?s.best.v:'',wd:s.worst?s.worst.d:'',wv:s.worst?s.worst.v:'',dd:s.maxDD,ls:mx,days:s.days};};
+  var cols=[{key:'net',label:'Net P&L',type:'money'},{key:'bd',label:'Best day',type:'date',w:12},{key:'bv',label:'Best day P&L',type:'money',agg:'none'},{key:'wd',label:'Worst day',type:'date',w:12},{key:'wv',label:'Worst day P&L',type:'money',agg:'none'},
+    {key:'dd',label:'Max drawdown',type:'money',agg:'none'},{key:'ls',label:'Longest losing streak (days)',type:'int',agg:'none'},{key:'days',label:'Trading days',type:'int',agg:'max'}];
+  var sh=treeSheet('Worst days-Drawdown','Worst days and drawdown','Company → Trader',coTrTree(rows.filter(function(o){return okTrader(o.trader);}),node),cols,node(rows,'Grand total'));
+  sh.notes.push('Best / worst day, drawdown and streak on company and grand total rows are for the whole group (all traders together), so they stay fixed numbers.');return sh;});}
 var REPORTS=[
   {id:'dw',name:'All traders – date wise',desc:'One row per trader per day: fund, F&O / Equity / MCX net, gross, charges, net P&L.',sheets:function(r){return [dateWiseSheet(r)];}},
   {id:'fyt',name:'FY-wise trader summary',desc:'Financial year → trader, with total fund, avg fund, P&L, ROI and win / loss days.',sheets:function(r){return [levelSheet(r,'FY → Trader','FY-wise trader summary',['fy','trader'])];}},
@@ -4167,18 +4284,32 @@ var REPORTS=[
   {id:'ss',name:'Segment start dates',desc:'First trade date for F&O, Equity and MCX: broker → demat → trader.',sheets:function(){return [startSheet()];}},
   {id:'ch',name:'Charges report',desc:'Company → trader, every charge head: brokerage, GST, STT, SEBI, stamp duty and more.',sheets:function(r){return [chargeSheet(r)];}},
   {id:'gov',name:'Government charges details',desc:'Segment → company → trader: transaction, SEBI, IPF, stamp duty, STT / CTT, clearing, GST and total government charges.',sheets:function(r){return [govtSheet(r)];}},
+  {id:'hf',name:'Holding vs Fintech – same trader',desc:'Each trader’s avg fund, net P&L and ROI in every company side by side, with a combined total. Traders in both companies come first.',sheets:function(r){return [hfSheet(r)];}},
+  {id:'act',name:'Active / inactive traders',desc:'Company → trader: first and last trade date, days since last trade, current fund and status (active = traded in the last '+FUND_ACTIVE_DAYS+' days).',sheets:function(r){return [actSheet(r)];}},
+  {id:'piv',name:'Month-on-month pivot',desc:'Company → trader in rows, months in columns, net P&L with a row total.',sheets:function(r){return [pivotSheet(r)];}},
+  {id:'top',name:'Top / bottom 10',desc:'Top and bottom 10 traders by net P&L and by ROI %, with fund, win % and trading days.',sheets:function(r){return [topSheet(r)];}},
+  {id:'dd',name:'Worst days / drawdown',desc:'Company → trader: best and worst day, maximum drawdown and longest losing streak.',sheets:function(r){return [ddSheet(r)];}},
   {id:'all',name:'Full pack',desc:'All the reports above in one file, one sheet each.',sheets:null}];
 REPORTS[REPORTS.length-1].sheets=function(r){var a=[];REPORTS.slice(0,-1).forEach(function(x){a=a.concat(x.sheets(r));});return a;};
 function rptFile(n){return 'Minix_'+n.replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+iso(new Date())+'.xlsx';}
 function runReport(btn,fn,name){var t=btn.textContent;btn.disabled=true;btn.textContent='Preparing…';
-  setTimeout(function(){try{var sh=fn();if(!sh.length||!sh.some(function(s){return s.rows.length;})){showMessage('No data for this selection. Change the filters at the top and try again.',true);}else{XL.save(sh,rptFile(name));showMessage('Downloaded '+name+'.');}}
+  setTimeout(function(){try{var sh=fn();sh.forEach(function(s){s.xo=XO;});if(!sh.length||!sh.some(function(s){return s.rows.length;})){showMessage('No data for this selection. Change the filters at the top and try again.',true);}else{XL.save(sh,rptFile(name));showMessage('Downloaded '+name+'.');}}
     catch(e){console.error(e);showMessage('Could not create the Excel file: '+e.message,true);}btn.disabled=false;btn.textContent=t;},30);}
-var CUST={period:'',levels:['company','trader','',''],met:DEF_MET.slice()};
-try{var cs=JSON.parse(localStorage.getItem('MX_CUSTOM_RPT')||'null');if(cs&&cs.levels)CUST=cs;}catch(e){}
+var CUST={period:'',levels:['company','trader','',''],met:DEF_MET.slice(),excl:[],sort:'',top:0,hz:0};
+try{var cs=JSON.parse(localStorage.getItem('MX_CUSTOM_RPT')||'null');if(cs&&cs.levels)CUST=Object.assign(CUST,cs);}catch(e){}
+var XO={f:1,af:1,ck:1};try{var xs=JSON.parse(localStorage.getItem('MX_XL_OPT')||'null');if(xs)XO=Object.assign(XO,xs);}catch(e){}
+var TPL={};try{TPL=JSON.parse(localStorage.getItem('MX_CUSTOM_TPL')||'{}')||{};}catch(e){}
 R.reports=function(el,rows){
   var opt=function(cur,first){return '<option value="">'+first+'</option>'+Object.keys(RLV).filter(function(k){return ['fy','month','date'].indexOf(k)<0;}).map(function(k){return '<option value="'+k+'"'+(k===cur?' selected':'')+'>'+esc(RLV[k].label)+'</option>';}).join('');};
-  el.innerHTML='<style>#page-reports .rp-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 2px;border-top:1px solid var(--line)}#page-reports .rp-row:first-child{border-top:0}#page-reports .rp-row b{font-size:13.5px}#page-reports .rp-row p{margin:2px 0 0;color:var(--muted);font-size:12px}#page-reports .rp-row.pack{background:var(--panel-2);border-radius:8px;padding:10px 10px;margin-top:4px}#page-reports .rp-f{font-size:12px;color:var(--muted);margin:0 0 6px}#page-reports .rp-lv{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 12px}#page-reports .rp-lv .ar{color:var(--muted)}#page-reports .rp-m{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 14px}#page-reports .rp-m label{font-size:12.5px;display:flex;align-items:center;gap:5px}#page-reports h3{font-size:12.5px;margin:4px 0 0;font-weight:600}</style>'+
-    '<div class="grid g21"><div class="card"><div class="card-h"><h2>Ready reports</h2><p>Each download is an .xlsx file: rupee format, header row frozen, subtotals and grand total, Excel + / − grouping.</p></div>'+
+  if(!Array.isArray(CUST.excl))CUST.excl=[];
+  var exList=uniq(FILTERED.map(function(o){return o.company+'|'+o.trader;})).sort(function(a,b){return a.split('|')[1].localeCompare(b.split('|')[1])||a.localeCompare(b);});
+  var exLbl=function(k){var p=k.split('|');return p[1]+' ('+shortCo(p[0]).replace(/^Minix\s+/i,'')+')';};
+  var SORTS=[['','Name, A to Z'],['net:d','Net P&L, high to low'],['net:a','Net P&L, low to high'],['roi:d','ROI %, high to low'],['fund:d','Avg fund, high to low'],['chg:d','Charges, high to low']];
+  var TOPS=[[0,'All rows'],[5,'Top 5 per group'],[10,'Top 10 per group'],[20,'Top 20 per group']];
+  var XOPT=[['f','Live formulas (totals update when rows are deleted or filtered)'],['af','AutoFilter on header row'],['ck','Check rows under grand total']];
+  el.innerHTML='<style>#page-reports .rp-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 2px;border-top:1px solid var(--line)}#page-reports .rp-row:first-child{border-top:0}#page-reports .rp-row b{font-size:13.5px}#page-reports .rp-row p{margin:2px 0 0;color:var(--muted);font-size:12px}#page-reports .rp-row.pack{background:var(--panel-2);border-radius:8px;padding:10px 10px;margin-top:4px}#page-reports .rp-f{font-size:12px;color:var(--muted);margin:0 0 6px}#page-reports .rp-lv{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 12px}#page-reports .rp-lv .ar{color:var(--muted)}#page-reports .rp-m{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 14px}#page-reports .rp-m label{font-size:12.5px;display:flex;align-items:center;gap:5px}#page-reports h3{font-size:12.5px;margin:4px 0 0;font-weight:600}'+
+    '#page-reports .rp-ex{max-height:190px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0 14px;display:flex;flex-wrap:wrap;gap:4px 16px}#page-reports .rp-ex label{font-size:12.5px;display:flex;align-items:center;gap:5px;min-width:0;max-width:100%}#page-reports .rp-ex label[hidden]{display:none}#page-reports .rp-c{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}#page-reports .rp-in{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 14px}#page-reports .rp-in .sel{max-width:100%}#page-reports .rp-in label{font-size:12.5px;display:flex;align-items:center;gap:5px}</style>'+
+    '<div class="grid g21"><div class="card"><div class="card-h"><h2>Ready reports</h2><p>Each download is an .xlsx file with live formulas: delete or filter a trader row and every subtotal and the grand total update. Rupee format, header row frozen, AutoFilter, Excel + / − grouping.</p></div>'+
     '<p class="rp-f">Uses the filters selected at the top. Now: '+esc(filterLabel())+'</p><div>'+
     REPORTS.map(function(r){return '<div class="rp-row'+(r.id==='all'?' pack':'')+'"><div><b>'+esc(r.name)+'</b><p>'+esc(r.desc)+'</p></div><button type="button" class="btn sm'+(r.id==='all'?' primary':'')+'" data-rp="'+r.id+'">Download</button></div>';}).join('')+'</div></div>'+
     '<div class="card"><div class="card-h"><h2>Custom report</h2><p>Pick the levels and columns. Your choice is kept for next time.</p></div>'+
@@ -4186,6 +4317,15 @@ R.reports=function(el,rows){
     '<h3>Group by</h3><div class="rp-lv">'+[0,1,2,3].map(function(i){return (i?'<span class="ar">→</span>':'')+'<select class="sel" data-lv="'+i+'" aria-label="Level '+(i+1)+'">'+opt(CUST.levels[i]||'',i?'(none)':'Choose')+'</select>';}).join('')+'</div>'+
     '<h3>Columns <button type="button" class="btn sm" id="rpMAll" style="margin-left:8px">✓ All</button> <button type="button" class="btn sm" id="rpMClr">✕ Clear</button></h3><div class="rp-m">'+RMET.map(function(m){return '<label><input type="checkbox" data-met="'+m[0]+'"'+(CUST.met.indexOf(m[0])>=0?' checked':'')+'> '+esc(m[1])+'</label>';}).join('')+'</div>'+
     '<h3>Charges breakup <button type="button" class="btn sm" id="rpChAll" style="margin-left:8px">✓ All</button> <button type="button" class="btn sm" id="rpChClr">✕ Clear</button></h3><div class="rp-m">'+CMET.map(function(m){return '<label><input type="checkbox" data-met="'+m[0]+'"'+(CUST.met.indexOf(m[0])>=0?' checked':'')+'> '+esc(m[1])+'</label>';}).join('')+'</div>'+
+    '<h3>Traders in report <span class="rp-c" id="rpExN"></span> <button type="button" class="btn sm" id="rpExAll" style="margin-left:8px">✓ All</button> <button type="button" class="btn sm" id="rpExClr">✕ Clear</button></h3>'+
+    '<div class="rp-in"><input type="search" class="sel" id="rpExQ" placeholder="Search trader" aria-label="Search trader" style="width:220px"><span class="rp-c" style="margin:0">Untick a trader to leave him out. ✓ All / ✕ Clear work on the names shown.</span></div>'+
+    '<div class="rp-ex" id="rpEx">'+(exList.length?exList.map(function(k){return '<label data-q="'+esc(exLbl(k).toLowerCase())+'"><input type="checkbox" data-ex="'+esc(k)+'"'+(CUST.excl.indexOf(k)<0?' checked':'')+'> '+esc(exLbl(k))+'</label>';}).join(''):'<span class="rp-c" style="margin:0">No traders for the filters at the top.</span>')+'</div>'+
+    '<h3>Sort and limit</h3><div class="rp-in"><select class="sel" id="rpSort" aria-label="Sort by">'+SORTS.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(CUST.sort||'')?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select>'+
+    '<select class="sel" id="rpTop" aria-label="Rows">'+TOPS.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(+CUST.top||0)?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select>'+
+    '<label><input type="checkbox" id="rpHz"'+(CUST.hz?' checked':'')+'> Hide zero rows</label></div>'+
+    '<h3>Excel options <span class="rp-c">(all downloads on this page)</span></h3><div class="rp-m">'+XOPT.map(function(o){return '<label><input type="checkbox" data-xo="'+o[0]+'"'+(XO[o[0]]?' checked':'')+'> '+esc(o[1])+'</label>';}).join('')+'</div>'+
+    '<h3>Saved templates</h3><div class="rp-in"><select class="sel" id="rpTpl" aria-label="Saved template"><option value="">Choose a saved template</option>'+Object.keys(TPL).sort().map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('')+'</select>'+
+    '<button type="button" class="btn sm" id="rpTplSave">Save current</button><button type="button" class="btn sm" id="rpTplDel">Delete</button></div>'+
     '<button type="button" class="btn primary sm" id="rpCustBtn">Download custom report</button></div></div>';
   el.querySelectorAll('[data-rp]').forEach(function(b){b.onclick=function(){var r=REPORTS.find(function(x){return x.id===b.dataset.rp;});runReport(b,function(){return r.sheets(FILTERED);},r.name);};});
   var keep=function(){try{localStorage.setItem('MX_CUSTOM_RPT',JSON.stringify(CUST));}catch(e){}};
@@ -4194,11 +4334,74 @@ R.reports=function(el,rows){
   el.querySelectorAll('input[data-met]').forEach(function(c){c.onchange=function(){CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};});
   var rpSet=function(list,on){list.forEach(function(m){var c=el.querySelector('input[data-met="'+m[0]+'"]');if(c)c.checked=on;});CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};
   if($('rpMAll'))$('rpMAll').onclick=function(){rpSet(RMET,true);};if($('rpMClr'))$('rpMClr').onclick=function(){rpSet(RMET,false);};if($('rpChClr'))$('rpChClr').onclick=function(){rpSet(CMET,false);};
-  if($('rpChAll'))$('rpChAll').onclick=function(){var cs=CMET.map(function(m){return el.querySelector('input[data-met="'+m[0]+'"]');}).filter(Boolean),allOn=false;cs.forEach(function(c){c.checked=true;});var ch=el.querySelector('input[data-met="chg"]');if(ch&&!allOn)ch.checked=true;CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};
+  if($('rpChAll'))$('rpChAll').onclick=function(){CMET.forEach(function(m){var c=el.querySelector('input[data-met="'+m[0]+'"]');if(c)c.checked=true;});var ch=el.querySelector('input[data-met="chg"]');if(ch)ch.checked=true;CUST.met=Array.from(el.querySelectorAll('input[data-met]:checked')).map(function(x){return x.dataset.met;});keep();};
+  /* traders in report */
+  var exBoxes=function(vis){return Array.from(el.querySelectorAll('#rpEx input[data-ex]')).filter(function(c){return !vis||!c.parentNode.hidden;});};
+  var exSync=function(){var off=exBoxes().filter(function(c){return !c.checked;}).map(function(c){return c.dataset.ex;});
+    CUST.excl=CUST.excl.filter(function(k){return exList.indexOf(k)<0;}).concat(off);keep();
+    $('rpExN').textContent=exList.length?(exList.length-off.length)+' of '+exList.length+' included':'';};
+  exBoxes().forEach(function(c){c.onchange=exSync;});exSync();
+  $('rpExAll').onclick=function(){exBoxes(1).forEach(function(c){c.checked=true;});exSync();};
+  $('rpExClr').onclick=function(){exBoxes(1).forEach(function(c){c.checked=false;});exSync();};
+  $('rpExQ').oninput=function(){var q=this.value.trim().toLowerCase();el.querySelectorAll('#rpEx label[data-q]').forEach(function(l){l.hidden=!!q&&l.dataset.q.indexOf(q)<0;});};
+  $('rpSort').onchange=function(){CUST.sort=this.value;keep();};$('rpTop').onchange=function(){CUST.top=+this.value||0;keep();};$('rpHz').onchange=function(){CUST.hz=this.checked?1:0;keep();};
+  el.querySelectorAll('input[data-xo]').forEach(function(c){c.onchange=function(){XO[c.dataset.xo]=c.checked?1:0;try{localStorage.setItem('MX_XL_OPT',JSON.stringify(XO));}catch(e){}};});
+  /* saved templates */
+  var tplKeep=function(){try{localStorage.setItem('MX_CUSTOM_TPL',JSON.stringify(TPL));}catch(e){}};
+  $('rpTpl').onchange=function(){var n=this.value;if(!n||!TPL[n])return;CUST=Object.assign({period:'',levels:['','','',''],met:DEF_MET.slice(),excl:[],sort:'',top:0,hz:0},JSON.parse(JSON.stringify(TPL[n])));keep();R.reports(el,rows);var s=$('rpTpl');if(s)s.value=n;showMessage('Template "'+n+'" loaded.');};
+  $('rpTplSave').onclick=function(){var cur=$('rpTpl').value,n=prompt('Template name',cur||'');if(n==null)return;n=n.trim().slice(0,60);if(!n){showMessage('Enter a template name.',true);return;}
+    TPL[n]=JSON.parse(JSON.stringify(CUST));tplKeep();R.reports(el,rows);var s=$('rpTpl');if(s)s.value=n;showMessage('Template "'+n+'" saved.');};
+  $('rpTplDel').onclick=function(){var n=$('rpTpl').value;if(!n){showMessage('Choose a template to delete.',true);return;}if(!confirm('Delete template "'+n+'"?'))return;delete TPL[n];tplKeep();R.reports(el,rows);showMessage('Template "'+n+'" deleted.');};
   $('rpCustBtn').onclick=function(){var lv=[];if(CUST.period)lv.push(CUST.period);CUST.levels.forEach(function(l){if(l&&lv.indexOf(l)<0)lv.push(l);});
     if(!lv.length){showMessage('Choose at least one level under Group by.',true);return;}if(!CUST.met.length){showMessage('Tick at least one column.',true);return;}
     var name=lv.map(function(l){return RLV[l].label.replace(/ \(.*\)$/,'');}).join(' → ');
-    runReport($('rpCustBtn'),function(){return [levelSheet(FILTERED,'Custom report',name,lv,CUST.met)];},'Custom '+name.replace(/ → /g,' '));};
+    var ex=CUST.excl.filter(function(k){return exList.indexOf(k)>=0;}),rs=ex.length?FILTERED.filter(function(o){return ex.indexOf(o.company+'|'+o.trader)<0;}):FILTERED;
+    runReport($('rpCustBtn'),function(){if(!rs.length)return [];var sh=levelSheet(rs,'Custom report',name,lv,CUST.met,{sort:CUST.sort,top:+CUST.top||0,hz:CUST.hz});
+      if(ex.length)sh.notes.push('Left out: '+ex.map(exLbl).join(', '));if(+CUST.top)sh.notes.push('Showing top '+CUST.top+' rows per group. The grand total adds only the rows shown.');return [sh];},'Custom '+name.replace(/ → /g,' '));};
+};
+
+/* ===================== Nov-2026: Data Quality Check ===================== */
+var DQ={f:'',scope:'all'};
+var DQT=[['fund0','Fund 0, P&L present','warn'],['dup','Duplicate rows','loss'],['name','Name mismatch','warn'],['miss','Missing dates','loss']];
+function dqLev(a,b){if(Math.abs(a.length-b.length)>2)return 9;var p=[],i,j;for(j=0;j<=b.length;j++)p[j]=j;for(i=1;i<=a.length;i++){var c=[i];for(j=1;j<=b.length;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[b.length];}
+function dqRun(rows){var out=[],add=function(t,o,detail,extra){out.push(Object.assign({t:t,iso:o?o.iso:'',company:o?o.company:'',demat:o?o.demat:'',portfolio:o?o.portfolio:'',trader:o?o.trader:'',detail:detail},extra||{}));};
+  /* 1. fund 0 but P&L present */
+  rows.forEach(function(o){if(!num(o.fund)&&(Math.abs(o.net)>0.5||Math.abs(o.gross)>0.5))add('fund0',o,'Fund 0, net P&L '+money(o.net));});
+  /* 2. exact duplicate rows (every column the same) */
+  var seen={};rows.forEach(function(o){var k;try{k=JSON.stringify(o.raw);}catch(e){k=null;}if(!k)return;if(seen[k]){seen[k]++;add('dup',o,'Same row '+seen[k]+' times');}else seen[k]=1;});
+  /* 3. names that look like the same person / portfolio */
+  [['trader','Trader'],['researcher','Researcher'],['portfolio','Portfolio']].forEach(function(F){var cnt={};rows.forEach(function(o){var n=o[F[0]];if(n&&!/^(not available|unknown)$/i.test(n))cnt[n]=(cnt[n]||0)+1;});
+    var ns=Object.keys(cnt),nz=ns.map(function(n){return n.toLowerCase().replace(/[^a-z0-9]/g,'');});
+    for(var i=0;i<ns.length;i++)for(var j=i+1;j<ns.length;j++){var a=nz[i],b=nz[j];if(!a||!b)continue;
+      var mn=Math.min(a.length,b.length),same=a===b||(mn>=8&&a[0]===b[0]&&a.indexOf(b)!==0&&b.indexOf(a)!==0&&!/\d/.test(a+b)&&dqLev(a,b)<=(mn>=12?2:1));if(!same)continue;
+      var lo=cnt[ns[i]]<=cnt[ns[j]]?ns[i]:ns[j],hi=lo===ns[i]?ns[j]:ns[i],ex=rows.find(function(o){return o[F[0]]===lo;});
+      add('name',ex,F[1]+' "'+lo+'" ('+cnt[lo]+' rows) looks like "'+hi+'" ('+cnt[hi]+' rows)',{trader:F[0]==='trader'?lo:(ex?ex.trader:'')});}});
+  /* 4. market open but no rows for a company */
+  var mk=uniq(MARKET.map(function(m){return m.iso;})).sort();
+  if(mk.length)Array.from(groupBy(rows,function(o){return o.company;}).entries()).forEach(function(e){var r=rangeOf(e[1]),have={};e[1].forEach(function(o){have[o.iso]=1;});
+    mk.forEach(function(d){if(d>=r[0]&&d<=r[1]&&!have[d])out.push({t:'miss',iso:d,company:e[0],demat:'',portfolio:'',trader:'',detail:'Market open, no rows for this company'});});});
+  out.sort(function(a,b){return a.iso<b.iso?1:a.iso>b.iso?-1:0;});return {list:out,market:mk.length>0};}
+R.dq=function(el,rows){
+  var src=DQ.scope==='filt'?rows:ROWS,res=dqRun(src),L=res.list,cnt={};DQT.forEach(function(t){cnt[t[0]]=0;});L.forEach(function(x){cnt[x.t]++;});
+  var show=DQ.f?L.filter(function(x){return x.t===DQ.f;}):L,MAX=300,last=maxIso(src),nm={};DQT.forEach(function(t){nm[t[0]]=t[1];});
+  el.innerHTML='<style>#page-dq .dq-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:4px 0 14px}#page-dq .dq-b{border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left;background:var(--panel);cursor:pointer;font:inherit;color:inherit}#page-dq .dq-b.on{outline:2px solid var(--accent);outline-offset:-1px}#page-dq .dq-b span{display:block;font-size:12.5px;color:var(--muted)}#page-dq .dq-b b{display:block;font-size:24px;margin-top:2px}#page-dq .dq-b.ok b{color:var(--gain)}#page-dq .dq-b.warn b{color:var(--warn)}#page-dq .dq-b.loss b{color:var(--loss)}#page-dq .dq-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}#page-dq .dq-bar p{margin:0;font-size:12px;color:var(--muted);flex:1 1 260px}#page-dq table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}#page-dq th,#page-dq td{padding:7px 8px;border-top:1px solid var(--line);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#page-dq th{color:var(--muted);font-weight:600;border-top:0}#page-dq td.w{white-space:normal}#page-dq .t-warn{color:var(--warn)}#page-dq .t-loss{color:var(--loss)}#page-dq .dq-ok{padding:18px;text-align:center;color:var(--gain);font-weight:600}@media(max-width:800px){#page-dq .dq-k{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>'+
+    '<div class="card"><div class="card-h"><h2>Data quality check</h2><p>Rows in the uploaded data that look wrong. Fix them in the CSV and upload again: the counts go back to 0.</p></div>'+
+    '<div class="dq-bar">'+segBtns('dqscope',[['all','All uploaded data'],['filt','Only the filters at the top']],DQ.scope)+'<p>Checked '+src.length.toLocaleString('en-IN')+' rows'+(last?' up to '+dmy(last):'')+'. Click a box to show only that problem.</p>'+
+    '<button type="button" class="btn sm" id="dqAll">Show all</button><button type="button" class="btn sm primary" id="dqXl">Download list (Excel)</button></div>'+
+    '<div class="dq-k">'+DQT.map(function(t){var n=cnt[t[0]];return '<button type="button" class="dq-b '+(n?t[2]:'ok')+(DQ.f===t[0]?' on':'')+'" data-dq="'+t[0]+'"><span>'+esc(t[1])+'</span><b>'+n.toLocaleString('en-IN')+'</b></button>';}).join('')+'</div>'+
+    (res.market?'':'<p class="rp-f" style="color:var(--muted);font-size:12px;margin:0 0 8px">Missing dates needs index (market) data to know which days the market was open.</p>')+
+    (show.length?'<table><colgroup><col style="width:17%"><col style="width:11%"><col style="width:16%"><col style="width:14%"><col style="width:14%"><col style="width:28%"></colgroup><thead><tr><th>Problem</th><th>Date</th><th>Company</th><th>Demat</th><th>Trader</th><th>Detail</th></tr></thead><tbody>'+
+      show.slice(0,MAX).map(function(x){var c=DQT.find(function(t){return t[0]===x.t;})[2];return '<tr><td class="t-'+c+'" title="'+esc(nm[x.t])+'">'+esc(nm[x.t])+'</td><td>'+esc(dmy(x.iso))+'</td><td title="'+esc(x.company)+'">'+esc(x.company)+'</td><td title="'+esc(x.demat)+'">'+esc(x.demat)+'</td><td title="'+esc(x.trader)+'">'+esc(x.trader)+'</td><td class="w">'+esc(x.detail)+'</td></tr>';}).join('')+'</tbody></table>'+
+      (show.length>MAX?'<p class="rp-f" style="color:var(--muted);font-size:12px;margin:8px 0 0">Showing '+MAX+' of '+show.length.toLocaleString('en-IN')+' rows. Download the list for all of them.</p>':'')
+     :'<div class="dq-ok">✓ No problems found'+(DQ.f?' for '+esc(nm[DQ.f]):'')+'.</div>')+'</div>';
+  el.querySelectorAll('[data-dq]').forEach(function(b){b.onclick=function(){DQ.f=DQ.f===b.dataset.dq?'':b.dataset.dq;R.dq(el,rows);};});
+  bindSeg(el,'dqscope',function(v){DQ.scope=v;R.dq(el,rows);});
+  $('dqAll').onclick=function(){DQ.f='';R.dq(el,rows);};
+  $('dqXl').onclick=function(){if(!show.length){showMessage('Nothing to download: no problems found.',true);return;}
+    var cols=[{label:'Problem',type:'text',w:22},{label:'Date',type:'date',w:12},{label:'Company',type:'text',w:24},{label:'Demat account',type:'text',w:20},{label:'Portfolio',type:'text',w:18},{label:'Trader',type:'text',w:22},{label:'Detail',type:'text',w:60}];
+    var sh={name:'Data quality',title:'Minix – Data quality check',notes:['Checked '+src.length+' rows'+(DQ.scope==='filt'?' (filters: '+filterLabel()+')':' (all uploaded data)')+(DQ.f?' · Only: '+nm[DQ.f]:''),'Exported '+new Date().toLocaleString('en-IN')],
+      columns:cols,rows:show.map(function(x){return {lvl:0,kind:'n',v:[nm[x.t],x.iso,x.company,x.demat,x.portfolio,x.trader,x.detail]};}),xo:{f:0,af:1,ck:0}};
+    try{XL.save([sh],'Minix_Data_quality_check_'+iso(new Date())+'.xlsx');showMessage('Downloaded data quality list.');}catch(e){console.error(e);showMessage('Could not create the Excel file: '+e.message,true);}};
 };
 
 /* ---------------- export ---------------- */

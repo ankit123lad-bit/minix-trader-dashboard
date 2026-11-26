@@ -180,6 +180,13 @@
 #minixHistoryRoot .mh-edited{display:inline-block;margin-left:5px;padding:3px 6px;border-radius:999px;background:#78350f;color:#fde68a;font-weight:900}
 #minixHistoryRoot h3{color:#7db7ff;margin:17px 0 7px}.mh-empty{text-align:center!important;padding:20px!important;color:#9eb4c8}
 @media(max-width:700px){#minixHistoryRoot .mh-filter{grid-template-columns:1fr}#minixHistoryRoot .mh-kpis{grid-template-columns:1fr 1fr}}
+
+/* hero chart toolbar */
+.hero-r{position:relative}
+.hctb{display:flex;justify-content:flex-end;gap:4px;margin:-4px 0 2px}
+.card.hero.hlbl-off #ovCurve svg text[style*="paint-order"]{display:none}
+.card.hero.hfull{position:fixed!important;inset:var(--cft,16px) 14px 14px 14px!important;z-index:9000;overflow:auto!important;max-height:none!important}
+.card.hero.hfull #ovCurve svg{width:100%!important;height:auto!important;max-height:calc(100vh - 140px)!important}
 </style>
 <style>
 :root{
@@ -3048,6 +3055,13 @@ R.charts=function(el,rows){CX.trS=CX.trS||'net';CX.lblOff=CX.lblOff||{};CX.segP=
   el.querySelectorAll('.cxg>.card .ctb').forEach(function(tb){if(tb.querySelector('[data-ct="lbl"]'))return;var card=tb.closest('.card'),k=CHART_KEYS.find(function(id){return card.querySelector('#'+id);});tb.insertAdjacentHTML('afterbegin','<button type="button" class="btn sm" data-ct="lbl" title="Show or hide the numbers on the chart">Labels: '+(card.classList.contains('cxlbl-off')?'Off':'On')+'</button>');
     tb.querySelector('[data-ct="lbl"]').onclick=function(){var off=!card.classList.contains('cxlbl-off');card.classList.toggle('cxlbl-off',off);this.textContent='Labels: '+(off?'Off':'On');CX.lblOff=CX.lblOff||{};if(k){CX.lblOff[k]=off?1:0;cxKeep();}};});};
 
+/* hero chart: Labels on/off + full screen */
+function heroLblOff(){try{return localStorage.getItem('MX_HERO_LBL')==='off';}catch(e){return false;}}
+function heroTools(){var lb=$('hLbl'),fs=$('hFs');if(!lb||!fs)return;var card=lb.closest('.card');
+  if(window.HFULL){if(typeof cxTop==='function')cxTop();D.body.classList.add('cfull-on');}
+  lb.onclick=function(){var off=!card.classList.contains('hlbl-off');card.classList.toggle('hlbl-off',off);this.textContent='Labels: '+(off?'Off':'On');try{localStorage.setItem('MX_HERO_LBL',off?'off':'on');}catch(e){}};
+  fs.onclick=function(){window.HFULL=!window.HFULL;if(!window.HFULL)D.body.classList.remove('cfull-on');render();};
+  if(!window._hfEsc){window._hfEsc=1;D.addEventListener('keydown',function(e){if(e.key==='Escape'&&window.HFULL){window.HFULL=false;D.body.classList.remove('cfull-on');render();}});}}
 function chartTools(el){el.querySelectorAll('.ovg>.card').forEach(function(card){var hd=card.querySelector('.card-h');if(!hd||hd.querySelector('.ctb'))return;var tl=hd.querySelector('.tools');if(!tl){tl=D.createElement('div');tl.className='tools';var p=hd.querySelector('p');hd.insertBefore(tl,p||null);}
   tl.insertAdjacentHTML('beforeend','<span class="ctb"><button type="button" class="btn sm" data-ct="fs" title="Full screen">⛶</button><span class="ctdl"><button type="button" class="btn sm" data-ct="dl" title="Download (Excel / PNG)">⬇</button><span class="ctdm" hidden><button type="button" class="btn sm" data-ct="xls" title="Download data as Excel">Excel</button><button type="button" class="btn sm" data-ct="png" title="Save chart as a picture">PNG</button></span></span></span>');
   tl.querySelector('[data-ct="fs"]').onclick=function(){var on=!card.classList.contains('cfull');D.querySelectorAll('.cfull').forEach(function(c){c.classList.remove('cfull');delete c.dataset.nw;});D.body.classList.toggle('cfull-on',on);window.CFULL=null;
@@ -3058,9 +3072,9 @@ function chartTools(el){el.querySelectorAll('.ovg>.card').forEach(function(card)
 function ovExtra(el,rows){
   var strat=Array.from(groupBy(rows,function(o){return o.strategy;}).entries()).map(function(e){return statRow(e[0],stats(e[1],GSEG));}).filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;});
   var dm=peopleRows(rows,'demat').filter(function(r){return Math.abs(r.net)>=1;}).sort(function(a,b){return b.net-a.net;});
-  $('ovCmpBtns').innerHTML=segBtns('ovcmp',[['sg','Segment'],['st','Strategy'],['br','Broker / Demat']],ovCmpV);
-  var drawCmp=function(){if(['sg','st','br'].indexOf(ovCmpV)<0)ovCmpV='sg';var d=ovCmpV==='sg'?[['FNO','FNO'],['MCX','MCX'],['Cash','Equity']].map(function(z){return {name:z[1],net:sum(rows,function(o){return V(o,z[0],'net');})};}):ovCmpV==='st'?strat:dm;var it=d.map(function(r){return {label:String(r.name).replace(/\bCash\b/g,'Equity'),value:r.net};}),tot=sum(it,function(x){return Math.abs(x.value);}),pf=function(v){return (tot?(v/tot*100):0).toFixed(1)+'%';};it.forEach(function(x){x.tip=x.label+'\nNet P&L: '+money(x.value)+'\nShare: '+pf(x.value);});col3d($('ovStC'),it,{h:190,allLbl:1,lfmt:function(v){return short(v)+' ('+pf(v)+')';},aria:ovCmpV==='sg'?'Segment-wise net P&L':ovCmpV==='st'?'Strategy-wise net P&L':'Broker / demat net P&L'});};
-  drawCmp();var onCmp=function(v){ovCmpV=v;$('ovCmpBtns').innerHTML=segBtns('ovcmp',[['sg','Segment'],['st','Strategy'],['br','Broker / Demat']],ovCmpV);bindSeg(el,'ovcmp',onCmp);drawCmp();};bindSeg(el,'ovcmp',onCmp);
+  $('ovCmpBtns').innerHTML=segBtns('ovcmp',[['sg','Segment'],['st','Strategy']],ovCmpV);
+  var drawCmp=function(){if(['sg','st'].indexOf(ovCmpV)<0)ovCmpV='sg';var d=ovCmpV==='sg'?[['FNO','FNO'],['MCX','MCX'],['Cash','Equity']].map(function(z){return {name:z[1],net:sum(rows,function(o){return V(o,z[0],'net');})};}):strat;var it=d.map(function(r){return {label:String(r.name).replace(/\bCash\b/g,'Equity'),value:r.net};}),tot=sum(it,function(x){return Math.abs(x.value);}),pf=function(v){return (tot?(v/tot*100):0).toFixed(1)+'%';};it.forEach(function(x){x.tip=x.label+'\nNet P&L: '+money(x.value)+'\nShare: '+pf(x.value);});col3d($('ovStC'),it,{h:190,allLbl:1,lfmt:function(v){return short(v)+' ('+pf(v)+')';},aria:ovCmpV==='sg'?'Segment-wise net P&L':'Strategy-wise net P&L'});};
+  drawCmp();var onCmp=function(v){ovCmpV=v;$('ovCmpBtns').innerHTML=segBtns('ovcmp',[['sg','Segment'],['st','Strategy']],ovCmpV);bindSeg(el,'ovcmp',onCmp);drawCmp();};bindSeg(el,'ovcmp',onCmp);
   miBind(el,rows,'ov');
   ovDrawdown($('ovDR'),rows);
   try{drawSegStart($('ovSeg'));}catch(e){console.error(e);}
@@ -3419,7 +3433,7 @@ R.overview=function(el,rows){
     wr:{title:'Trader win rate',how:'One day per trader per date. Win = net above zero; loss = below zero.',rows:[['Winning trader-days',s.pos.toLocaleString('en-IN')],['Losing trader-days',s.neg.toLocaleString('en-IN')]],total:['Win rate',pct(s.win,1)]},
     dv:{title:'Dividend received',how:'Sum of the Dividend Received column. Not added to Net P&L.',rows:[['Dividend',money(s.div)]],total:['Dividend received',money(s.div)]}};
   var fsplit=function(f){return comps.map(function(c){return c.replace(' Pvt Ltd','').replace('Minix ','')+' '+short(f(c));}).join(' · ');};
-  el.innerHTML='<div class="grid g21 tight"><div class="card hero sm"><div class="hero-l"><div class="lbl">Net P&amp;L after charges · '+segLabel()+'</div><div class="big num '+cls(s.net)+'">'+short(s.net)+'</div><div class="sub"><span>ROI <b class="'+cls(s.roi)+'">'+pct(s.roi)+'</b></span><span>Avg fund <b>'+short(s.fund)+'</b></span></div>'+coLines(rows)+'<div class="sub"><span class="gain">'+plural(s.dpos,'profit day')+'</span><span class="loss">'+plural(s.dneg,'loss day')+'</span><span>'+plural(s.days,'total day')+'</span></div><div class="meta">'+(from?dmy(from)+' to '+dmy(to)+' · ':'')+plural(s.traders,'trader')+'</div></div><div class="hero-r"><div class="chart" id="ovCurve"></div></div></div>'+
+  el.innerHTML='<div class="grid g21 tight"><div class="card hero sm'+(heroLblOff()?' hlbl-off':'')+(window.HFULL?' cfull hfull':'')+'"><div class="hero-l"><div class="lbl">Net P&amp;L after charges · '+segLabel()+'</div><div class="big num '+cls(s.net)+'">'+short(s.net)+'</div><div class="sub"><span>ROI <b class="'+cls(s.roi)+'">'+pct(s.roi)+'</b></span><span>Avg fund <b>'+short(s.fund)+'</b></span></div>'+coLines(rows)+'<div class="sub"><span class="gain">'+plural(s.dpos,'profit day')+'</span><span class="loss">'+plural(s.dneg,'loss day')+'</span><span>'+plural(s.days,'total day')+'</span></div><div class="meta">'+(from?dmy(from)+' to '+dmy(to)+' · ':'')+plural(s.traders,'trader')+'</div></div><div class="hero-r"><div class="hctb"><button type="button" class="btn sm" id="hLbl" title="Show or hide the numbers on the chart">Labels: '+(heroLblOff()?'Off':'On')+'</button><button type="button" class="btn sm" id="hFs" title="'+(window.HFULL?'Exit full screen (Esc)':'Full screen')+'">'+(window.HFULL?'✕':'⛶')+'</button></div><div class="chart" id="ovCurve"></div></div></div>'+
     '<div class="card fs-mini"><div class="card-h"><h2>Fund summary</h2></div><div class="fsr"><span>Total fund</span><b>'+short(fi.total)+'</b></div><small>'+fsplit(function(c){return fi.byCompany[c];})+'</small><div class="fsr"><span>+ Net P&amp;L</span><b class="'+cls(s.net)+'">'+short(s.net)+'</b></div><div class="fsr hl"><span>= Net fund</span><b>'+short(fi.total+s.net)+'</b></div><small>'+fsplit(function(c){return fi.byCompany[c]+(compNet[c]||0);})+'</small><div class="mkt3"><span>Nifty 50 <b class="'+cls(idxChg('Nifty 50',last))+'">'+pct(idxChg('Nifty 50',last)||0)+'</b></span><span>Bank Nifty <b class="'+cls(idxChg('Nifty Bank',last))+'">'+pct(idxChg('Nifty Bank',last)||0)+'</b></span><span>Minix today <b class="'+cls(ls.net)+'">'+pct(fi.total?ls.net/fi.total*100:0)+'</b></span></div></div></div>'+
     '<div class="kpis k9">'+kpiC('tf','Total fund',short(fi.total),'')+kpiC('af','Average fund',short(s.fund),'')+kpiC('mu','Margin used',short(s.util),pct(s.utilPct,1)+' of fund')+kpiC('gr','Gross P&amp;L',short(s.gross),'',cls(s.gross))+kpiC('ch','Charges',short(s.chg),'')+kpiC('np','Net P&amp;L',short(s.net),'',cls(s.net))+kpiC('roi','ROI on fund',pct(s.roi),'',cls(s.roi))+kpiC('wr','Win rate',pct(s.win,1),'')+kpiC('dv','Dividend',short(s.div),'Not in net')+'</div>'+
     '<div class="card" id="ovMkt"></div>'+
@@ -3438,6 +3452,7 @@ R.overview=function(el,rows){
     '<div class="card"><div class="card-h"><h2 id="ovPieT"></h2><div class="tools">'+tabs('ovpie',[['chg','Charges'],['co','Company'],['sg','Segment'],['np','Net'],['br','Broker']],ovPie)+'</div></div><div id="ovPie"></div></div></div>';
   el.insertAdjacentHTML('beforeend',OVX);ovArrange(el);
   lineChart($('ovCurve'),[{name:'Cumulative net',color:s.net>=0?'var(--gain)':'var(--loss)',points:s.curve}],{area:true,zero:true,h:125,hero:1});
+  heroTools();
   /* market cards */
   $('ovMkt').innerHTML='<div class="card-h"><h2>Market today</h2><p>'+(last?dmy(last):'')+'</p></div><table class="tbl calc mkt-t"><thead><tr><th></th><th class="n">Close / Net</th><th class="n">Change</th><th class="n">Points / Up-Down</th></tr></thead><tbody>'+['Nifty 50','Nifty Bank'].map(function(n){var nm=n==='Nifty Bank'?'Bank Nifty':'Nifty 50',l=MARKET.filter(function(m){return m.index===n&&(!to||m.iso<=to);}).sort(function(a,b){return a.iso<b.iso?-1:1;});var z=l[l.length-1];if(!z)return '<tr><td>'+nm+'</td><td class="n muted" colspan="3">No data</td></tr>';
       return '<tr><td>'+nm+'</td><td class="n">'+z.close.toLocaleString('en-IN',{maximumFractionDigits:2})+'</td><td class="n '+cls(z.chg)+'">'+(z.chg>=0?'▲ ':'▼ ')+pct(Math.abs(z.chg))+'</td><td class="n '+cls(z.pts)+'">'+(z.pts>=0?'+':'-')+Math.abs(z.pts).toFixed(2)+'</td></tr>';}).join('')+
@@ -4004,7 +4019,7 @@ function render(){
   D.querySelectorAll('.page').forEach(function(s){s.classList.toggle('on',s.id==='page-'+page);});
   $('mxPageTitle').textContent=P.title;$('mxPageSub').textContent=P.sub+(GSEG?' · Segment: '+SEGNAME[GSEG]:'');
   updateAlerts();setStatus();hstats();
-  if(page!=='charts'){window.CFULL=null;D.body.classList.remove('cfull-on');}
+  if(page!=='charts'){window.CFULL=null;D.body.classList.remove('cfull-on');}if(page!=='overview')window.HFULL=false;
   if(page==='cal'){if($('page-traders'))$('page-traders').innerHTML='';}else if(page==='traders'){if($('page-cal'))$('page-cal').innerHTML='';}
   if(page==='charts'){if($('page-overview'))$('page-overview').innerHTML='';}else if(page==='overview'){if($('page-charts'))$('page-charts').innerHTML='';}
   try{R[page]($('page-'+page),FILTERED);if(page==='fy'){var fm=$('fyMvI');if(fm&&fm.closest('.card'))fm.closest('.card').style.display='none';}if(page==='traders'){['trHeat','trCal'].forEach(function(id){var x=$(id);x=x&&x.closest('.card');if(x)x.style.display='none';});}decorate($('page-'+page));}catch(e){console.error(e);$('page-'+page).insertAdjacentHTML('afterbegin','<div class="card loss">This page could not be drawn: '+esc(e.message)+'</div>');}
